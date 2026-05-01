@@ -34,6 +34,31 @@ public class ChessMove {
         return endPosition;
 
     }
+    public ChessPiece.PieceType getPromotionPiece() {
+        return promotionPiece;
+    }
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        ChessMove m = (ChessMove) obj;
+        return (this.startPosition == m.startPosition &&
+                this.endPosition == m.endPosition &&
+                this.promotionPiece == m.promotionPiece);
+
+    }
 
     /**
      * Gets the type of piece to promote a pawn to if pawn promotion is part of this
@@ -41,9 +66,7 @@ public class ChessMove {
      *
      * @return Type of piece to promote a pawn to, or null if no promotion
      */
-    public ChessPiece.PieceType getPromotionPiece() {
-        return promotionPiece;
-    }
+
 
     @Override
     public String toString() {

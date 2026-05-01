@@ -60,4 +60,28 @@ public class ChessPiece {
         }
         return List.of();
     }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        ChessPiece p = (ChessPiece) obj;
+        return (this.pieceColor == p.pieceColor &&
+                this.type == p.type);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
 }

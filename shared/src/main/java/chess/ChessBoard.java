@@ -13,6 +13,8 @@ public class ChessBoard {
 
     }
 
+
+
     /**
      * Adds a chess piece to the chessboard
      *
@@ -40,5 +42,25 @@ public class ChessBoard {
      */
     public void resetBoard() {
         throw new RuntimeException("Not implemented");
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        ChessBoard b = (ChessBoard)obj;
+        return true;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }
