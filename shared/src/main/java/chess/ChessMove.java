@@ -7,12 +7,15 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessMove {
+    private final ChessPosition startPosition;
+    private final ChessPosition endPosition;
+    private final ChessPiece.PieceType promotionPiece;
 
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
                      ChessPiece.PieceType promotionPiece) {
-        this.getStartPosition = startPosition;
+        this.startPosition = startPosition;
         this.endPosition = endPosition;
-        this.getPromotionPiece = promotionPiece;
+        this.promotionPiece = promotionPiece;
     }
 
     /**
@@ -28,7 +31,7 @@ public class ChessMove {
      * @return ChessPosition of ending location
      */
     public ChessPosition getEndPosition() {
-        return endposition;
+        return endPosition;
 
     }
 
@@ -44,6 +47,6 @@ public class ChessMove {
 
     @Override
     public String toString() {
-        return String.format("%s%%s", startPosition, endPosition, promotionPiece);
+        return String.format("%s%s%s", startPosition, endPosition, promotionPiece);
     }
 }
