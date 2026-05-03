@@ -16,7 +16,7 @@ public class BishopMoveTests {
                         | | | | | | | | |
                         | | | | | | | | |
                         | | | | | | | | |
-                        | | | | | | | | |
+                        | | | | | | | | |  
                         """,
                 new ChessPosition(5, 4),
                 new int[][]{

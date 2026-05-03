@@ -6,23 +6,14 @@ package chess;
  * Note: You can add to this class, but you may not alter
  * signature of the existing methods.
  */
-public class ChessMove {
-    private final ChessPosition startPosition;
-    private final ChessPosition endPosition;
-    private final ChessPiece.PieceType promotionPiece;
-
-    public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
-                     ChessPiece.PieceType promotionPiece) {
-        this.startPosition = startPosition;
-        this.endPosition = endPosition;
-        this.promotionPiece = promotionPiece;
-    }
+public record ChessMove(ChessPosition startPosition, ChessPosition endPosition, ChessPiece.PieceType promotionPiece) {
 
     /**
      * @return ChessPosition of starting location
      */
-    public ChessPosition getStartPosition() {
-        
+    @Override
+    public ChessPosition startPosition() {
+
         return startPosition;
 
     }
@@ -30,35 +21,12 @@ public class ChessMove {
     /**
      * @return ChessPosition of ending location
      */
-    public ChessPosition getEndPosition() {
+    @Override
+    public ChessPosition endPosition() {
         return endPosition;
 
     }
-    public ChessPiece.PieceType getPromotionPiece() {
-        return promotionPiece;
-    }
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-        if (obj.getClass() != this.getClass()) {
-            return false;
-        }
-        ChessMove m = (ChessMove) obj;
-        return (this.startPosition == m.startPosition &&
-                this.endPosition == m.endPosition &&
-                this.promotionPiece == m.promotionPiece);
-
-    }
 
     /**
      * Gets the type of piece to promote a pawn to if pawn promotion is part of this
