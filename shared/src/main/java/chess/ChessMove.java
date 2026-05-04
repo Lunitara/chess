@@ -11,22 +11,21 @@ public record ChessMove(ChessPosition startPosition, ChessPosition endPosition, 
     /**
      * @return ChessPosition of starting location
      */
-    @Override
-    public ChessPosition startPosition() {
+    public ChessPosition getStartPosition() {
 
         return startPosition;
 
     }
-
     /**
      * @return ChessPosition of ending location
      */
-    @Override
-    public ChessPosition endPosition() {
+    public ChessPosition getEndPosition() {
         return endPosition;
 
     }
-
+    public ChessPiece.PieceType getPromotionPiece() {
+        return promotionPiece;
+    }
 
     /**
      * Gets the type of piece to promote a pawn to if pawn promotion is part of this
