@@ -1,5 +1,7 @@
 package chess;
 
+import com.google.gson.reflect.TypeToken;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -271,27 +273,19 @@ public class ChessPiece {
             //if it's about to promote
             if (downright != null) {
                 if (downright.pieceColor != piece.pieceColor) {
-                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), PieceType.QUEEN));
-                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), PieceType.ROOK));
-                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), PieceType.BISHOP));
-                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), PieceType.KNIGHT));
+                    pawnPromotion(1, -1, board, myPosition, available);
+
                 }
             }
             if (downleft != null) {
                 if (downleft.pieceColor != piece.pieceColor) {
-                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.QUEEN));
-                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.ROOK));
-                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.BISHOP));
-                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.KNIGHT));
+                    pawnPromotion(-1, -1, board, myPosition, available);
+
                 }
             }
             //if there isn't a piece right in front i5 can move there
             if (board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {
-                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.QUEEN));
-                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.ROOK));
-                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.BISHOP));
-                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.KNIGHT));
-
+                pawnPromotion(-1, 0, board, myPosition, available);
             }
         }
         else {
@@ -320,7 +314,22 @@ public class ChessPiece {
 
         }
     }
+public void pawnPromotion(int col_delta, int row_delta, ChessBoard board, ChessPosition myPosition, Collection<ChessMove> available) {
+    int count = 1;
+    PieceType[] pieces = {
+            PieceType.BISHOP,
+            PieceType.ROOK,
+            PieceType.QUEEN,
+            PieceType.KNIGHT,
+    };
+    for (PieceType piece : pieces) {
+        if (board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {
+            available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), piece));
+        }
+    }
 
+
+}
     public void directionUpdater(int col_delta, int row_delta, ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
         ChessPiece piece = board.getPiece(myPosition);
         int count = 1;
