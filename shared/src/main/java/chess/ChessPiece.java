@@ -180,8 +180,21 @@ public class ChessPiece {
 
  public void whitePawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> available) {
      ChessPiece piece = board.getPiece(myPosition);
-     ChessPiece upright = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1));
-     ChessPiece upleft = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() -1));
+     ChessPiece upleft;
+     ChessPiece upright;
+     if (myPosition.getColumn() -1 <1) {
+         upleft = null;
+     }
+     else {
+         upleft = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() -1));
+
+     }
+     if (myPosition.getColumn() +1 > 8) {
+         upright = null;
+     }
+     else {
+         upright = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1));
+     }
      if (myPosition.getRow() == 7) {
          //if it's about to promote
          if (upright != null) {
@@ -217,12 +230,12 @@ public class ChessPiece {
          }
          //if piece of opposite color is in row+1col+1 or row-1col+1 then it can move there
 
-         if (upright != null) {
+         if (upright != null && myPosition.getColumn() != 8) {
              if (upright.pieceColor != piece.pieceColor) {
                  available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), null));
              }
          }
-         if (upleft != null) {
+         if (upleft != null && myPosition.getColumn() != 1) {
              if (upleft.pieceColor != piece.pieceColor) {
                  available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() -1), null));
              }
@@ -239,8 +252,21 @@ public class ChessPiece {
 
     public void blackPawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> available) {
         ChessPiece piece = board.getPiece(myPosition);
-        ChessPiece downright = board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1));
-        ChessPiece downleft = board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() -1));
+        ChessPiece downleft;
+        ChessPiece downright;
+        if (myPosition.getColumn() -1 <1) {
+            downleft = null;
+        }
+        else {
+            downleft = board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() -1));
+
+        }
+        if (myPosition.getColumn() +1 > 8) {
+            downright = null;
+        }
+        else {
+            downright = board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1));
+        }
         if (myPosition.getRow() == 2) {
             //if it's about to promote
             if (downright != null) {
@@ -276,12 +302,12 @@ public class ChessPiece {
             }
             //if piece of opposite color is in row+1col+1 or row-1col+1 then it can move there
 
-            if (downright != null) {
+            if (downright != null && myPosition.getColumn() != 8) {
                 if (downright.pieceColor != piece.pieceColor) {
                     available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), null));
                 }
             }
-            if (downleft != null) {
+            if (downleft != null && myPosition.getColumn() != 1) {
                 if (downleft.pieceColor != piece.pieceColor) {
                     available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), null));
                 }
