@@ -200,7 +200,7 @@ public class ChessPiece {
                  available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.KNIGHT));
              }
          }
-         //if there isn't a piece right in front ic an move there
+         //if there isn't a piece right in front it can move there
          if (board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn())) == null) {
              available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.QUEEN));
              available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.ROOK));
@@ -259,7 +259,7 @@ public class ChessPiece {
                     available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.KNIGHT));
                 }
             }
-            //if there isn't a piece right in front ic an move there
+            //if there isn't a piece right in front i5 can move there
             if (board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {
                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.QUEEN));
                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.ROOK));
@@ -286,7 +286,7 @@ public class ChessPiece {
                     available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), null));
                 }
             }
-            //if there isn't a piece right in front ic an move there
+            //if there isn't a piece right in front it can move there
             if (board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {
                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn()), null));
 
