@@ -201,26 +201,19 @@ public class ChessPiece {
          //if it's about to promote
          if (upright != null) {
              if (upright.pieceColor != piece.pieceColor) {
-                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), PieceType.QUEEN));
-                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), PieceType.ROOK));
-                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), PieceType.BISHOP));
-                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), PieceType.KNIGHT));
+                 pawnPromotion(1, 1, board, myPosition, available);
+
              }
          }
          if (upleft != null) {
              if (upleft.pieceColor != piece.pieceColor) {
-                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.QUEEN));
-                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.ROOK));
-                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.BISHOP));
-                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.KNIGHT));
+                 pawnPromotion(-1, 1, board, myPosition, available);
+
              }
          }
          //if there isn't a piece right in front it can move there
          if (board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn())) == null) {
-             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.QUEEN));
-             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.ROOK));
-             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.BISHOP));
-             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.KNIGHT));
+             pawnPromotion(0, 1, board, myPosition, available);
 
          }
      }
@@ -285,7 +278,7 @@ public class ChessPiece {
             }
             //if there isn't a piece right in front i5 can move there
             if (board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {
-                pawnPromotion(-1, 0, board, myPosition, available);
+                pawnPromotion(0, -1, board, myPosition, available);
             }
         }
         else {
