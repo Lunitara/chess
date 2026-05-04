@@ -42,7 +42,10 @@ public class ChessPosition {
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        int result = 7;
+        result = 31 * result + row;
+        result = 31* result + col;
+        return result;
     }
 
     @Override

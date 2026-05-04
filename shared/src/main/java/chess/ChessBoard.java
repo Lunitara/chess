@@ -41,26 +41,45 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        throw new RuntimeException("Not implemented");
+        //bottom row
+        this.addPiece(new ChessPosition(1,1), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.ROOK));
+        this.addPiece(new ChessPosition(1,2), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.KNIGHT));
+        this.addPiece(new ChessPosition(1,3), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.BISHOP));
+        this.addPiece(new ChessPosition(1,4), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.KING));
+        this.addPiece(new ChessPosition(1,5), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.QUEEN));
+        this.addPiece(new ChessPosition(1,6), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.BISHOP));
+        this.addPiece(new ChessPosition(1,7), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.KNIGHT));
+        this.addPiece(new ChessPosition(1,8), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.ROOK));
+        //row of pawns
+        for (int i = 1; i <= 8; i++) {
+            this.addPiece(new ChessPosition(2,i), new ChessPiece(ChessGame.TeamColor.WHITE,ChessPiece.PieceType.PAWN));
+        }
+        //top row
+        this.addPiece(new ChessPosition(8,1), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.ROOK));
+        this.addPiece(new ChessPosition(8,2), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.KNIGHT));
+        this.addPiece(new ChessPosition(8,3), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.BISHOP));
+        this.addPiece(new ChessPosition(8,4), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.QUEEN));
+        this.addPiece(new ChessPosition(8,5), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.KING));
+        this.addPiece(new ChessPosition(8,6), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.BISHOP));
+        this.addPiece(new ChessPosition(8,7), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.KNIGHT));
+        this.addPiece(new ChessPosition(8,8), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.ROOK));
+        //row of pawns
+        for (int i = 1; i <= 8; i++) {
+            this.addPiece(new ChessPosition(7,i), new ChessPiece(ChessGame.TeamColor.BLACK,ChessPiece.PieceType.PAWN));
+        }
     }
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
+
         if (obj == this) {
             return true;
         }
-        if (obj.getClass() != this.getClass()) {
-            return false;
-        }
-        ChessBoard b = (ChessBoard)obj;
-        return true;
+        return obj != null && this.getClass() == obj.getClass();
 
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return 31;
     }
 }
