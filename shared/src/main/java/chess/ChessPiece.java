@@ -56,13 +56,101 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
         //generate by piece using pragmatic functions plausible places it could move to
+        if (piece.getPieceType() == PieceType.KING) {
+            return kingMoves(board, myPosition);
+        }
         if (piece.getPieceType() == PieceType.BISHOP) {
             return bishopMoves(board, myPosition);
+        }
+        if (piece.getPieceType() == PieceType.KNIGHT) {
+            return knightMoves(board, myPosition);
+        }
+        if (piece.getPieceType() == PieceType.ROOK) {
+            return rookMoves(board, myPosition);
+        }
+        if (piece.getPieceType() == PieceType.QUEEN) {
+            return queenMoves(board, myPosition);
         }
         if (piece.getPieceType() == PieceType.PAWN) {
             return pawnMoves(board, myPosition);
         }
         return List.of();
+    }
+
+    public Collection<ChessMove> knightMoves(ChessBoard board, ChessPosition myPosition) {
+        List<ChessMove> available = new ArrayList<>();
+        //moving two up one right the board
+        directionUpdater(1, 2, board, myPosition, available);
+        //moving two up one left
+        directionUpdater(-1, 2, board, myPosition, available);
+        //moving two left one right
+        directionUpdater(-2, 1, board, myPosition, available);
+        //moving two left one left
+        directionUpdater(-2, -1, board, myPosition, available);
+        //moving two right one left
+        directionUpdater(2, -1, board, myPosition, available);
+        //moving two right one right
+        directionUpdater(2, 1, board, myPosition, available);
+        //moving two down one right
+        directionUpdater(1, -2, board, myPosition, available);
+        //moving two down one left
+        directionUpdater(-1, -2, board, myPosition, available);
+        return available;
+    }
+
+    public Collection<ChessMove> rookMoves(ChessBoard board, ChessPosition myPosition) {
+        List<ChessMove> available = new ArrayList<>();
+        //moving up the board
+        directionUpdater(0, 1, board, myPosition, available);
+        //moving right the board
+        directionUpdater(1, 0, board, myPosition, available);
+        //moving down the board
+        directionUpdater(0, -1, board, myPosition, available);
+        //moving left the board
+        directionUpdater(-1, 0, board, myPosition, available);
+        return available;
+    }
+
+    public Collection<ChessMove> queenMoves(ChessBoard board, ChessPosition myPosition) {
+        List<ChessMove> available = new ArrayList<>();
+        //moving up the board
+        directionUpdater(0, 1, board, myPosition, available);
+        //moving right the board
+        directionUpdater(1, 0, board, myPosition, available);
+        //moving down the board
+        directionUpdater(0, -1, board, myPosition, available);
+        //moving left the board
+        directionUpdater(-1, 0, board, myPosition, available);
+        //moving upright the board
+        directionUpdater(1, 1, board, myPosition, available);
+        //moving upleft the board
+        directionUpdater(-1, 1, board, myPosition, available);
+        //moving downright the board
+        directionUpdater(1, -1, board, myPosition, available);
+        //moving downleft the board
+        directionUpdater(-1, -1, board, myPosition, available);
+        return available;
+    }
+
+    public Collection<ChessMove> kingMoves(ChessBoard board, ChessPosition myPosition) {
+        List<ChessMove> available = new ArrayList<>();
+        //moving up the board
+        directionUpdater(0, 1, board, myPosition, available);
+        //moving right the board
+        directionUpdater(1, 0, board, myPosition, available);
+        //moving down the board
+        directionUpdater(0, -1, board, myPosition, available);
+        //moving left the board
+        directionUpdater(-1, 0, board, myPosition, available);
+        //moving upright the board
+        directionUpdater(1, 1, board, myPosition, available);
+        //moving upleft the board
+        directionUpdater(-1, 1, board, myPosition, available);
+        //moving downright the board
+        directionUpdater(1, -1, board, myPosition, available);
+        //moving downleft the board
+        directionUpdater(-1, -1, board, myPosition, available);
+        return available;
     }
 
     public Collection<ChessMove> bishopMoves(ChessBoard board, ChessPosition myPosition) {
@@ -78,42 +166,188 @@ public class ChessPiece {
         return available;
     }
 
+    public Collection<ChessMove> pawnMoves(ChessBoard board, ChessPosition myPosition) {
+        List<ChessMove> available = new ArrayList<>();
+        ChessPiece piece = board.getPiece(myPosition);
+        //check if it's white
+        if (piece.pieceColor == ChessGame.TeamColor.WHITE) {
+            whitePawnMoves(board, myPosition, available);
+        }
+        else {
+            blackPawnMoves(board, myPosition, available);
+        }
+        return available;    }
+
+ public void whitePawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> available) {
+     ChessPiece piece = board.getPiece(myPosition);
+     ChessPiece upright = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1));
+     ChessPiece upleft = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() -1));
+     if (myPosition.getRow() == 7) {
+         //if it's about to promote
+         if (upright != null) {
+             if (upright.pieceColor != piece.pieceColor) {
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), PieceType.QUEEN));
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), PieceType.ROOK));
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), PieceType.BISHOP));
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), PieceType.KNIGHT));
+             }
+         }
+         if (upleft != null) {
+             if (upleft.pieceColor != piece.pieceColor) {
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.QUEEN));
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.ROOK));
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.BISHOP));
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() - 1), PieceType.KNIGHT));
+             }
+         }
+         //if there isn't a piece right in front ic an move there
+         if (board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn())) == null) {
+             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.QUEEN));
+             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.ROOK));
+             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.BISHOP));
+             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() ), PieceType.KNIGHT));
+
+         }
+     }
+     else {
+         //if it's the first turn of the pawn it can move twice if nothing obstructs it
+         if (myPosition.getRow() == 2 && board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn())) == null && board.getPiece(new ChessPosition(myPosition.getRow() + 2, myPosition.getColumn())) == null) {
+             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 2, myPosition.getColumn()), null));
+
+         }
+         //if piece of opposite color is in row+1col+1 or row-1col+1 then it can move there
+
+         if (upright != null) {
+             if (upright.pieceColor != piece.pieceColor) {
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1), null));
+             }
+         }
+         if (upleft != null) {
+             if (upleft.pieceColor != piece.pieceColor) {
+                 available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() -1), null));
+             }
+         }
+         //if there isn't a piece right in front ic an move there
+         if (board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn())) == null) {
+             available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn()), null));
+
+         }
+
+     }
+ }
+
+
+    public void blackPawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> available) {
+        ChessPiece piece = board.getPiece(myPosition);
+        ChessPiece downright = board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1));
+        ChessPiece downleft = board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() -1));
+        if (myPosition.getRow() == 2) {
+            //if it's about to promote
+            if (downright != null) {
+                if (downright.pieceColor != piece.pieceColor) {
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), PieceType.QUEEN));
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), PieceType.ROOK));
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), PieceType.BISHOP));
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), PieceType.KNIGHT));
+                }
+            }
+            if (downleft != null) {
+                if (downleft.pieceColor != piece.pieceColor) {
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.QUEEN));
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.ROOK));
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.BISHOP));
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), PieceType.KNIGHT));
+                }
+            }
+            //if there isn't a piece right in front ic an move there
+            if (board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {
+                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.QUEEN));
+                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.ROOK));
+                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.BISHOP));
+                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() ), PieceType.KNIGHT));
+
+            }
+        }
+        else {
+            //if it's the first turn of the pawn it can move twice if nothing obstructs it
+            if (myPosition.getRow() == 7 && board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null && board.getPiece(new ChessPosition(myPosition.getRow() - 2, myPosition.getColumn())) == null) {
+                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 2, myPosition.getColumn()), null));
+
+            }
+            //if piece of opposite color is in row+1col+1 or row-1col+1 then it can move there
+
+            if (downright != null) {
+                if (downright.pieceColor != piece.pieceColor) {
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1), null));
+                }
+            }
+            if (downleft != null) {
+                if (downleft.pieceColor != piece.pieceColor) {
+                    available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() -1, myPosition.getColumn() - 1), null));
+                }
+            }
+            //if there isn't a piece right in front ic an move there
+            if (board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn())) == null) {
+                available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn()), null));
+
+            }
+
+        }
+    }
+
     public void directionUpdater(int col_delta, int row_delta, ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
         ChessPiece piece = board.getPiece(myPosition);
         int count = 1;
-        while (myPosition.getColumn() + count * col_delta <= 8 &&
-                myPosition.getRow() + count * row_delta <= 8 &&
-                myPosition.getColumn() + count * col_delta >= 1 &&
-                myPosition.getRow() + count * row_delta >= 1 &&
-                board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)) == null) {
-            moves.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), null));
-            count++;
-        }
-        if (myPosition.getColumn() + count * col_delta <= 8 &&
-                myPosition.getRow() + count * row_delta <= 8 &&
-                myPosition.getColumn() + count * col_delta >= 1 &&
-                myPosition.getRow() + count * row_delta >= 1 &&
-                board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)) != null &&
-                board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)).pieceColor != piece.pieceColor) {
-            moves.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), null));
-        }
-
-    }
-
-    public Collection<ChessMove> pawnMoves(ChessBoard board, ChessPosition myPosition) {
-        ChessPiece piece = board.getPiece(myPosition);
-        //if piece of opposite color is in row+1col+1 or row-1col+1 then it can move there
-        //can also move col+1 as long as there is not a piece already there
-        //moves once or twice first turn
-        //promotes to anything at the end
-        //
-        ChessPiece upright = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1));
-        if (upright != null) {
-            if (upright.pieceColor != piece.pieceColor) {
-                //
+        if (piece.getPieceType() == PieceType.KING) {
+            if (myPosition.getColumn() + count * col_delta <= 8 &&
+                    myPosition.getRow() + count * row_delta <= 8 &&
+                    myPosition.getColumn() + count * col_delta >= 1 &&
+                    myPosition.getRow() + count * row_delta >= 1) {
+                //if it's not out of bounds then...
+                if (board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)) == null) {
+                    //add if the place has a piece of opposite color
+                    moves.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), null));
+                } else if (board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)).pieceColor != piece.pieceColor) {
+                    //add if it doesn't have a piece at all
+                    moves.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), null));
+                }
+            }
+        } else if (piece.getPieceType() == PieceType.KNIGHT) {
+            if (myPosition.getColumn() + count * col_delta <= 8 &&
+                    myPosition.getRow() + count * row_delta <= 8 &&
+                    myPosition.getColumn() + count * col_delta >= 1 &&
+                    myPosition.getRow() + count * row_delta >= 1) {
+                //if it's not out of bounds then...
+                if (board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)) == null) {
+                    //add if the place has a piece of opposite color
+                    moves.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), null));
+                } else if (board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)).pieceColor != piece.pieceColor) {
+                    //add if it doesn't have a piece at all
+                    moves.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), null));
+                }
+            }
+        } else {
+            //go through all positions
+            while (myPosition.getColumn() + count * col_delta <= 8 &&
+                    myPosition.getRow() + count * row_delta <= 8 &&
+                    myPosition.getColumn() + count * col_delta >= 1 &&
+                    myPosition.getRow() + count * row_delta >= 1 &&
+                    board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)) == null) {
+                moves.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), null));
+                count++;
+            }
+            //check last position
+            if (myPosition.getColumn() + count * col_delta <= 8 &&
+                    myPosition.getRow() + count * row_delta <= 8 &&
+                    myPosition.getColumn() + count * col_delta >= 1 &&
+                    myPosition.getRow() + count * row_delta >= 1 &&
+                    board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)) != null &&
+                    board.getPiece(new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta)).pieceColor != piece.pieceColor) {
+                moves.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + count * row_delta, myPosition.getColumn() + count * col_delta), null));
             }
         }
-        return List.of(new ChessMove(new ChessPosition(5, +1), new ChessPosition(1, 8), null));
+
+
     }
 
 
