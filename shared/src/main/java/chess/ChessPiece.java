@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -372,7 +373,7 @@ public void pawnPromotion(int col_delta, int row_delta, ChessBoard board, ChessP
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(this.pieceColor, this.type);
     }
 
 }
