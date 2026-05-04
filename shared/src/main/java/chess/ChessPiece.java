@@ -182,21 +182,8 @@ public class ChessPiece {
 
  public void whitePawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> available) {
      ChessPiece piece = board.getPiece(myPosition);
-     ChessPiece upleft;
-     ChessPiece upright;
-     if (myPosition.getColumn() -1 <1) {
-         upleft = null;
-     }
-     else {
-         upleft = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() -1));
-
-     }
-     if (myPosition.getColumn() +1 > 8) {
-         upright = null;
-     }
-     else {
-         upright = board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1));
-     }
+     ChessPiece upleft = (myPosition.getColumn() -1 < 1) ? null : board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() -1));
+     ChessPiece upright = (myPosition.getColumn() +1 > 8) ? null : board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() + 1));
      if (myPosition.getRow() == 7) {
          //if it's about to promote
          if (upright != null) {
@@ -235,7 +222,7 @@ public class ChessPiece {
                  available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn() -1), null));
              }
          }
-         //if there isn't a piece right in front ic an move there
+         //if there isn't a piece right in front it can move there
          if (board.getPiece(new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn())) == null) {
              available.add(new ChessMove(myPosition, new ChessPosition(myPosition.getRow() + 1, myPosition.getColumn()), null));
 
@@ -247,21 +234,8 @@ public class ChessPiece {
 
     public void blackPawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> available) {
         ChessPiece piece = board.getPiece(myPosition);
-        ChessPiece downleft;
-        ChessPiece downright;
-        if (myPosition.getColumn() -1 <1) {
-            downleft = null;
-        }
-        else {
-            downleft = board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() -1));
-
-        }
-        if (myPosition.getColumn() +1 > 8) {
-            downright = null;
-        }
-        else {
-            downright = board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1));
-        }
+        ChessPiece downleft = (myPosition.getColumn() -1 < 1) ? null : board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() -1));
+        ChessPiece downright = (myPosition.getColumn() +1 > 8) ? null : board.getPiece(new ChessPosition(myPosition.getRow() - 1, myPosition.getColumn() + 1));
         if (myPosition.getRow() == 2) {
             //if it's about to promote
             if (downright != null) {
