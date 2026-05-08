@@ -85,8 +85,16 @@ public class ChessGame {
      */
     public boolean isInCheck(TeamColor teamColor) {
         if (teamColor == TeamColor.WHITE) {
+            ChessBoard boardClone = this.getBoard().clone();
+            ChessPosition whiteKingPlace = this.getBoard().getKing(color);
+            Collection<ChessPiece> allBlackPieces = boardClone.getAllPiecesOfColor(TeamColor.BLACK);
+            Collection<ChessPosition> allBlackPositions = boardClone.getAllPositionsOfColor(TeamColor.BLACK);
+            for (int i = 0; i < allBlackPieces.size(); i++) {
 
+            }
+            for (ChessMove blackMove :)
         }
+
         return false;
     }
 

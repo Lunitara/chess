@@ -11,7 +11,7 @@ import java.util.List;
  * Note: You can add to this class, but you may not alter
  * signature of the existing methods.
  */
-public class ChessBoard {
+public class ChessBoard implements Cloneable{
     ChessPiece[][] squares = new ChessPiece[8][8];
     public ChessBoard() {
 
@@ -44,12 +44,48 @@ public class ChessBoard {
         List<ChessPiece> allPieces = new ArrayList<>();
         for (int i = 0; i <= 8; i++) {
             for (int j = 0; j <= 8; j++) {
-                if (getPiece(new ChessPosition(i,j)) != null && getPiece(new ChessPosition(i,j)).pieceColor == color) {
+                if (this.getPiece(new ChessPosition(i,j)) != null && this.getPiece(new ChessPosition(i,j)).getTeamColor() == color) {
                     allPieces.add(getPiece(new ChessPosition(i,j)));
                 }
             }
         }
         return allPieces;
+    }
+
+    public Collection<ChessPosition> getAllPositionsOfColor(ChessGame.TeamColor color) {
+        List<ChessPosition> allPieces = new ArrayList<>();
+        for (int i = 0; i <= 8; i++) {
+            for (int j = 0; j <= 8; j++) {
+                if (this.getPiece(new ChessPosition(i,j)) != null && this.getPiece(new ChessPosition(i,j)).getTeamColor() == color) {
+                    allPieces.add(new ChessPosition(i,j));
+                }
+            }
+        }
+        return allPieces;
+    }
+
+    public ChessBoard addAllPiecesToClone(ChessBoard boardClone) {
+        for (int i = 0; i <= 8; i++) {
+            for (int j = 0; j <= 8; j++) {
+                if (this.getPiece(new ChessPosition(i,j)) != null) {
+                    boardClone.addPiece(new ChessPosition(i,j),this.getPiece(new ChessPosition(i,j)));
+                }
+            }
+        }
+        return boardClone;
+    }
+
+    public ChessPosition getKing(ChessGame.TeamColor color) {
+        ChessPosition fakeKing = new ChessPosition(0,0);
+        for (int i = 0; i <= 8; i++) {
+            for (int j = 0; j <= 8; j++) {
+                if (getPiece(new ChessPosition(i,j)) != null && getPiece(new ChessPosition(i,j)).getTeamColor() == color && getPiece(new ChessPosition(i,j)).getPieceType() == ChessPiece.PieceType.KING) {
+                    return new ChessPosition(i,j);
+                }
+            }
+        }
+        return fakeKing;
+
     }
 
     /**
@@ -84,6 +120,18 @@ public class ChessBoard {
         for (int i = 1; i <= 8; i++) {
             this.addPiece(new ChessPosition(7,i),new ChessPiece(ChessGame.TeamColor.BLACK, ChessPiece.PieceType.PAWN));
 
+        }
+    }
+
+    @Override
+    public ChessBoard clone() {
+        try {
+            ChessBoard clone = (ChessBoard) super.clone();
+            clone.addAllPiecesToClone(clone);
+            return clone;
+        }
+        catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
         }
     }
 
