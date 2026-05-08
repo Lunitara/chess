@@ -7,45 +7,52 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessPosition {
-    private final int row;
-    private final int col;
+    final int row;
+    final int col;
     public ChessPosition(int row, int col) {
-        //saves row and positions
         this.row = row;
         this.col = col;
     }
 
+    /**
+     * @return which row this position is in
+     * 1 codes for the bottom row
+     */
     public int getRow() {
-        return row;
+
+        return this.row;
     }
 
+    /**
+     * @return which column this position is in
+     * 1 codes for the left column
+     */
     public int getColumn() {
-        return col;
-    }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-        if (obj.getClass() != this.getClass()) {
-            return false;
-        }
-        ChessPosition p = (ChessPosition) obj;
-        return (this.row == p.row &&
-                this.col == p.col);
-
+        return this.col;
     }
 
     @Override
     public int hashCode() {
         int result = 7;
-        result = 31 * result + row;
-        result = 31* result + col;
+        result = result * 31 + col;
+        result = result * 31 + row;
         return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+        ChessPosition p = (ChessPosition) obj;
+        return (p.col == this.col && p.row == this.row);
     }
 
     @Override
