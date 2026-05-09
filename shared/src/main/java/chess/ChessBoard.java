@@ -63,8 +63,16 @@ public class ChessBoard implements Cloneable{
         }
         return allPieces;
     }
-
-    public ChessBoard addAllPiecesToClone(ChessBoard boardClone) {
+    public void applyMove(ChessMove move) {
+        ChessPosition startingPosition = move.getStartPosition();
+        ChessPiece startPiece = this.getPiece(startingPosition);
+        if (move.getPromotionPiece() != null) {
+            startPiece = new ChessPiece(startPiece.getTeamColor(), move.getPromotionPiece());
+        }
+        this.addPiece(move.getEndPosition(), startPiece);
+        this.addPiece(move.getStartPosition(), null);
+    }
+    public void addAllPiecesToClone(ChessBoard boardClone) {
         for (int i = 0; i <= 8; i++) {
             for (int j = 0; j <= 8; j++) {
                 if (this.getPiece(new ChessPosition(i,j)) != null) {
@@ -72,7 +80,6 @@ public class ChessBoard implements Cloneable{
                 }
             }
         }
-        return boardClone;
     }
 
     public ChessPosition getKing(ChessGame.TeamColor color) {
@@ -127,7 +134,7 @@ public class ChessBoard implements Cloneable{
     public ChessBoard clone() {
         try {
             ChessBoard clone = (ChessBoard) super.clone();
-            clone.addAllPiecesToClone(clone);
+            this.addAllPiecesToClone(clone);
             return clone;
         }
         catch (CloneNotSupportedException e) {
