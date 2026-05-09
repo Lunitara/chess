@@ -74,19 +74,23 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        Collection<ChessMove> valid = validMoves(move.getStartPosition());
+        ChessPiece pieceAtStart = this.board.getPiece(move.getStartPosition());
+        if (pieceAtStart == null) {
+            throw new InvalidMoveException();
+        }
         if (move.getStartPosition() == null) {
             throw new InvalidMoveException();
         }
+        Collection<ChessMove> valid = validMoves(move.getStartPosition());
         if (!valid.contains(move)) {
             throw new InvalidMoveException();
 
         }
-        if (this.color != this.board.getPiece(move.getStartPosition()).getTeamColor()) {
+        if (this.color != pieceAtStart.getTeamColor()) {
             throw new InvalidMoveException();
         }
         this.board.applyMove(move);
-        if (this.board.getPiece(move.getStartPosition()).getTeamColor() == TeamColor.WHITE) {
+        if (pieceAtStart.getTeamColor() == TeamColor.WHITE) {
             this.color = TeamColor.BLACK;
         } else {
             this.color = TeamColor.WHITE;
