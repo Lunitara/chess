@@ -12,6 +12,7 @@ import java.util.List;
 public class ChessGame {
     TeamColor color;
     TeamColor turn;
+
     public ChessGame() {
         this.color = color;
         this.turn = TeamColor.WHITE;
@@ -53,8 +54,7 @@ public class ChessGame {
         ChessBoard board = getBoard();
         if (board.getPiece(startPosition) == null) {
             return null;
-        }
-        else {
+        } else {
             ChessPiece piece = board.getPiece(startPosition);
             Collection<ChessMove> possiblevalid = piece.pieceMoves(board, startPosition);
             if (this.color == TeamColor.WHITE) {
@@ -84,18 +84,21 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
+        boolean check = false;
+        TeamColor otherTeamColor;
         if (teamColor == TeamColor.WHITE) {
-            ChessBoard boardClone = this.getBoard().clone();
-            ChessPosition whiteKingPlace = this.getBoard().getKing(color);
-            Collection<ChessPiece> allBlackPieces = boardClone.getAllPiecesOfColor(TeamColor.BLACK);
-            Collection<ChessPosition> allBlackPositions = boardClone.getAllPositionsOfColor(TeamColor.BLACK);
-            for (int i = 0; i < allBlackPieces.size(); i++) {
-
-            }
-            for (ChessMove blackMove :)
+            otherTeamColor = TeamColor.BLACK;
+        } else {
+            otherTeamColor = TeamColor.WHITE;
         }
+        ChessBoard boardClone = this.getBoard().clone();
+        ChessPosition ourKingPiece = this.getBoard().getKing(teamColor);
+        Collection<ChessPosition> allOtherPositions = boardClone.getAllPositionsOfColor(otherTeamColor);
+        for (ChessPosition blackPos : allOtherPositions) {
+            ChessPiece otherPiece = boardClone.getPiece(blackPos);
 
-        return false;
+        }
+        return check;
     }
 
     /**
@@ -134,6 +137,7 @@ public class ChessGame {
      * @return the chessboard
      */
     public ChessBoard getBoard() {
-        throw new RuntimeException("Not implemented");
+        return new ChessBoard();
     }
+
 }
