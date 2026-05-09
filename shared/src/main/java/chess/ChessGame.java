@@ -55,8 +55,8 @@ public class ChessGame {
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         Collection<ChessMove> goodMoves = new ArrayList<>();
         ChessPiece pieceToCheck = this.board.getPiece(startPosition);
-        Collection<ChessMove> possiblevalid = pieceToCheck.pieceMoves(board, startPosition);
-        for (ChessMove move : possiblevalid) {
+        Collection<ChessMove> possibleValid = pieceToCheck.pieceMoves(board, startPosition);
+        for (ChessMove move : possibleValid) {
             ChessBoard boardClone = board.clone();
             boardClone.applyMove(move);
             if (!boardClone.boardInCheck(pieceToCheck.pieceColor)) {
@@ -75,6 +75,9 @@ public class ChessGame {
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
         Collection<ChessMove> valid = validMoves(move.getStartPosition());
+        if (move.getStartPosition() == null) {
+            throw new InvalidMoveException();
+        }
         if (!valid.contains(move)) {
             throw new InvalidMoveException();
 

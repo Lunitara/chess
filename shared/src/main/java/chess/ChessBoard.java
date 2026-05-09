@@ -54,8 +54,8 @@ public class ChessBoard implements Cloneable{
 
     public Collection<ChessPosition> getAllPositionsOfColor(ChessGame.TeamColor color) {
         List<ChessPosition> allPieces = new ArrayList<>();
-        for (int i = 0; i <= 8; i++) {
-            for (int j = 0; j <= 8; j++) {
+        for (int i = 1; i <= 8; i++) {
+            for (int j = 1; j <= 8; j++) {
                 if (this.getPiece(new ChessPosition(i,j)) != null && this.getPiece(new ChessPosition(i,j)).getTeamColor() == color) {
                     allPieces.add(new ChessPosition(i,j));
                 }
@@ -86,7 +86,7 @@ public class ChessBoard implements Cloneable{
             ChessPiece enemyPiece = this.getPiece(enemyPos);
             Collection<ChessMove> possibleValidMoves = enemyPiece.pieceMoves(this, enemyPos);
             for (ChessMove move : possibleValidMoves) {
-                if (move.getEndPosition() == ourKingPiece) {
+                if (move.getEndPosition().equals(ourKingPiece)) {
                     return true;
                 }
             }
@@ -94,8 +94,8 @@ public class ChessBoard implements Cloneable{
         return false;
     }
     public void addAllPiecesToClone(ChessBoard boardClone) {
-        for (int i = 0; i <= 8; i++) {
-            for (int j = 0; j <= 8; j++) {
+        for (int i = 1; i <= 8; i++) {
+            for (int j = 1; j <= 8; j++) {
                 if (this.getPiece(new ChessPosition(i,j)) != null) {
                     boardClone.addPiece(new ChessPosition(i,j),this.getPiece(new ChessPosition(i,j)));
                 }
@@ -104,15 +104,14 @@ public class ChessBoard implements Cloneable{
     }
 
     public ChessPosition getKing(ChessGame.TeamColor color) {
-        ChessPosition fakeKing = new ChessPosition(0,0);
-        for (int i = 0; i <= 8; i++) {
-            for (int j = 0; j <= 8; j++) {
+        for (int i = 1; i <= 8; i++) {
+            for (int j = 1; j <= 8; j++) {
                 if (getPiece(new ChessPosition(i,j)) != null && getPiece(new ChessPosition(i,j)).getTeamColor() == color && getPiece(new ChessPosition(i,j)).getPieceType() == ChessPiece.PieceType.KING) {
                     return new ChessPosition(i,j);
                 }
             }
         }
-        return fakeKing;
+        return null;
 
     }
 
@@ -153,14 +152,9 @@ public class ChessBoard implements Cloneable{
 
     @Override
     public ChessBoard clone() {
-        try {
-            ChessBoard clone = (ChessBoard) super.clone();
-            this.addAllPiecesToClone(clone);
-            return clone;
-        }
-        catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
+        ChessBoard clone = new ChessBoard();
+        this.addAllPiecesToClone(clone);
+        return clone;
     }
 
     @Override
