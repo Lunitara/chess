@@ -58,8 +58,12 @@ public class ChessGame {
         Collection<ChessMove> possiblevalid = pieceToCheck.pieceMoves(board, startPosition);
         for (ChessMove move : possiblevalid) {
             ChessBoard boardClone = board.clone();
-            pieceToCheck.pieceMoves(boardClone, )
+            boardClone.applyMove(move);
+            if (!boardClone.boardInCheck(pieceToCheck.pieceColor)) {
+                goodMoves.add(move);
+            }
         }
+        return goodMoves;
 
     }
 
@@ -79,7 +83,11 @@ public class ChessGame {
             throw new InvalidMoveException();
         }
         this.board.applyMove(move);
-
+        if (this.board.getPiece(move.getStartPosition()).getTeamColor() == TeamColor.WHITE) {
+            this.color = TeamColor.BLACK;
+        } else {
+            this.color = TeamColor.WHITE;
+        }
 
     }
 
@@ -90,24 +98,7 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        TeamColor enemyTeamColor;
-        if (teamColor == TeamColor.WHITE) {
-            enemyTeamColor = TeamColor.BLACK;
-        } else {
-            enemyTeamColor = TeamColor.WHITE;
-        }
-        ChessPosition ourKingPiece = this.getBoard().getKing(teamColor);
-        Collection<ChessPosition> allEnemyPositions = this.getBoard().getAllPositionsOfColor(enemyTeamColor);
-        for (ChessPosition enemyPos : allEnemyPositions) {
-            ChessPiece enemyPiece = getBoard().getPiece(enemyPos);
-            Collection<ChessMove> possibleValidMoves = enemyPiece.pieceMoves(getBoard(), enemyPos);
-            for (ChessMove move : possibleValidMoves) {
-                if (move.getEndPosition() == ourKingPiece) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return board.boardInCheck(teamColor);
     }
 
     /**
@@ -146,7 +137,7 @@ public class ChessGame {
      * @return the chessboard
      */
     public ChessBoard getBoard() {
-        return  this.board;
+        return this.board;
     }
 
 }

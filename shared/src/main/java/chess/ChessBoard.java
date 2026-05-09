@@ -72,6 +72,27 @@ public class ChessBoard implements Cloneable{
         this.addPiece(move.getEndPosition(), startPiece);
         this.addPiece(move.getStartPosition(), null);
     }
+
+    public boolean boardInCheck(ChessGame.TeamColor teamColor) {
+        ChessGame.TeamColor enemyTeamColor;
+        if (teamColor == ChessGame.TeamColor.WHITE) {
+            enemyTeamColor = ChessGame.TeamColor.BLACK;
+        } else {
+            enemyTeamColor = ChessGame.TeamColor.WHITE;
+        }
+        ChessPosition ourKingPiece = this.getKing(teamColor);
+        Collection<ChessPosition> allEnemyPositions = this.getAllPositionsOfColor(enemyTeamColor);
+        for (ChessPosition enemyPos : allEnemyPositions) {
+            ChessPiece enemyPiece = this.getPiece(enemyPos);
+            Collection<ChessMove> possibleValidMoves = enemyPiece.pieceMoves(this, enemyPos);
+            for (ChessMove move : possibleValidMoves) {
+                if (move.getEndPosition() == ourKingPiece) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     public void addAllPiecesToClone(ChessBoard boardClone) {
         for (int i = 0; i <= 8; i++) {
             for (int j = 0; j <= 8; j++) {
