@@ -2,6 +2,8 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * A class that can manage a chess game, making moves on a board
@@ -11,12 +13,11 @@ import java.util.Collection;
  */
 public class ChessGame {
     private TeamColor color;
-    private TeamColor turn;
     private ChessBoard board;
 
     public ChessGame() {
-        this.turn = TeamColor.WHITE;
-
+        this.color = TeamColor.WHITE;
+        this.board = new ChessBoard();
     }
 
     /**
@@ -32,7 +33,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        turn = team;
+        color = team;
     }
 
     /**
@@ -115,7 +116,15 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        Boolean inCheckmate = true;
+        Collection<ChessPosition> ourPieces  = this.board.getAllPositionsOfColor(teamColor);
+        for (ChessPosition ourPiece : ourPieces) {
+            if (!validMoves(ourPiece).isEmpty()) {
+                inCheckmate = false;
+            }
+        }
+        return inCheckmate;
+
     }
 
     /**
@@ -126,7 +135,13 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        ChessPosition king = this.board.getKing(teamColor);
+        if (!this.board.boardInCheck(teamColor)) {
+            if (isInCheckmate(teamColor)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -147,4 +162,24 @@ public class ChessGame {
         return this.board;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.color, this.board);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+        ChessGame g = (ChessGame) obj;
+        return (g.board == this.board &&
+                g.color == this.color);
+    }
 }
