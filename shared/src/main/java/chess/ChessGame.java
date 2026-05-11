@@ -18,6 +18,7 @@ public class ChessGame {
     public ChessGame() {
         this.color = TeamColor.WHITE;
         this.board = new ChessBoard();
+        this.board.resetBoard();
     }
 
     /**
@@ -179,7 +180,6 @@ public class ChessGame {
             return false;
         }
         ChessGame g = (ChessGame) obj;
-        return (g.board == this.board &&
-                g.color == this.color);
+        return Objects.equals(this.board, g.board) && Objects.equals(this.color, g.color);
     }
 }
