@@ -2,7 +2,6 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -117,7 +116,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        Boolean inCheckmate = true;
+        boolean inCheckmate = true;
         Collection<ChessPosition> ourPieces  = this.board.getAllPositionsOfColor(teamColor);
         for (ChessPosition ourPiece : ourPieces) {
             if (!validMoves(ourPiece).isEmpty()) {
@@ -136,11 +135,8 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        ChessPosition king = this.board.getKing(teamColor);
         if (!this.board.boardInCheck(teamColor)) {
-            if (isInCheckmate(teamColor)) {
-                return true;
-            }
+            return isInCheckmate(teamColor);
         }
         return false;
     }
