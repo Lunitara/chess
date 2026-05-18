@@ -1,22 +1,31 @@
 package dataaccess;
+import model.AuthData;
+import model.GameData;
+import java.util.Collection;
 
 public class GameDAO {
-
-    private Collection<GameData> listGames(authToken authtoken) {
-
-    }
-    private void createGame(authToken authtoken) {
+    //CREATE OBJECTS FROM DATA STORE
+    private void createGame(String authtoken) {
 
     }
-    private void joinGame(authToken authtoken) {
+    //READ OBJECTS FROM DATA STORE
+    private Collection<GameData> listGames(String authtoken) {
+
+        return java.util.List.of();
+    }
+    private GameData getGame(String authtoken) {
+
+        return null;
+    }
+    //UPDATE OBJECTS FROM DATA STORE
+    private void joinGame(String authtoken) {
 
     }
-    private GameData getGame(authToken authtoken) {
+
+    private void updateGame(GameData authtoken) {
 
     }
-    private GameData updateGame(gameData authtoken) {
-
-    }
+    //DELETE OBJECTS FROM DATA STORE
     private void cleargameData() {
 
     }

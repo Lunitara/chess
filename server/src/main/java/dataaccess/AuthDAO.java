@@ -3,20 +3,21 @@ package dataaccess;
 import model.AuthData;
 
 public class AuthDAO {
-
-    private AuthData getAuth(authToken authtoken) {
-
-    }
-    private void createAuth(authData authtoken) {
+    //CREATE OBJECTS FROM DATA STORE
+    private void createAuth(AuthData authtoken) {
 
     }
-    private void deleteAuth(authToken authtoken) {
+    //READ OBJECTS FROM DATA STORE
+    private AuthData getAuth(AuthData authtoken) {
+
+        return authtoken;
+    }
+    //DELETE OBJECTS FROM DATA STORE
+
+    private void deleteAuth(AuthData authtoken) {
 
     }
-    private void logout(authToken authtoken) {
-
-    }
-    private void cleargameData() {
+    private void clearAuthData() {
 
     }
 }
