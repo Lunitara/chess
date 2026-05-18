@@ -4,20 +4,20 @@ import model.AuthData;
 
 public class AuthDAO {
     //CREATE OBJECTS FROM DATA STORE
-    private void createAuth(AuthData authtoken) {
+    public void createAuth(AuthData authData) {
 
     }
     //READ OBJECTS FROM DATA STORE
-    private AuthData getAuth(AuthData authtoken) {
+    public AuthData getAuth(String authToken) {
 
-        return authtoken;
+        return null;
     }
     //DELETE OBJECTS FROM DATA STORE
 
-    private void deleteAuth(AuthData authtoken) {
+    public void deleteAuth(AuthData authData) {
 
     }
-    private void clearAuthData() {
+    public void clearAuthData() {
 
     }
 }

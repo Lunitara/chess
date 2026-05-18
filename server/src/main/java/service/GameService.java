@@ -4,11 +4,11 @@ import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 
-public class AuthService {
+public class GameService {
     private UserDAO users;
     private GameDAO games;
     private AuthDAO auths;
-    public void clearAuthData() {
-        auths.clearAuthData();
+    public void clearGameData() {
+        games.clearGameData();
     }
 }

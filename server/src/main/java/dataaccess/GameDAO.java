@@ -5,20 +5,20 @@ import java.util.Collection;
 
 public class GameDAO {
     //CREATE OBJECTS FROM DATA STORE
-    private void createGame(String authtoken) {
+    public void createGame(String authtoken) {
 
     }
     //READ OBJECTS FROM DATA STORE
-    private Collection<GameData> listGames(String authtoken) {
+    public Collection<GameData> listGames(String authtoken) {
 
         return java.util.List.of();
     }
-    private GameData getGame(String authtoken) {
+    public GameData getGame(String authtoken) {
 
         return null;
     }
     //UPDATE OBJECTS FROM DATA STORE
-    private void joinGame(String authtoken) {
+    public void joinGame(String authtoken) {
 
     }
 
@@ -26,7 +26,7 @@ public class GameDAO {
 
     }
     //DELETE OBJECTS FROM DATA STORE
-    private void cleargameData() {
+    public void clearGameData() {
 
     }
 }
