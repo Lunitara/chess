@@ -24,7 +24,7 @@ public class GameServiceTests {
 
     }
     @Test
-    void testCheckColorAvailability() {
+    void positiveTestCheckColorAvailability() {
         //passes
         gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
@@ -34,7 +34,7 @@ public class GameServiceTests {
         gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "apple"));
     }
     @Test
-    void testCreateGame() {
+    void positiveTestCreateGame() {
         //passes
         gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         assertEquals(1, gameService.listGames("banana").games().size());
@@ -43,7 +43,7 @@ public class GameServiceTests {
     }
 
     @Test
-    void testJoinGame() {
+    void positiveTestJoinGame() {
         //passes
         gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
@@ -53,7 +53,44 @@ public class GameServiceTests {
         gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "apple"));
     }
     @Test
-    void testListGames() {
+    void positiveTestListGames() {
+        //passes
+        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        assertEquals(1, gameService.listGames("banana").games().size());
+        //fails if auth is wrong
+        assertThrows(IllegalArgumentException.class, () -> {gameService.listGames("carrot");});
+    }
+    @Test
+    void negativeTestCheckColorAvailability() {
+        //passes
+        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
+        //fails if auth is wrong
+        assertThrows(IllegalArgumentException.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "carrot"));});
+        //fails if color is already taken
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "apple"));
+    }
+    @Test
+    void negativeTestCreateGame() {
+        //passes
+        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        assertEquals(1, gameService.listGames("banana").games().size());
+        //fails if auth is wrong
+        assertThrows(IllegalArgumentException.class, () -> {gameService.listGames("carrot");});
+    }
+
+    @Test
+    void negativeTestJoinGame() {
+        //passes
+        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
+        //fails if auth is wrong
+        assertThrows(IllegalArgumentException.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "carrot"));});
+        //fails if color is already taken
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "apple"));
+    }
+    @Test
+    void negativeTestListGames() {
         //passes
         gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         assertEquals(1, gameService.listGames("banana").games().size());

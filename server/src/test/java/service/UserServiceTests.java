@@ -30,7 +30,7 @@ public class UserServiceTests {
 
 
     @Test
-    void testRegister() {
+    void positiveTestRegister() {
         //passes
         userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
         userService.logout(authToken);
@@ -41,7 +41,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void testLogin() {
+    void positiveTestLogin() {
         //passes
         userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
         userService.logout(authToken);
@@ -55,7 +55,48 @@ public class UserServiceTests {
     }
 
     @Test
-    void testLogout() {
+    void positiveTestLogout() {
+        //passes
+        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.logout(authToken);
+        //cannot log out twice so fails
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.logout(authToken);
+        });
+        userService.login(new UserService.LoginRequest("Carl", "llama"));
+        //wrong auth token but tries to log out
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.logout("wrongAuthToken");
+        });
+    }
+
+    @Test
+    void negativeTestRegister() {
+        //passes
+        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.logout(authToken);
+        //blank register spot
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.register(new UserData("Carl", "", "mon@gmail.com"));
+        });
+    }
+
+    @Test
+    void negativeTestLogin() {
+        //passes
+        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.logout(authToken);
+        userService.login(new UserService.LoginRequest("Carl", "llama"));
+        //cannot log out twice so fails
+        userService.logout(authToken);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.login(new UserService.LoginRequest("Carl", "wrongPassword"));
+        });
+    }
+
+    @Test
+    void negativeTestLogout() {
         //passes
         userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
         userService.logout(authToken);
