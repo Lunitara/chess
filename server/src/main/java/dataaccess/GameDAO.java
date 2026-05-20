@@ -5,6 +5,7 @@ import model.UserData;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 public class GameDAO {
     //CREATE OBJECTS FROM DATA STORE
@@ -21,17 +22,23 @@ public class GameDAO {
 
         return allGames;
     }
-    public GameData getGame(String authtoken) {
+    public GameData getGame(int gameID) {
 
+        for (int i = 0; i < allGames.size(); i++) {
+            if (Objects.equals(allGames.get(i).gameID(), gameID)) {
+                return allGames.get(i);
+            }
+        }
         return null;
     }
     //UPDATE OBJECTS FROM DATA STORE
-    public void joinGame(String authtoken) {
 
-    }
-
-    private void updateGame(GameData authtoken) {
-
+    public void updateGame(GameData gameData) {
+        for (int i = 0; i < allGames.size(); i++) {
+            if (Objects.equals(allGames.get(i).gameID(), gameData.gameID())) {
+                allGames.set(i, gameData);
+            }
+        }
     }
     //DELETE OBJECTS FROM DATA STORE
     public void clearGameData() {

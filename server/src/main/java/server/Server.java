@@ -152,10 +152,11 @@ public class Server {
             }
             try {
 
-                games.CreateGame(new GameService.CreateGameRequest(getAuthHeader(context),game.gameName()));
+                GameService.CreateGameResult result = games.CreateGame(new GameService.CreateGameRequest(getAuthHeader(context),game.gameName()));
+                context.json(result);
             }
             catch (IllegalArgumentException ex) {
-                context.status(403).result("{\"message\":\"error already exists\"}");
+                context.status(401).result("{\"message\":\"error already exists\"}");
                 return;
             }
         }
@@ -171,26 +172,27 @@ public class Server {
     //
     private  void joinGame(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
+        try {
+            String authToken = getAuthHeader(context);
+            if (authToken.equals("")) {
+                context.status(400).result("{\"message\":\"error authToken is blank\"}");
+                return;
+            }
 
-//        try {
-//            GameData game = context.bodyAsClass(GameData.class);
-//            if (Objects.equals(game.gameName(), "") || Objects.equals(game.gameName(), null)) {
-//                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
-//                return;
-//            }
-//            try {
-//                GameService. result = users.register(user);
-//                context.json(result);
-//            }
-//            catch (IllegalArgumentException ex) {
-//                context.status(403).result("{\"message\":\"error already exists\"}");
-//                return;
-//            }
-//        }
-//        catch (IllegalStateException ex) {
-//            context.status(400).result("Request body should be json");
-//            return;
-//        }
+            try {
+                GameService.JoinGameRequest game = context.bodyAsClass(GameService.JoinGameRequest.class);
+                game.authToken = authToken;
+                games.JoinGame(game);
+            }
+            catch (IllegalArgumentException ex) {
+                context.status(400).result("{\"message\":\"error color already used\"}");
+            }
+        }
+        catch (IllegalStateException ex) {
+            context.status(400).result("{\"message\":\"error Request body should be json\"}");
+            return;
+        }
+
     }
     //
     public Server() {
