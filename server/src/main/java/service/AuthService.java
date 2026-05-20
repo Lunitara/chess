@@ -7,6 +7,8 @@ import model.AuthData;
 
 public class AuthService {
     private UserDAO users;
+    private GameDAO games;
+    private AuthDAO auths;
 
     public AuthService(UserDAO users, GameDAO games, AuthDAO auths) {
         this.users = users;
@@ -14,10 +16,6 @@ public class AuthService {
         this.auths = auths;
     }
 
-
-
-    private GameDAO games;
-    private AuthDAO auths;
     public void clearAuthData() {
         auths.clearAuthData();
     }

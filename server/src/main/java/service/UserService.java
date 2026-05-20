@@ -47,7 +47,6 @@ public class UserService {
         return new RegisterResult(user.username(), authToken);
     }
 
-
     public LoginResult login(LoginRequest loginRequest) {
         String authToken = AuthData.generateToken();
         UserData existingUser = users.getUser(loginRequest.username());
@@ -75,12 +74,6 @@ public class UserService {
         else {
             auths.deleteAuth(authData);
         }
-    }
-
-    boolean checkPassword(String password) {
-
-
-        return false;
     }
 
     public void clearUserData() {

@@ -32,8 +32,6 @@ public class GameService {
     public record ListGamesResult(Collection<GameData> games) {
     }
 
-
-
     public GameService.CreateGameResult CreateGame(CreateGameRequest createGameRequest) {
         AuthData existingAuth = auths.getAuth(createGameRequest.authToken());
         if (existingAuth == null) {
@@ -77,6 +75,7 @@ public class GameService {
         }
 
     }
+
     public ListGamesResult listGames(String authToken) {
         if (auths.getAuth(authToken) == null) {
             throw new IllegalArgumentException("error unauthorized (color not available)");
