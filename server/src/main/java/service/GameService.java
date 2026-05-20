@@ -10,7 +10,6 @@ import model.GameData;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
-import model.UserData;
 
 public class GameService {
     private UserDAO users;
@@ -44,7 +43,7 @@ public class GameService {
         int gameID = games.createGame(gameData);
         return new GameService.CreateGameResult(gameID);
     }
-    public boolean checkColorAvailibility(GameData gameData, String playerColor) {
+    public boolean checkColorAvailability(GameData gameData, String playerColor) {
         if (gameData.blackUsername() == null && Objects.equals(playerColor, "BLACK") || gameData.whiteUsername() == null && Objects.equals(playerColor, "WHITE")) {
             return true;
         }
@@ -55,16 +54,22 @@ public class GameService {
         model.GameData gameData = games.getGame(joinGameRequest.gameID());
         AuthData existingAuth = auths.getAuth(joinGameRequest.authToken());
         if (existingAuth == null) {
-            throw new IllegalArgumentException("error null");
+            throw new IllegalStateException("error null auth");
         }
         if (gameData == null) {
-            throw new IllegalArgumentException("error null");
+            throw new IllegalArgumentException("error null game");
         }
-        if (checkColorAvailibility(gameData, joinGameRequest.playerColor)) {
+        if (checkColorAvailability(gameData, joinGameRequest.playerColor)) {
+            if (Objects.equals(joinGameRequest.playerColor, "BLACK")) {
+                gameData = new GameData(gameData.gameID(), gameData.whiteUsername(),existingAuth.username(),gameData.gameName(),gameData.game());
+            }
+            if (Objects.equals(joinGameRequest.playerColor, "WHITE")) {
+                gameData = new GameData(gameData.gameID(), existingAuth.username(),gameData.blackUsername(),gameData.gameName(),gameData.game());
+            }
             games.updateGame(gameData);
         }
         else {
-            throw new IllegalArgumentException("error unauthorized (color not available)");
+            throw new IllegalAccessError("error unauthorized (color not available)");
         }
 
     }

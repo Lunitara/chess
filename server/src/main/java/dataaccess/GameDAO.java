@@ -42,6 +42,6 @@ public class GameDAO {
     }
     //DELETE OBJECTS FROM DATA STORE
     public void clearGameData() {
-
+        allGames.clear();
     }
 }

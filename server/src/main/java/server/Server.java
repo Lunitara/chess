@@ -104,7 +104,7 @@ public class Server {
                 context.status(400).result("{\"message\":\"error authToken is null\"}");
             }
             try {
-                Collection<GameData> result = games.listGames(authToken);
+                GameService.ListGamesResult result = games.listGames(authToken);
                 context.json(result);
 
             }
@@ -185,7 +185,13 @@ public class Server {
                 games.JoinGame(game);
             }
             catch (IllegalArgumentException ex) {
+                context.status(400).result("{\"message\":\"error null game\"}");
+            }
+            catch (IllegalAccessError ex) {
                 context.status(400).result("{\"message\":\"error color already used\"}");
+            }
+            catch (IllegalStateException ex) {
+                context.status(401).result("{\"message\":\"error null auth\"}");
             }
         }
         catch (IllegalStateException ex) {
