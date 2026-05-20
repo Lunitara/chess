@@ -87,7 +87,7 @@ public class ChessGame {
     }
 
     public void castleLogic(TeamColor color, Collection<ChessMove> goodMoves) {
-        Collection<ChessMove> possibleValidWhiteCastle = new ArrayList<>();
+        Collection<ChessMove> virtualKingMoves = new ArrayList<>();
         ChessPiece tempPiece= board.getPiece(new ChessPosition(1,1));
 
         if (tempPiece == null || tempPiece.getPieceType() != ChessPiece.PieceType.ROOK || tempPiece.getTeamColor() != TeamColor.WHITE) {
@@ -136,7 +136,7 @@ public class ChessGame {
 
             }
             for (int king_col = 4; king_col > 2; king_col--) {
-                possibleValidWhiteCastle.add(new ChessMove(new ChessPosition(king_row,5), new ChessPosition(king_row,king_col), null));
+                virtualKingMoves.add(new ChessMove(new ChessPosition(king_row,5), new ChessPosition(king_row,king_col), null));
                 if (this.board.getPiece(new ChessPosition(king_row,king_col)) != null) {
                     allNull = false;
 
@@ -144,7 +144,7 @@ public class ChessGame {
             }
             if (allNull) {
                 boolean canMove = true;
-                for (ChessMove move : possibleValidWhiteCastle) {
+                for (ChessMove move : virtualKingMoves) {
                     ChessBoard boardClone = board.clone();
                     boardClone.applyMove(move);
                     if (boardClone.boardInCheck(color)) {
@@ -163,7 +163,7 @@ public class ChessGame {
             }
 
         }
-        possibleValidWhiteCastle = new ArrayList<>();
+        virtualKingMoves = new ArrayList<>();
         if (color == TeamColor.BLACK && !blackLeftRookorKingMoved) {
             boolean allNull = true;
             //there are no pieces between king and rook
@@ -172,7 +172,7 @@ public class ChessGame {
 
             }
             for (int king_col = 4; king_col > 2; king_col--) {
-                possibleValidWhiteCastle.add(new ChessMove(new ChessPosition(king_row,5), new ChessPosition(king_row,king_col), null));
+                virtualKingMoves.add(new ChessMove(new ChessPosition(king_row,5), new ChessPosition(king_row,king_col), null));
                 if (this.board.getPiece(new ChessPosition(king_row,king_col)) != null) {
                     allNull = false;
 
@@ -180,7 +180,7 @@ public class ChessGame {
             }
             if (allNull) {
                 boolean canMove = true;
-                for (ChessMove move : possibleValidWhiteCastle) {
+                for (ChessMove move : virtualKingMoves) {
                     ChessBoard boardClone = board.clone();
                     boardClone.applyMove(move);
                     if (boardClone.boardInCheck(color)) {
@@ -198,13 +198,13 @@ public class ChessGame {
                 }
             }
         }
-        possibleValidWhiteCastle = new ArrayList<>();
+        virtualKingMoves = new ArrayList<>();
         //right side
         if (color == TeamColor.WHITE &&!whiteRightRookorKingMoved) {
             boolean allNull = true;
             //there are no pieces between king and rook
             for (int king_col = 7; king_col > 5; king_col--) {
-                possibleValidWhiteCastle.add(new ChessMove(new ChessPosition(king_row,5), new ChessPosition(king_row,king_col), null));
+                virtualKingMoves.add(new ChessMove(new ChessPosition(king_row,5), new ChessPosition(king_row,king_col), null));
                 if (this.board.getPiece(new ChessPosition(king_row,king_col)) != null) {
                     allNull = false;
 
@@ -212,7 +212,7 @@ public class ChessGame {
             }
             if (allNull) {
                 boolean canMove = true;
-                for (ChessMove move : possibleValidWhiteCastle) {
+                for (ChessMove move : virtualKingMoves) {
                     ChessBoard boardClone = board.clone();
                     boardClone.applyMove(move);
                     if (boardClone.boardInCheck(color)) {
@@ -231,12 +231,12 @@ public class ChessGame {
 
             }
         }
-        possibleValidWhiteCastle = new ArrayList<>();
+        virtualKingMoves = new ArrayList<>();
         if (color == TeamColor.BLACK && !blackRightRookorKingMoved) {
             boolean allNull = true;
             //there are no pieces between king and rook
             for (int king_col = 7; king_col > 5; king_col--) {
-                possibleValidWhiteCastle.add(new ChessMove(new ChessPosition(king_row,5), new ChessPosition(king_row,king_col), null));
+                virtualKingMoves.add(new ChessMove(new ChessPosition(king_row,5), new ChessPosition(king_row,king_col), null));
                 if (this.board.getPiece(new ChessPosition(king_row,king_col)) != null) {
                     allNull = false;
 
@@ -244,7 +244,7 @@ public class ChessGame {
             }
             if (allNull) {
                 boolean canMove = true;
-                for (ChessMove move : possibleValidWhiteCastle) {
+                for (ChessMove move : virtualKingMoves) {
                     ChessBoard boardClone = board.clone();
                     boardClone.applyMove(move);
                     if (boardClone.boardInCheck(color)) {
