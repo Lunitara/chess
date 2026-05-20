@@ -27,39 +27,32 @@ public class UserServiceTests {
         authToken = registerResult.authToken();
 
     }
-    public UserService.RegisterResult register(UserData user) {
-        String authToken = AuthData.generateToken();
-        UserData existingUser = users.getUser(user.username());
-        if (existingUser != null) {
-            throw new IllegalArgumentException("Already Taken Exception");
-        }
-        users.createUser(user);
-        AuthData authData = new AuthData(authToken,user.username());
-        auths.createAuth(authData);
 
-        return new UserService.RegisterResult(user.username(), authToken);
+
+    @Test
+    void testRegister() {
+        //passes
+        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.logout(authToken);
+        //blank register spot
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.register(new UserData("Carl", "", "mon@gmail.com"));
+        });
     }
 
+    @Test
+    void testLogin() {
+        //passes
+        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.logout(authToken);
+        userService.login(new UserService.LoginRequest("Carl", "llama"));
+        //cannot log out twice so fails
+        userService.logout(authToken);
 
-    public UserService.LoginResult login(UserService.LoginRequest loginRequest) {
-        String authToken = AuthData.generateToken();
-        UserData existingUser = users.getUser(loginRequest.username());
-        if (existingUser != null) {
-            if (Objects.equals(existingUser.password(), loginRequest.password())) {
-                AuthData authData = new AuthData( authToken, existingUser.username());
-                auths.createAuth(authData);
-                return new UserService.LoginResult(existingUser.username(), authToken);
-            }
-            else {
-                throw new IllegalArgumentException("Passwords don't match");
-            }
-        }
-        else {
-            throw new IllegalArgumentException("Error null user");
-        }
-
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.login(new UserService.LoginRequest("Carl", "wrongPassword"));
+        });
     }
-
 
     @Test
     void testLogout() {
@@ -69,6 +62,11 @@ public class UserServiceTests {
         //cannot log out twice so fails
         assertThrows(IllegalArgumentException.class, () -> {
             userService.logout(authToken);
+        });
+        userService.login(new UserService.LoginRequest("Carl", "llama"));
+        //wrong auth token but tries to log out
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.logout("wrongAuthToken");
         });
     }
     @Test
