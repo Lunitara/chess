@@ -6,10 +6,18 @@ import dataaccess.UserDAO;
 import model.AuthData;
 import model.UserData;
 
-public class UserService(UserDAO userdao, GameDAO gamedao, AuthDAO authdao) {
-    private UserDAO users;
-    private GameDAO games;
-    private AuthDAO auths;
+import java.util.Objects;
+
+public class UserService {
+    private final UserDAO users;
+    private final GameDAO games;
+    private final AuthDAO auths;
+
+    public UserService(GameDAO games, UserDAO users, AuthDAO auths) {
+        this.games = games;
+        this.users = users;
+        this.auths = auths;
+    }
 
     public record RegisterResult(String username, String authToken) {
     }
@@ -23,7 +31,7 @@ public class UserService(UserDAO userdao, GameDAO gamedao, AuthDAO authdao) {
     public record LoginRequest(String username, String password) {
     }
 
-    public record LogoutRequest() {
+    public record LogoutRequest(String AuthToken) {
     }
 
     public RegisterResult register(UserData user) {
@@ -40,11 +48,34 @@ public class UserService(UserDAO userdao, GameDAO gamedao, AuthDAO authdao) {
     }
 
 
-    public UserData login(LoginRequest loginRequest) {
-        return null;
+    public LoginResult login(LoginRequest loginRequest) {
+        String authToken = AuthData.generateToken();
+        UserData existingUser = users.getUser(loginRequest.username());
+        if (existingUser != null) {
+            if (Objects.equals(existingUser.password(), loginRequest.password())) {
+                AuthData authData = new AuthData(existingUser.username(), authToken);
+                auths.createAuth(authData);
+                return new LoginResult(existingUser.username(), authToken);
+            }
+            else {
+                throw new IllegalArgumentException("Passwords don't match");
+            }
+        }
+        else {
+            throw new IllegalArgumentException("Error null user");
+        }
+
     }
 
-    public void logout(LogoutRequest logoutRequest) {
+    public void Logout(LogoutRequest logoutRequest) {
+        String authToken = AuthData.generateToken();
+        if (authToken == null) {
+            throw new IllegalArgumentException("Error null user");
+        }
+        else {
+            AuthData authData = new AuthData(authData.username(), authToken);
+            auths.deleteAuth(authData);
+        }
     }
 
     boolean checkPassword(String password) {

@@ -1,11 +1,14 @@
 package server;
 import com.google.gson.Gson;
+import com.sun.jdi.InvalidStackFrameException;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import io.javalin.*;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.json.JsonMapper;
+import model.GameData;
 import model.UserData;
 import org.jetbrains.annotations.NotNull;
 import service.UserService;
@@ -13,7 +16,9 @@ import service.GameService;
 import service.AuthService;
 import io.javalin.json.JavalinJackson;
 
+import java.io.EOFException;
 import java.lang.reflect.Type;
+import java.util.Objects;
 
 public class Server {
 
@@ -33,21 +38,155 @@ public class Server {
         //context.bodyAsClass parses request body into record class probably
         try {
             UserData user = context.bodyAsClass(UserData.class);
+            if (Objects.equals(user.username(), "") || Objects.equals(user.password(), "") || Objects.equals(user.email(), "")) {
+                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
+                return;
+            }
+            if (Objects.equals(user.username(), null) || Objects.equals(user.password(), null) || Objects.equals(user.email(), null)) {
+                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
+                return;
+            }
             try {
                 UserService.RegisterResult result = users.register(user);
                 context.json(result);
             }
             catch (IllegalArgumentException ex) {
-                context.status(403).result("That username already exists");
+                context.status(403).result("{\"message\":\"error already exists\"}");
+                return;
             }
-
         }
         catch (IllegalStateException ex) {
             context.status(400).result("Request body should be json");
+            return;
         }
-
-
     }
+    //login
+    private  void Login(@NotNull Context context) {
+        //context.bodyAsClass parses request body into record class probably
+        try {
+            UserService.LoginRequest user = context.bodyAsClass(UserService.LoginRequest.class);
+            if (Objects.equals(user.username(), "") || Objects.equals(user.password(), "")) {
+                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
+                return;
+            }
+            if (Objects.equals(user.username(), null) || Objects.equals(user.password(), null)) {
+                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
+                return;
+            }
+            try {
+                UserService.LoginResult result = users.login(user);
+                context.json(result);
+
+            }
+            catch (IllegalArgumentException ex) {
+                context.status(401).result("{\"message\":\"error unauthorized\"}");
+                return;
+            }
+        }
+        catch (IllegalStateException ex) {
+            context.status(400).result("Request body should be json");
+            return;
+        }
+    }
+    //
+    private void listGames(@NotNull Context context) {
+        //context.bodyAsClass parses request body into record class probably
+        try {
+            UserService. games = context.bodyAsClass(UserService.listGames.class);
+            if (Objects.equals(authInfo.AuthToken(), "")) {
+                context.status(400).result("{\"message\":\"error authToken is blank\"}");
+                return;
+            }
+            if (Objects.equals(authInfo.AuthToken(), null)) {
+                context.status(400).result("{\"message\":\"error authToken is null\"}");
+                return;
+            }
+            try {
+                authInfo.
+
+            }
+            catch (IllegalArgumentException ex) {
+                context.status(401).result("{\"message\":\"error unauthorized\"}");
+            }
+        }
+        catch (IllegalStateException ex) {
+            context.status(400).result("Request body should be json");
+            return;
+        }
+    }
+    //
+    private  void Logout(@NotNull Context context) {
+        //context.bodyAsClass parses request body into record class probably
+        try {
+            UserService.LogoutRequest authInfo = context.bodyAsClass(UserService.LogoutRequest.class);
+            if (Objects.equals(authInfo.AuthToken(), "")) {
+                context.status(400).result("{\"message\":\"error authToken is blank\"}");
+                return;
+            }
+            if (Objects.equals(authInfo.AuthToken(), null)) {
+                context.status(400).result("{\"message\":\"error authToken is null\"}");
+                return;
+            }
+            try {
+                authInfo.
+
+            }
+            catch (IllegalArgumentException ex) {
+                context.status(401).result("{\"message\":\"error unauthorized\"}");
+            }
+        }
+        catch (IllegalStateException ex) {
+            context.status(400).result("Request body should be json");
+            return;
+        }
+    }
+    //
+    private  void CreateGame(@NotNull Context context) {
+        //context.bodyAsClass parses request body into record class probably
+        try {
+            GameData game = context.bodyAsClass(GameData.class);
+            if (Objects.equals(game.gameName(), "") || Objects.equals(game.gameName(), null)) {
+                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
+                return;
+            }
+            try {
+                GameService. result = users.register(user);
+                context.json(result);
+            }
+            catch (IllegalArgumentException ex) {
+                context.status(403).result("{\"message\":\"error already exists\"}");
+                return;
+            }
+        }
+        catch (IllegalStateException ex) {
+            context.status(400).result("Request body should be json");
+            return;
+        }
+    }
+    //
+    private  void joinGame(@NotNull Context context) {
+        //context.bodyAsClass parses request body into record class probably
+        try {
+            GameData game = context.bodyAsClass(GameData.class);
+            if (Objects.equals(game.gameName(), "") || Objects.equals(game.gameName(), null)) {
+                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
+                return;
+            }
+            try {
+                GameService. result = users.register(user);
+                context.json(result);
+            }
+            catch (IllegalArgumentException ex) {
+                context.status(403).result("{\"message\":\"error already exists\"}");
+                return;
+            }
+        }
+        catch (IllegalStateException ex) {
+            context.status(400).result("Request body should be json");
+            return;
+        }
+    }
+    //
     public Server() {
         javalin = Javalin.create(config -> {
             config.staticFiles.add("web");
@@ -55,7 +194,12 @@ public class Server {
                 @NotNull
                 @Override
                 public <T> T fromJsonString(@NotNull String json, @NotNull Type targetType) {
-                    return gson.fromJson(json,targetType);
+                    try {
+                        return gson.fromJson(json,targetType);
+                    }
+                    catch (Exception e) {
+                        throw new IllegalStateException("Request body should be json");
+                    }
                 }
 
                 @NotNull
@@ -68,13 +212,17 @@ public class Server {
         UserDAO usersdao = new UserDAO();
         GameDAO gamesdao = new GameDAO();
         AuthDAO authsdao = new AuthDAO();
-        users = new UserService(usersdao, gamesdao, authsdao);
-        games = new GameService(usersdao, gamesdao, authsdao);
+        users = new UserService(gamesdao,usersdao,  authsdao);
+        games = new GameService(  authsdao, gamesdao, usersdao);
         auths = new AuthService(usersdao, gamesdao, authsdao);
         // Register your endpoints and exception handlers here.
         javalin.delete("/db", this::Clear);
         javalin.post("/user", this::Register);
-
+        javalin.post("/session", this::Login);
+        javalin.delete("/session", this::Logout);
+        javalin.get("/game", this::listGames);
+        javalin.post("/game", this::CreateGame);
+        javalin.put("/game", this::joinGame);
 
 
     }

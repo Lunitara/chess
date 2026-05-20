@@ -1,17 +1,21 @@
 package dataaccess;
 import model.AuthData;
 import model.GameData;
+import model.UserData;
+
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class GameDAO {
     //CREATE OBJECTS FROM DATA STORE
+    ArrayList<GameData> allGames = new ArrayList<>();
     public void createGame(String authtoken) {
-
+        allGames.a
     }
     //READ OBJECTS FROM DATA STORE
     public Collection<GameData> listGames(String authtoken) {
 
-        return java.util.List.of();
+        return allGames;
     }
     public GameData getGame(String authtoken) {
 
