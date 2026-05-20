@@ -5,11 +5,28 @@ import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
 import model.UserData;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class UserServiceTests {
+    UserService userService;
+    String authToken;
+
+    @BeforeEach
+    public void setUp() {
+        AuthDAO authDAO = new AuthDAO();
+        GameDAO gameDAO = new GameDAO();
+        UserDAO userDAO = new UserDAO();
+        userService = new UserService(gameDAO, userDAO,authDAO);
+        UserService.RegisterResult registerResult = userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        authToken = registerResult.authToken();
+
+    }
     public UserService.RegisterResult register(UserData user) {
         String authToken = AuthData.generateToken();
         UserData existingUser = users.getUser(user.username());
@@ -43,16 +60,17 @@ public class UserServiceTests {
 
     }
 
-    public void logout(String authToken) {
-        AuthData authData = auths.getAuth(authToken);
-        if (authData == null) {
-            throw new IllegalArgumentException("Error not logged in");
-        }
-        else {
-            auths.deleteAuth(authData);
-        }
-    }
 
+    @Test
+    void testLogout() {
+        //passes
+        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.logout(authToken);
+        //cannot log out twice so fails
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.logout(authToken);
+        });
+    }
     @Test
     void testClear() {
         UserService userService = new UserService( new GameDAO(),new UserDAO(),new AuthDAO());

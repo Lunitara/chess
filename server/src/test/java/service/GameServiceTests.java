@@ -1,15 +1,11 @@
 package service;
 
-import chess.ChessGame;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
-import model.GameData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,6 +22,16 @@ public class GameServiceTests {
         authDAO.createAuth(new AuthData("banana", "Monkey"));
         authDAO.createAuth(new AuthData("apple", "Horse"));
 
+    }
+    @Test
+    void testCheckColorAvailability() {
+        //passes
+        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
+        //fails if auth is wrong
+        assertThrows(IllegalArgumentException.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "carrot"));});
+        //fails if color is already taken
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "apple"));
     }
     @Test
     void testCreateGame() {
@@ -45,7 +51,6 @@ public class GameServiceTests {
         assertThrows(IllegalArgumentException.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "carrot"));});
         //fails if color is already taken
         gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "apple"));
-
     }
     @Test
     void testListGames() {
