@@ -1,11 +1,9 @@
 package server;
 import com.google.gson.Gson;
-import com.sun.jdi.InvalidStackFrameException;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import io.javalin.*;
-import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.json.JsonMapper;
 import model.GameData;
@@ -14,12 +12,8 @@ import org.jetbrains.annotations.NotNull;
 import service.UserService;
 import service.GameService;
 import service.AuthService;
-import io.javalin.json.JavalinJackson;
 
-import java.io.EOFException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Objects;
 
 public class Server {
@@ -31,12 +25,12 @@ public class Server {
     private final Gson gson = new Gson();
 
 
-    private  void Clear(@NotNull Context context) {
+    private  void clear(@NotNull Context context) {
         users.clearUserData();
         games.clearGameData();
         auths.clearAuthData();
     }
-    private  void Register(@NotNull Context context) {
+    private  void register(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
             UserData user = context.bodyAsClass(UserData.class);
@@ -63,7 +57,7 @@ public class Server {
         }
     }
     //login
-    private  void Login(@NotNull Context context) {
+    private  void login(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
             UserService.LoginRequest user = context.bodyAsClass(UserService.LoginRequest.class);
@@ -118,7 +112,7 @@ public class Server {
 
     }
     //
-    private  void Logout(@NotNull Context context) {
+    private  void logout(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
             String authToken = getAuthHeader(context);
@@ -152,7 +146,7 @@ public class Server {
             }
             try {
 
-                GameService.CreateGameResult result = games.CreateGame(new GameService.CreateGameRequest(getAuthHeader(context),game.gameName()));
+                GameService.CreateGameResult result = games.createGame(new GameService.CreateGameRequest(getAuthHeader(context),game.gameName()));
                 context.json(result);
             }
             catch (IllegalArgumentException ex) {
@@ -182,7 +176,7 @@ public class Server {
             try {
                 GameService.JoinGameRequest game = context.bodyAsClass(GameService.JoinGameRequest.class);
                 game = new GameService.JoinGameRequest(game.playerColor(), game.gameID(), authToken);
-                games.JoinGame(game);
+                games.joinGame(game);
             }
             catch (IllegalArgumentException ex) {
                 context.status(400).result("{\"message\":\"error null game\"}");
@@ -233,10 +227,10 @@ public class Server {
         games = new GameService(  authsdao, gamesdao, usersdao);
         auths = new AuthService(usersdao, gamesdao, authsdao);
         // Register your endpoints and exception handlers here.
-        javalin.delete("/db", this::Clear);
-        javalin.post("/user", this::Register);
-        javalin.post("/session", this::Login);
-        javalin.delete("/session", this::Logout);
+        javalin.delete("/db", this::clear);
+        javalin.post("/user", this::register);
+        javalin.post("/session", this::login);
+        javalin.delete("/session", this::logout);
         javalin.get("/game", this::listGames);
         javalin.post("/game", this::CreateGame);
         javalin.put("/game", this::joinGame);

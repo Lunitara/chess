@@ -88,7 +88,7 @@ public class UserServiceTests {
         userService.login(new UserService.LoginRequest("Carl", "llama"));
         //wrong auth token but tries to log out
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.logout("wrongAuthToken");
+            userService.logout("wrong authToken");
         });
     }
     @Test

@@ -40,17 +40,6 @@ public class ChessBoard implements Cloneable{
         return squares[position.getRow()-1][position.getColumn()-1];
     }
 
-    public Collection<ChessPiece> getAllPiecesOfColor(ChessGame.TeamColor color) {
-        List<ChessPiece> allPieces = new ArrayList<>();
-        for (int i = 0; i <= 8; i++) {
-            for (int j = 0; j <= 8; j++) {
-                if (this.getPiece(new ChessPosition(i,j)) != null && this.getPiece(new ChessPosition(i,j)).getTeamColor() == color) {
-                    allPieces.add(getPiece(new ChessPosition(i,j)));
-                }
-            }
-        }
-        return allPieces;
-    }
 
     public Collection<ChessPosition> getAllPositionsOfColor(ChessGame.TeamColor color) {
         List<ChessPosition> allPieces = new ArrayList<>();
