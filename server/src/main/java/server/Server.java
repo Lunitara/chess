@@ -92,7 +92,7 @@ public class Server {
     private void listGames(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
-            UserService. games = context.bodyAsClass(UserService.listGames.class);
+            GameService.listGames games = context.bodyAsClass(GameService.listGames.class);
             if (Objects.equals(authInfo.AuthToken(), "")) {
                 context.status(400).result("{\"message\":\"error authToken is blank\"}");
                 return;
@@ -102,7 +102,7 @@ public class Server {
                 return;
             }
             try {
-                authInfo.
+                auth
 
             }
             catch (IllegalArgumentException ex) {

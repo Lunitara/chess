@@ -20,13 +20,12 @@ public class GameService {
     }
     public record CreateGameResult(String GameID) {
     }
-    public GameService.CreateGameResult CreateGame(String authToken) {
-        String authToken = AuthData.getAuth();
-        UserData existingUser = users.getUser(user.username());
-        if (existingUser != null) {
-            throw new IllegalArgumentException("Already Taken Exception");
+    public GameService.CreateGameRequest CreateGame(String authToken) {
+        AuthData existingAuth = auths.getAuth(authToken);
+        if (existingAuth == null) {
+            throw new IllegalArgumentException("error null");
         }
-        users.createUser(user);
+        games.createGame();
         AuthData authData = new AuthData(user.username(), authToken);
         auths.createAuth(authData);
 

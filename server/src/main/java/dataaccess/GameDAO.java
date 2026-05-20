@@ -9,8 +9,8 @@ import java.util.Collection;
 public class GameDAO {
     //CREATE OBJECTS FROM DATA STORE
     ArrayList<GameData> allGames = new ArrayList<>();
-    public void createGame(String authtoken) {
-        allGames.a
+    public void createGame(GameData gameData) {
+        allGames.add(gameData);
     }
     //READ OBJECTS FROM DATA STORE
     public Collection<GameData> listGames(String authtoken) {
