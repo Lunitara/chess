@@ -18,6 +18,8 @@ import io.javalin.json.JavalinJackson;
 
 import java.io.EOFException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Objects;
 
 public class Server {
@@ -91,19 +93,19 @@ public class Server {
     //
     private void listGames(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
-        /*
+
         try {
-            GameService.listGames games = context.bodyAsClass(GameService.listGames.class);
-            if (Objects.equals(authInfo.AuthToken(), "")) {
+            String authToken = getAuthHeader(context);
+
+            if (Objects.equals(authToken, "")) {
                 context.status(400).result("{\"message\":\"error authToken is blank\"}");
-                return;
             }
-            if (Objects.equals(authInfo.AuthToken(), null)) {
+            if (Objects.equals(authToken, null)) {
                 context.status(400).result("{\"message\":\"error authToken is null\"}");
-                return;
             }
             try {
-                auth
+                Collection<GameData> result = games.listGames(authToken);
+                context.json(result);
 
             }
             catch (IllegalArgumentException ex) {
@@ -112,10 +114,8 @@ public class Server {
         }
         catch (IllegalStateException ex) {
             context.status(400).result("Request body should be json");
-            return;
         }
 
-         */
     }
     //
     private  void Logout(@NotNull Context context) {
@@ -181,7 +181,7 @@ public class Server {
 
             try {
                 GameService.JoinGameRequest game = context.bodyAsClass(GameService.JoinGameRequest.class);
-                game.authToken = authToken;
+                game = new GameService.JoinGameRequest(game.playerColor(), game.gameID(), authToken);
                 games.JoinGame(game);
             }
             catch (IllegalArgumentException ex) {

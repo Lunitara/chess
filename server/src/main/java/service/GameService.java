@@ -7,6 +7,7 @@ import dataaccess.UserDAO;
 import model.AuthData;
 import model.GameData;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
 import model.UserData;
@@ -27,8 +28,11 @@ public class GameService {
     }
     public record CreateGameResult(int gameID) {
     }
-    public record JoinGameRequest(String playerColor, int GameID, String authToken) {
+    public record JoinGameRequest(String playerColor, int gameID, String authToken) {
     }
+    public record ListGamesResult(Collection<GameData> games) {
+    }
+
 
 
     public GameService.CreateGameResult CreateGame(CreateGameRequest createGameRequest) {
@@ -48,7 +52,7 @@ public class GameService {
     }
 
     public void JoinGame(JoinGameRequest joinGameRequest) {
-        model.GameData gameData = games.getGame(joinGameRequest.GameID());
+        model.GameData gameData = games.getGame(joinGameRequest.gameID());
         AuthData existingAuth = auths.getAuth(joinGameRequest.authToken());
         if (existingAuth == null) {
             throw new IllegalArgumentException("error null");
@@ -64,7 +68,9 @@ public class GameService {
         }
 
     }
-
+    public ListGamesResult listGames(String authToken) {
+        return new ListGamesResult(games.listGames(authToken));
+    }
     public void clearGameData() {
         games.clearGameData();
     }
