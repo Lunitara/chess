@@ -31,8 +31,6 @@ public class UserService {
     public record LoginRequest(String username, String password) {
     }
 
-    public record LogoutRequest(String AuthToken) {
-    }
 
     public RegisterResult register(UserData user) {
         String authToken = AuthData.generateToken();

@@ -135,7 +135,7 @@ public class Server {
         }
     }
     //
-    private  void CreateGame(@NotNull Context context) {
+    private  void createGame(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
 
         try {
@@ -232,7 +232,7 @@ public class Server {
         javalin.post("/session", this::login);
         javalin.delete("/session", this::logout);
         javalin.get("/game", this::listGames);
-        javalin.post("/game", this::CreateGame);
+        javalin.post("/game", this::createGame);
         javalin.put("/game", this::joinGame);
 
 

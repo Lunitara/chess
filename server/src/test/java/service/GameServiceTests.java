@@ -81,7 +81,7 @@ public class GameServiceTests {
     void negativeTestListGames() {
         gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         assertEquals(1, gameService.listGames("banana").games().size());
-        //fails if auth is wrong
+        //fails if it's different
         assertThrows(IllegalArgumentException.class, () -> {gameService.listGames("carrot");});
     }
 

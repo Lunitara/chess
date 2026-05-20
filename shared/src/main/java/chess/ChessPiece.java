@@ -63,10 +63,10 @@ public class ChessPiece {
             return rookMoves(board, myPosition, available);
         }
         if (piece.getPieceType() == PieceType.QUEEN) {
-            return queenMoves(board, myPosition, available);
+            return kingOrQueenMoves(board, myPosition, available);
         }
         if (piece.getPieceType() == PieceType.KING) {
-            return kingMoves(board, myPosition, available);
+            return kingOrQueenMoves(board, myPosition, available);
         }
         if (piece.getPieceType() == PieceType.KNIGHT) {
             return knightMoves(board, myPosition, available);
@@ -320,7 +320,7 @@ public class ChessPiece {
 
         return available;
     }
-    public Collection<ChessMove> queenMoves(ChessBoard board, ChessPosition myPosition,
+    public Collection<ChessMove> kingOrQueenMoves(ChessBoard board, ChessPosition myPosition,
                                             Collection<ChessMove> available) {
 
         directionUpdater(0,1,board, myPosition, available);
@@ -335,20 +335,6 @@ public class ChessPiece {
         return available;
     }
 
-    public Collection<ChessMove> kingMoves(ChessBoard board, ChessPosition myPosition,
-                                           Collection<ChessMove> available) {
-
-        directionUpdater(0,1,board, myPosition, available);
-        directionUpdater(0,-1,board, myPosition, available);
-        directionUpdater(1,0,board, myPosition, available);
-        directionUpdater(-1,0,board, myPosition, available);
-        directionUpdater(1,1,board, myPosition, available);
-        directionUpdater(1,-1,board, myPosition, available);
-        directionUpdater(-1,1,board, myPosition, available);
-        directionUpdater(-1,-1,board, myPosition, available);
-
-        return available;
-    }
 
     public void directionUpdater(int rowDelta, int colDelta, ChessBoard board, ChessPosition myPosition,
                                  Collection<ChessMove> available) {

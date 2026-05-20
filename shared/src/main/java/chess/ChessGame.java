@@ -86,7 +86,8 @@ public class ChessGame {
 
     }
 
-    public void castleLogic(TeamColor color, Collection<ChessMove> goodMoves) {
+    public void castleLogic(TeamColor color,
+                            Collection<ChessMove> goodMoves) {
         Collection<ChessMove> virtualKingMoves = new ArrayList<>();
         ChessPiece tempPiece= board.getPiece(new ChessPosition(1,1));
 
@@ -141,10 +142,10 @@ public class ChessGame {
                 allNull = false;
 
             }
-            for (int king_col = 4; king_col > 2; king_col--) {
+            for (int kingCol = 4; kingCol > 2; kingCol--) {
                 virtualKingMoves.add(new ChessMove(new ChessPosition(kingRow,5),
-                        new ChessPosition(kingRow,king_col), null));
-                if (this.board.getPiece(new ChessPosition(kingRow,king_col)) != null) {
+                        new ChessPosition(kingRow,kingCol), null));
+                if (this.board.getPiece(new ChessPosition(kingRow,kingCol)) != null) {
                     allNull = false;
 
                 }
@@ -181,10 +182,10 @@ public class ChessGame {
                 allNull = false;
 
             }
-            for (int king_col = 4; king_col > 2; king_col--) {
+            for (int kingCol = 4; kingCol > 2; kingCol--) {
                 virtualKingMoves.add(new ChessMove(new ChessPosition(kingRow,5),
-                        new ChessPosition(kingRow,king_col), null));
-                if (this.board.getPiece(new ChessPosition(kingRow,king_col)) != null) {
+                        new ChessPosition(kingRow,kingCol), null));
+                if (this.board.getPiece(new ChessPosition(kingRow,kingCol)) != null) {
                     allNull = false;
 
                 }
@@ -253,10 +254,10 @@ public class ChessGame {
         if (color == TeamColor.BLACK && !blackRightRookorKingMoved) {
             boolean allNull = true;
             //there are no pieces between king and rook
-            for (int king_col = 7; king_col > 5; king_col--) {
+            for (int kingCol = 7; kingCol > 5; kingCol--) {
                 virtualKingMoves.add(new ChessMove(new ChessPosition(kingRow,5),
-                        new ChessPosition(kingRow,king_col), null));
-                if (this.board.getPiece(new ChessPosition(kingRow,king_col)) != null) {
+                        new ChessPosition(kingRow,kingCol), null));
+                if (this.board.getPiece(new ChessPosition(kingRow,kingCol)) != null) {
                     allNull = false;
 
                 }
