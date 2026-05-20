@@ -6,11 +6,25 @@ import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
 import model.GameData;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class GameServiceTests {
+    GameService gameService;
+
+    @BeforeEach
+    public void setUp() {
+        AuthDAO authDAO = new AuthDAO();
+        GameDAO gameDAO = new GameDAO();
+        UserDAO userDAO = new UserDAO();
+        gameService = new GameService(authDAO, gameDAO, userDAO);
+        authDAO.createAuth(new AuthData("banana", "Monkey"));
+    }
     public GameService.CreateGameResult CreateGame(GameService.CreateGameRequest createGameRequest) {
         AuthData existingAuth = auths.getAuth(createGameRequest.authToken());
         if (existingAuth == null) {
@@ -60,22 +74,19 @@ public class GameServiceTests {
         }
         return new GameService.ListGamesResult(games.listGames());
     }
-    public void clearGameData() {
-        games.clearGameData();
+    @Test
+    void testListGames() {
+        //passes
+        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        assertEquals(1, gameService.listGames("banana").games().size());
+        //fails
+        assertThrows(IllegalArgumentException.class, () -> {gameService.listGames("carrot");});
     }
-        public void setUp() {
-            AuthDAO authDAO = new AuthDAO();
-            GameDAO gameDAO = new GameDAO();
-            UserDAO userDAO = new UserDAO();
-            GameService gameService = new GameService(authDAO, gameDAO, userDAO);
-            authDAO.createAuth(new AuthData("banana", "Monkey"));
-        }
+
         @Test
         void testClear() {
-
-;
-            gameService.CreateGame(new GameService.CreateGameRequest())
+            gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
             gameService.clearGameData();
-
+            assertEquals(0, gameService.listGames("banana").games().size());
         }
 }
