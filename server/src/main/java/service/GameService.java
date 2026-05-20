@@ -59,7 +59,11 @@ public class GameService {
         if (gameData == null) {
             throw new IllegalArgumentException("error null game");
         }
+        if (!Objects.equals(joinGameRequest.playerColor, "WHITE") && !Objects.equals(joinGameRequest.playerColor, "BLACK")) {
+            throw new IllegalCallerException("error unauthorized (color not available)");
+        }
         if (checkColorAvailability(gameData, joinGameRequest.playerColor)) {
+
             if (Objects.equals(joinGameRequest.playerColor, "BLACK")) {
                 gameData = new GameData(gameData.gameID(), gameData.whiteUsername(),existingAuth.username(),gameData.gameName(),gameData.game());
             }

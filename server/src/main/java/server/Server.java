@@ -188,10 +188,13 @@ public class Server {
                 context.status(400).result("{\"message\":\"error null game\"}");
             }
             catch (IllegalAccessError ex) {
-                context.status(400).result("{\"message\":\"error color already used\"}");
+                context.status(403).result("{\"message\":\"error color already used\"}");
             }
             catch (IllegalStateException ex) {
                 context.status(401).result("{\"message\":\"error null auth\"}");
+            }
+            catch (IllegalCallerException ex) {
+                context.status(400).result("{\"message\":\"error no good color\"}");
             }
         }
         catch (IllegalStateException ex) {
