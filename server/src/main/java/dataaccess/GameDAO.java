@@ -18,7 +18,7 @@ public class GameDAO {
         return counter;
     }
     //READ OBJECTS FROM DATA STORE
-    public Collection<GameData> listGames(String authtoken) {
+    public Collection<GameData> listGames() {
 
         return allGames;
     }

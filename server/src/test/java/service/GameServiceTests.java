@@ -6,35 +6,12 @@ import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
 import model.GameData;
+import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
 import java.util.Objects;
-import java.util.UUID;
 
-public class GameService {
-    private UserDAO users;
-    private GameDAO games;
-    private AuthDAO auths;
-    public static String generateGameID() {
-        return UUID.randomUUID().toString();
-    }
-    public GameService(AuthDAO auths, GameDAO games, UserDAO users) {
-        this.auths = auths;
-        this.games = games;
-        this.users = users;
-    }
-    public record CreateGameRequest(String authToken, String gameName) {
-    }
-    public record CreateGameResult(int gameID) {
-    }
-    public record JoinGameRequest(String playerColor, int gameID, String authToken) {
-    }
-    public record ListGamesResult(Collection<GameData> games) {
-    }
-
-
-
-    public GameService.CreateGameResult CreateGame(CreateGameRequest createGameRequest) {
+public class GameServiceTests {
+    public GameService.CreateGameResult CreateGame(GameService.CreateGameRequest createGameRequest) {
         AuthData existingAuth = auths.getAuth(createGameRequest.authToken());
         if (existingAuth == null) {
             throw new IllegalArgumentException("error null");
@@ -50,7 +27,7 @@ public class GameService {
         return false;
     }
 
-    public void JoinGame(JoinGameRequest joinGameRequest) {
+    public void JoinGame(GameService.JoinGameRequest joinGameRequest) {
         model.GameData gameData = games.getGame(joinGameRequest.gameID());
         AuthData existingAuth = auths.getAuth(joinGameRequest.authToken());
         if (existingAuth == null) {
@@ -77,13 +54,28 @@ public class GameService {
         }
 
     }
-    public ListGamesResult listGames(String authToken) {
+    public GameService.ListGamesResult listGames(String authToken) {
         if (auths.getAuth(authToken) == null) {
             throw new IllegalArgumentException("error unauthorized (color not available)");
         }
-        return new ListGamesResult(games.listGames());
+        return new GameService.ListGamesResult(games.listGames());
     }
     public void clearGameData() {
         games.clearGameData();
     }
+        public void setUp() {
+            AuthDAO authDAO = new AuthDAO();
+            GameDAO gameDAO = new GameDAO();
+            UserDAO userDAO = new UserDAO();
+            GameService gameService = new GameService(authDAO, gameDAO, userDAO);
+            authDAO.createAuth(new AuthData("banana", "Monkey"));
+        }
+        @Test
+        void testClear() {
+
+;
+            gameService.CreateGame(new GameService.CreateGameRequest())
+            gameService.clearGameData();
+
+        }
 }

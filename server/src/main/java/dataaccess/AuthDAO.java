@@ -27,6 +27,6 @@ public class AuthDAO {
         allAuths.remove(authData);
     }
     public void clearAuthData() {
-
+        allAuths.clear();
     }
 }
