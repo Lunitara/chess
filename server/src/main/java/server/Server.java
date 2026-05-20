@@ -128,7 +128,7 @@ public class Server {
             }
 
             try {
-                auths.Logout(authToken);
+                users.logout(authToken);
 
             }
             catch (IllegalArgumentException ex) {

@@ -41,7 +41,7 @@ public class UserService {
             throw new IllegalArgumentException("Already Taken Exception");
         }
         users.createUser(user);
-        AuthData authData = new AuthData(user.username(), authToken);
+        AuthData authData = new AuthData(authToken,user.username());
         auths.createAuth(authData);
 
         return new RegisterResult(user.username(), authToken);
@@ -53,7 +53,7 @@ public class UserService {
         UserData existingUser = users.getUser(loginRequest.username());
         if (existingUser != null) {
             if (Objects.equals(existingUser.password(), loginRequest.password())) {
-                AuthData authData = new AuthData(existingUser.username(), authToken);
+                AuthData authData = new AuthData( authToken, existingUser.username());
                 auths.createAuth(authData);
                 return new LoginResult(existingUser.username(), authToken);
             }
@@ -67,8 +67,8 @@ public class UserService {
 
     }
 
-    public void Logout(LogoutRequest logoutRequest) {
-        AuthData authData = auths.getAuth(logoutRequest.AuthToken());
+    public void logout(String authToken) {
+        AuthData authData = auths.getAuth(authToken);
         if (authData == null) {
             throw new IllegalArgumentException("Error not logged in");
         }

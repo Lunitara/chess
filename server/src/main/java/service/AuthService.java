@@ -3,6 +3,7 @@ package service;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
+import model.AuthData;
 
 public class AuthService {
     private UserDAO users;
@@ -13,15 +14,7 @@ public class AuthService {
         this.auths = auths;
     }
 
-    public void Logout(String authToken) {
-        String authTok = auths.getAuth(authToken);
-        if (authToken != null) {
-            auths.deleteAuth(authToken);
-        }
-        else {
-            throw new IllegalArgumentException("error unauthorized");
-        }
-    }
+
 
     private GameDAO games;
     private AuthDAO auths;
