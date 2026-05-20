@@ -26,8 +26,8 @@ public class GameServiceTests {
     @Test
     void positiveTestCheckColorAvailability() {
         //passes
-        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
-        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
+        GameService.CreateGameResult game = gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
 
     }
     @Test
@@ -40,8 +40,8 @@ public class GameServiceTests {
     @Test
     void positiveTestJoinGame() {
         //passes
-        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
-        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
+        GameService.CreateGameResult game = gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
     }
     @Test
     void positiveTestListGames() {
@@ -52,12 +52,13 @@ public class GameServiceTests {
     }
     @Test
     void negativeTestCheckColorAvailability() {
-        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
-        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
+        GameService.CreateGameResult game = gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
         //fails if auth is wrong
-        assertThrows(IllegalArgumentException.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "carrot"));});
+        assertThrows(IllegalStateException.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "carrot"));});
         //fails if color is already taken
-        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "apple"));
+        assertThrows(IllegalAccessError.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "apple"));;});
+
     }
     @Test
     void negativeTestCreateGame() {
@@ -69,12 +70,12 @@ public class GameServiceTests {
 
     @Test
     void negativeTestJoinGame() {
-        gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
-        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "banana"));
+        GameService.CreateGameResult game = gameService.CreateGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
+        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
         //fails if auth is wrong
-        assertThrows(IllegalArgumentException.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "carrot"));});
+        assertThrows(IllegalStateException.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "carrot"));});
         //fails if color is already taken
-        gameService.JoinGame(new GameService.JoinGameRequest("WHITE", 123, "apple"));
+        assertThrows(IllegalAccessError.class, () -> {gameService.JoinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "apple"));;});
     }
     @Test
     void negativeTestListGames() {

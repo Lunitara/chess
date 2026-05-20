@@ -32,14 +32,14 @@ public class UserServiceTests {
     @Test
     void positiveTestRegister() {
         //passes
-        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
     }
 
     @Test
     void positiveTestLogin() {
         //passes
-        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
         userService.login(new UserService.LoginRequest("Carl", "llama"));
 
@@ -48,13 +48,13 @@ public class UserServiceTests {
     @Test
     void positiveTestLogout() {
         //passes
-        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
     }
 
     @Test
     void negativeTestRegister() {
-        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
         //blank register spot
         assertThrows(IllegalArgumentException.class, () -> {
@@ -64,11 +64,14 @@ public class UserServiceTests {
 
     @Test
     void negativeTestLogin() {
-        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
         userService.login(new UserService.LoginRequest("Carl", "llama"));
+        //not logged in
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.logout(authToken);
+        });
         //cannot log out twice so fails
-        userService.logout(authToken);
         assertThrows(IllegalArgumentException.class, () -> {
             userService.login(new UserService.LoginRequest("Carl", "wrongPassword"));
         });
@@ -76,7 +79,7 @@ public class UserServiceTests {
 
     @Test
     void negativeTestLogout() {
-        userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
+        userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
         //cannot log out twice so fails
         assertThrows(IllegalArgumentException.class, () -> {
