@@ -25,7 +25,7 @@ public class UserService {
     public record RegisterRequest(String username, String password, String email) {
     }
 
-    public record LoginResult(String username, String AuthToken) {
+    public record LoginResult(String username, String authToken) {
     }
 
     public record LoginRequest(String username, String password) {
@@ -68,12 +68,11 @@ public class UserService {
     }
 
     public void Logout(LogoutRequest logoutRequest) {
-        String authToken = AuthData.generateToken();
-        if (authToken == null) {
-            throw new IllegalArgumentException("Error null user");
+        AuthData authData = auths.getAuth(logoutRequest.AuthToken());
+        if (authData == null) {
+            throw new IllegalArgumentException("Error not logged in");
         }
         else {
-            AuthData authData = new AuthData(authData.username(), authToken);
             auths.deleteAuth(authData);
         }
     }

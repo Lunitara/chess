@@ -8,9 +8,13 @@ import java.util.Collection;
 
 public class GameDAO {
     //CREATE OBJECTS FROM DATA STORE
+    private int counter = 0;
     ArrayList<GameData> allGames = new ArrayList<>();
-    public void createGame(GameData gameData) {
-        allGames.add(gameData);
+    public int createGame(GameData gameData) {
+        counter++;
+        GameData newGame = new GameData(counter,gameData.whiteUsername(),gameData.blackUsername(),gameData.gameName(),gameData.game());
+        allGames.add(newGame);
+        return counter;
     }
     //READ OBJECTS FROM DATA STORE
     public Collection<GameData> listGames(String authtoken) {

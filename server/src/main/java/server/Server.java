@@ -91,6 +91,7 @@ public class Server {
     //
     private void listGames(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
+        /*
         try {
             GameService.listGames games = context.bodyAsClass(GameService.listGames.class);
             if (Objects.equals(authInfo.AuthToken(), "")) {
@@ -113,22 +114,21 @@ public class Server {
             context.status(400).result("Request body should be json");
             return;
         }
+
+         */
     }
     //
     private  void Logout(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
-            UserService.LogoutRequest authInfo = context.bodyAsClass(UserService.LogoutRequest.class);
-            if (Objects.equals(authInfo.AuthToken(), "")) {
+            String authToken = getAuthHeader(context);
+            if (authToken.equals("")) {
                 context.status(400).result("{\"message\":\"error authToken is blank\"}");
                 return;
             }
-            if (Objects.equals(authInfo.AuthToken(), null)) {
-                context.status(400).result("{\"message\":\"error authToken is null\"}");
-                return;
-            }
+
             try {
-                authInfo.
+                auths.Logout(authToken);
 
             }
             catch (IllegalArgumentException ex) {
@@ -136,13 +136,14 @@ public class Server {
             }
         }
         catch (IllegalStateException ex) {
-            context.status(400).result("Request body should be json");
+            context.status(400).result("{\"message\":\"error Request body should be json\"}");
             return;
         }
     }
     //
     private  void CreateGame(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
+
         try {
             GameData game = context.bodyAsClass(GameData.class);
             if (Objects.equals(game.gameName(), "") || Objects.equals(game.gameName(), null)) {
@@ -150,8 +151,8 @@ public class Server {
                 return;
             }
             try {
-                GameService. result = users.register(user);
-                context.json(result);
+
+                games.CreateGame(new GameService.CreateGameRequest(getAuthHeader(context),game.gameName()));
             }
             catch (IllegalArgumentException ex) {
                 context.status(403).result("{\"message\":\"error already exists\"}");
@@ -163,28 +164,33 @@ public class Server {
             return;
         }
     }
+    private String getAuthHeader(Context context) {
+        //way to get the auth header I guess
+        return context.header("Authorization");
+    }
     //
     private  void joinGame(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
-        try {
-            GameData game = context.bodyAsClass(GameData.class);
-            if (Objects.equals(game.gameName(), "") || Objects.equals(game.gameName(), null)) {
-                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
-                return;
-            }
-            try {
-                GameService. result = users.register(user);
-                context.json(result);
-            }
-            catch (IllegalArgumentException ex) {
-                context.status(403).result("{\"message\":\"error already exists\"}");
-                return;
-            }
-        }
-        catch (IllegalStateException ex) {
-            context.status(400).result("Request body should be json");
-            return;
-        }
+
+//        try {
+//            GameData game = context.bodyAsClass(GameData.class);
+//            if (Objects.equals(game.gameName(), "") || Objects.equals(game.gameName(), null)) {
+//                context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
+//                return;
+//            }
+//            try {
+//                GameService. result = users.register(user);
+//                context.json(result);
+//            }
+//            catch (IllegalArgumentException ex) {
+//                context.status(403).result("{\"message\":\"error already exists\"}");
+//                return;
+//            }
+//        }
+//        catch (IllegalStateException ex) {
+//            context.status(400).result("Request body should be json");
+//            return;
+//        }
     }
     //
     public Server() {

@@ -13,6 +13,16 @@ public class AuthService {
         this.auths = auths;
     }
 
+    public void Logout(String authToken) {
+        String authTok = auths.getAuth(authToken);
+        if (authToken != null) {
+            auths.deleteAuth(authToken);
+        }
+        else {
+            throw new IllegalArgumentException("error unauthorized");
+        }
+    }
+
     private GameDAO games;
     private AuthDAO auths;
     public void clearAuthData() {
