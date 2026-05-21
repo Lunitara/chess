@@ -39,7 +39,7 @@ public class GameServiceTests {
 
     @Test
     void positiveTestJoinGame() {
-        //passes
+        //passes the join game
         GameService.CreateGameResult game = gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         gameService.joinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
     }
@@ -47,7 +47,8 @@ public class GameServiceTests {
     void positiveTestListGames() {
         //passes
         gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
-        assertEquals(1, gameService.listGames("banana").games().size());
+        gameService.createGame(new GameService.CreateGameRequest("apple", "MonkeyWorld"));
+        assertEquals(2, gameService.listGames("banana").games().size());
 
     }
     @Test
@@ -62,8 +63,8 @@ public class GameServiceTests {
     }
     @Test
     void negativeTestCreateGame() {
-        gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
-        assertEquals(1, gameService.listGames("banana").games().size());
+        gameService.createGame(new GameService.CreateGameRequest("apple", "MonkeyWorld"));
+        assertEquals(1, gameService.listGames("apple").games().size());
         //fails if auth is wrong
         assertThrows(IllegalArgumentException.class, () -> {gameService.listGames("carrot");});
     }
