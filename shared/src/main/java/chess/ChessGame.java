@@ -213,86 +213,7 @@ public class ChessGame {
         if (this.color != pieceAtStart.getTeamColor()) {
             throw new InvalidMoveException();
         }
-        //marks whether rook or king has been moved since game start for castling
-        if ((pieceAtStart.getPieceType() == ChessPiece.PieceType.ROOK &&
-                Objects.equals(move.getStartPosition(), new ChessPosition(1, 1))) ||
-                (pieceAtStart.getPieceType() == ChessPiece.PieceType.KING &&
-                        Objects.equals(move.getStartPosition(), new ChessPosition(1, 5)) &&
-                        pieceAtStart.pieceColor == TeamColor.WHITE)) {
-            this.whiteLeftRookorKingMoved = true;
-        }
-        if (move.getEndPosition().getRow() == 1 && move.getEndPosition().getColumn() == 1) {
-            this.whiteLeftRookorKingMoved = true;
-        }
-        if ((pieceAtStart.getPieceType() == ChessPiece.PieceType.ROOK &&
-                Objects.equals(move.getStartPosition(), new ChessPosition(1, 8))) ||
-                (pieceAtStart.getPieceType() == ChessPiece.PieceType.KING &&
-                        Objects.equals(move.getStartPosition(), new ChessPosition(1, 5)) &&
-                        pieceAtStart.pieceColor == TeamColor.WHITE)) {
-            this.whiteRightRookorKingMoved = true;
-        }
-        if (move.getEndPosition().getRow() == 1 && move.getEndPosition().getColumn() == 8) {
-            this.whiteRightRookorKingMoved = true;
-        }
-        if ((pieceAtStart.getPieceType() == ChessPiece.PieceType.ROOK &&
-                Objects.equals(move.getStartPosition(), new ChessPosition(8, 1))) ||
-                (pieceAtStart.getPieceType() == ChessPiece.PieceType.KING &&
-                        Objects.equals(move.getStartPosition(), new ChessPosition(8, 5)) &&
-                        pieceAtStart.pieceColor == TeamColor.BLACK)) {
-            this.blackLeftRookorKingMoved = true;
-        }
-        if (move.getEndPosition().getRow() == 8 && move.getEndPosition().getColumn() == 1) {
-            this.blackLeftRookorKingMoved = true;
-        }
-        if ((pieceAtStart.getPieceType() == ChessPiece.PieceType.ROOK &&
-                Objects.equals(move.getStartPosition(), new ChessPosition(8, 8))) ||
-                (pieceAtStart.getPieceType() == ChessPiece.PieceType.KING &&
-                        Objects.equals(move.getStartPosition(), new ChessPosition(8, 5)) &&
-                        pieceAtStart.pieceColor == TeamColor.BLACK)) {
-            this.blackRightRookorKingMoved = true;
-        }
-        if (move.getEndPosition().getRow() == 8 && move.getEndPosition().getColumn() == 8) {
-            this.blackRightRookorKingMoved = true;
-        }
-        //white king left rook castle
-        if (Objects.equals(move.getStartPosition(), new ChessPosition(1, 5)) &&
-                Objects.equals(move.getEndPosition(), new ChessPosition(1, 3)) &&
-                pieceAtStart.getPieceType() == ChessPiece.PieceType.KING) {
-            this.board.applyMove(new ChessMove(new ChessPosition(1, 5),
-                    new ChessPosition(1, 3), null));
-            this.board.applyMove(new ChessMove(new ChessPosition(1, 1),
-                    new ChessPosition(1, 4), null));
-        }//white king right rook castle
-        else if (Objects.equals(move.getStartPosition(), new ChessPosition(1, 5)) &&
-                Objects.equals(move.getEndPosition(), new ChessPosition(1, 7)) &&
-                pieceAtStart.getPieceType() == ChessPiece.PieceType.KING) {
-            this.board.applyMove(new ChessMove(new ChessPosition(1, 5),
-                    new ChessPosition(1, 7), null));
-            this.board.applyMove(new ChessMove(new ChessPosition(1, 8),
-                    new ChessPosition(1, 6), null));
-        }
-        //black king left rook castle
-        else if (Objects.equals(move.getStartPosition(), new ChessPosition(8, 5)) &&
-                Objects.equals(move.getEndPosition(), new ChessPosition(8, 3)) &&
-                pieceAtStart.getPieceType() == ChessPiece.PieceType.KING) {
-            this.board.applyMove(new ChessMove(new ChessPosition(8, 5),
-                    new ChessPosition(8, 3), null));
-            this.board.applyMove(new ChessMove(new ChessPosition(8, 1),
-                    new ChessPosition(8, 4), null));
-        }
-        //black ing right rook castle
-        else if (Objects.equals(move.getStartPosition(), new ChessPosition(8, 5)) &&
-                Objects.equals(move.getEndPosition(), new ChessPosition(8, 7)) &&
-                pieceAtStart.getPieceType() == ChessPiece.PieceType.KING) {
-            this.board.applyMove(new ChessMove(new ChessPosition(8, 5),
-                    new ChessPosition(8, 7), null));
-            this.board.applyMove(new ChessMove(new ChessPosition(8, 8),
-                    new ChessPosition(8, 6), null));
-        }
-        //end of castling code
-        else {
-            this.board.applyMove(move);
-        }
+        checkKingRookPos(move);
 
         if (pieceAtStart.getTeamColor() == TeamColor.WHITE) {
             this.color = TeamColor.BLACK;
@@ -301,7 +222,90 @@ public class ChessGame {
         }
 
     }
+public void checkKingRookPos(ChessMove move) {
+    ChessPiece pieceAtStart = this.board.getPiece(move.getStartPosition());
 
+    //marks whether rook or king has been moved since game start for castling
+    if ((pieceAtStart.getPieceType() == ChessPiece.PieceType.ROOK &&
+            Objects.equals(move.getStartPosition(), new ChessPosition(1, 1))) ||
+            (pieceAtStart.getPieceType() == ChessPiece.PieceType.KING &&
+                    Objects.equals(move.getStartPosition(), new ChessPosition(1, 5)) &&
+                    pieceAtStart.pieceColor == TeamColor.WHITE)) {
+        this.whiteLeftRookorKingMoved = true;
+    }
+    if (move.getEndPosition().getRow() == 1 && move.getEndPosition().getColumn() == 1) {
+        this.whiteLeftRookorKingMoved = true;
+    }
+    if ((pieceAtStart.getPieceType() == ChessPiece.PieceType.ROOK &&
+            Objects.equals(move.getStartPosition(), new ChessPosition(1, 8))) ||
+            (pieceAtStart.getPieceType() == ChessPiece.PieceType.KING &&
+                    Objects.equals(move.getStartPosition(), new ChessPosition(1, 5)) &&
+                    pieceAtStart.pieceColor == TeamColor.WHITE)) {
+        this.whiteRightRookorKingMoved = true;
+    }
+    if (move.getEndPosition().getRow() == 1 && move.getEndPosition().getColumn() == 8) {
+        this.whiteRightRookorKingMoved = true;
+    }
+    if ((pieceAtStart.getPieceType() == ChessPiece.PieceType.ROOK &&
+            Objects.equals(move.getStartPosition(), new ChessPosition(8, 1))) ||
+            (pieceAtStart.getPieceType() == ChessPiece.PieceType.KING &&
+                    Objects.equals(move.getStartPosition(), new ChessPosition(8, 5)) &&
+                    pieceAtStart.pieceColor == TeamColor.BLACK)) {
+        this.blackLeftRookorKingMoved = true;
+    }
+    if (move.getEndPosition().getRow() == 8 && move.getEndPosition().getColumn() == 1) {
+        this.blackLeftRookorKingMoved = true;
+    }
+    if ((pieceAtStart.getPieceType() == ChessPiece.PieceType.ROOK &&
+            Objects.equals(move.getStartPosition(), new ChessPosition(8, 8))) ||
+            (pieceAtStart.getPieceType() == ChessPiece.PieceType.KING &&
+                    Objects.equals(move.getStartPosition(), new ChessPosition(8, 5)) &&
+                    pieceAtStart.pieceColor == TeamColor.BLACK)) {
+        this.blackRightRookorKingMoved = true;
+    }
+    if (move.getEndPosition().getRow() == 8 && move.getEndPosition().getColumn() == 8) {
+        this.blackRightRookorKingMoved = true;
+    }
+    //white king left rook castle
+    if (Objects.equals(move.getStartPosition(), new ChessPosition(1, 5)) &&
+            Objects.equals(move.getEndPosition(), new ChessPosition(1, 3)) &&
+            pieceAtStart.getPieceType() == ChessPiece.PieceType.KING) {
+        this.board.applyMove(new ChessMove(new ChessPosition(1, 5),
+                new ChessPosition(1, 3), null));
+        this.board.applyMove(new ChessMove(new ChessPosition(1, 1),
+                new ChessPosition(1, 4), null));
+    }//white king right rook castle
+    else if (Objects.equals(move.getStartPosition(), new ChessPosition(1, 5)) &&
+            Objects.equals(move.getEndPosition(), new ChessPosition(1, 7)) &&
+            pieceAtStart.getPieceType() == ChessPiece.PieceType.KING) {
+        this.board.applyMove(new ChessMove(new ChessPosition(1, 5),
+                new ChessPosition(1, 7), null));
+        this.board.applyMove(new ChessMove(new ChessPosition(1, 8),
+                new ChessPosition(1, 6), null));
+    }
+    //black king left rook castle
+    else if (Objects.equals(move.getStartPosition(), new ChessPosition(8, 5)) &&
+            Objects.equals(move.getEndPosition(), new ChessPosition(8, 3)) &&
+            pieceAtStart.getPieceType() == ChessPiece.PieceType.KING) {
+        this.board.applyMove(new ChessMove(new ChessPosition(8, 5),
+                new ChessPosition(8, 3), null));
+        this.board.applyMove(new ChessMove(new ChessPosition(8, 1),
+                new ChessPosition(8, 4), null));
+    }
+    //black ing right rook castle
+    else if (Objects.equals(move.getStartPosition(), new ChessPosition(8, 5)) &&
+            Objects.equals(move.getEndPosition(), new ChessPosition(8, 7)) &&
+            pieceAtStart.getPieceType() == ChessPiece.PieceType.KING) {
+        this.board.applyMove(new ChessMove(new ChessPosition(8, 5),
+                new ChessPosition(8, 7), null));
+        this.board.applyMove(new ChessMove(new ChessPosition(8, 8),
+                new ChessPosition(8, 6), null));
+    }
+    //end of castling code
+    else {
+        this.board.applyMove(move);
+    }
+}
     /**
      * Determines if the given team is in check
      *
