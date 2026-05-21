@@ -41,7 +41,7 @@ public class GameServiceTests {
     void positiveTestJoinGame() {
         //passes the join game
         GameService.CreateGameResult game = gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
-        gameService.joinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
+        gameService.joinGame(new GameService.JoinGameRequest("BLACK", game.gameID(), "banana"));
     }
     @Test
     void positiveTestListGames() {
