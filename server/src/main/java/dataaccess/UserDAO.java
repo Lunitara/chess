@@ -8,7 +8,7 @@ import java.util.Objects;
 public class UserDAO {
     ArrayList<UserData> allUsers = new ArrayList<>();
 // CREATE OBJECTS FROM DATA STORE
-    public void createUser(UserData userdata) {
+    public void createUser(UserData userdata) throws DataAccessException {
         allUsers.add(userdata);
     }
     //READ OBJECTS FROM DATA STORE
