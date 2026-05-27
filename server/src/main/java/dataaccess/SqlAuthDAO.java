@@ -37,7 +37,7 @@ public class SqlAuthDAO implements AuthDAO{
             """
     };
     public void createAuth(AuthData authdata) throws DataAccessException{
-        var statement = "INSERT INTO userdata (authToken, username) VALUES (?,?)";
+        var statement = "INSERT INTO authdata (authToken, username) VALUES (?,?)";
         executeUpdate(statement, authdata.authToken(), authdata.username());
     }
 

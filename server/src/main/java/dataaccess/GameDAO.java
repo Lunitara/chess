@@ -9,13 +9,13 @@ import java.util.Objects;
 
 public interface GameDAO {
     //CREATE OBJECTS FROM DATA STORE
-    public int createGame(GameData gameData);
+    public int createGame(GameData gameData) throws DataAccessException;
     //READ OBJECTS FROM DATA STORE
-    public Collection<GameData> listGames();
-    public GameData getGame(int gameID);
+    public Collection<GameData> listGames() throws DataAccessException;
+    public GameData getGame(int gameID) throws DataAccessException;
     //UPDATE OBJECTS FROM DATA STORE
 
     public void updateGame(GameData gameData);
     //DELETE OBJECTS FROM DATA STORE
-    public void clearGameData();
+    public void clearGameData() throws DataAccessException;
 }

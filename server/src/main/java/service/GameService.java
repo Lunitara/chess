@@ -2,6 +2,7 @@ package service;
 
 import chess.ChessGame;
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
@@ -29,7 +30,7 @@ public class GameService {
     public record ListGamesResult(Collection<GameData> games) {
     }
 
-    public GameService.CreateGameResult createGame(CreateGameRequest createGameRequest) {
+    public GameService.CreateGameResult createGame(CreateGameRequest createGameRequest)  throws DataAccessException{
         AuthData existingAuth = auths.getAuth(createGameRequest.authToken());
         if (existingAuth == null) {
             throw new IllegalArgumentException("error null");
@@ -39,7 +40,7 @@ public class GameService {
         int gameID = games.createGame(gameData);
         return new GameService.CreateGameResult(gameID);
     }
-    public boolean checkColorAvailability(GameData gameData, String playerColor) {
+    public boolean checkColorAvailability(GameData gameData, String playerColor)  throws DataAccessException{
         if (gameData.blackUsername() == null && Objects.equals(playerColor, "BLACK") ||
                 gameData.whiteUsername() == null && Objects.equals(playerColor, "WHITE")) {
             return true;
@@ -47,7 +48,7 @@ public class GameService {
         return false;
     }
 
-    public void joinGame(JoinGameRequest joinGameRequest) {
+    public void joinGame(JoinGameRequest joinGameRequest)  throws DataAccessException{
         model.GameData gameData = games.getGame(joinGameRequest.gameID());
         AuthData existingAuth = auths.getAuth(joinGameRequest.authToken());
         if (existingAuth == null) {
@@ -78,13 +79,13 @@ public class GameService {
 
     }
 
-    public ListGamesResult listGames(String authToken) {
+    public ListGamesResult listGames(String authToken)  throws DataAccessException {
         if (auths.getAuth(authToken) == null) {
             throw new IllegalArgumentException("error unauthorized (color not available)");
         }
         return new ListGamesResult(games.listGames());
     }
-    public void clearGameData() {
+    public void clearGameData()  throws DataAccessException {
         games.clearGameData();
     }
 }

@@ -12,7 +12,7 @@ public class GameServiceTests {
     GameService gameService;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp()  throws DataAccessException{
         AuthDAO authDAO = new AuthMemoryDAO();
         GameDAO gameDAO = new GameMemoryDAO();
         UserDAO userDAO = new UserMemoryDAO();
@@ -22,27 +22,27 @@ public class GameServiceTests {
 
     }
     @Test
-    void positiveTestCheckColorAvailability() {
+    void positiveTestCheckColorAvailability()  throws DataAccessException{
         //passes
         GameService.CreateGameResult game = gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         gameService.joinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
 
     }
     @Test
-    void positiveTestCreateGame() {
+    void positiveTestCreateGame()  throws DataAccessException{
         //passes
         gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         assertEquals(1, gameService.listGames("banana").games().size());
     }
 
     @Test
-    void positiveTestJoinGame() {
+    void positiveTestJoinGame()  throws DataAccessException{
         //passes the join game
         GameService.CreateGameResult game = gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         gameService.joinGame(new GameService.JoinGameRequest("BLACK", game.gameID(), "banana"));
     }
     @Test
-    void positiveTestListGames() {
+    void positiveTestListGames()  throws DataAccessException{
         //passes
         gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         gameService.createGame(new GameService.CreateGameRequest("apple", "MonkeyWorld"));
@@ -50,7 +50,7 @@ public class GameServiceTests {
 
     }
     @Test
-    void negativeTestCheckColorAvailability() {
+    void negativeTestCheckColorAvailability()  throws DataAccessException{
         GameService.CreateGameResult game = gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         gameService.joinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
         //fails if auth is wrong
@@ -60,7 +60,7 @@ public class GameServiceTests {
 
     }
     @Test
-    void negativeTestCreateGame() {
+    void negativeTestCreateGame()  throws DataAccessException{
         gameService.createGame(new GameService.CreateGameRequest("apple", "MonkeyWorld"));
         assertEquals(1, gameService.listGames("apple").games().size());
         //fails if auth is wrong
@@ -68,7 +68,7 @@ public class GameServiceTests {
     }
 
     @Test
-    void negativeTestJoinGame() {
+    void negativeTestJoinGame()  throws DataAccessException{
         GameService.CreateGameResult game = gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         gameService.joinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "banana"));
         //fails if auth is wrong
@@ -77,7 +77,7 @@ public class GameServiceTests {
         assertThrows(IllegalAccessError.class, () -> {gameService.joinGame(new GameService.JoinGameRequest("WHITE", game.gameID(), "apple"));;});
     }
     @Test
-    void negativeTestListGames() {
+    void negativeTestListGames()  throws DataAccessException{
         gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
         assertEquals(1, gameService.listGames("banana").games().size());
         //fails if it's different
@@ -85,7 +85,7 @@ public class GameServiceTests {
     }
 
         @Test
-        void testClear() {
+        void testClear()  throws DataAccessException{
             gameService.createGame(new GameService.CreateGameRequest("banana", "MonkeyWorld"));
             gameService.clearGameData();
             assertEquals(0, gameService.listGames("banana").games().size());
