@@ -15,7 +15,7 @@ public interface GameDAO {
     public GameData getGame(int gameID) throws DataAccessException;
     //UPDATE OBJECTS FROM DATA STORE
 
-    public void updateGame(GameData gameData);
+    public void updateGame(GameData gameData) throws DataAccessException;
     //DELETE OBJECTS FROM DATA STORE
     public void clearGameData() throws DataAccessException;
 }

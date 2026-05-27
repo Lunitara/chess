@@ -83,7 +83,7 @@ public class Server {
         }
     }
     //
-    private void listGames(@NotNull Context context) {
+    private void listGames(@NotNull Context context) throws DataAccessException{
         //context.bodyAsClass parses request body into record class probably
 
         try {
@@ -133,7 +133,7 @@ public class Server {
         }
     }
     //
-    private  void createGame(@NotNull Context context) {
+    private  void createGame(@NotNull Context context) throws DataAccessException{
         //context.bodyAsClass parses request body into record class probably
 
         try {
@@ -162,7 +162,7 @@ public class Server {
         return context.header("Authorization");
     }
     //
-    private  void joinGame(@NotNull Context context) {
+    private  void joinGame(@NotNull Context context) throws DataAccessException{
         //context.bodyAsClass parses request body into record class probably
         try {
             String authToken = getAuthHeader(context);
