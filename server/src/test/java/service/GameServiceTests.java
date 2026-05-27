@@ -1,8 +1,6 @@
 package service;
 
-import dataaccess.AuthDAO;
-import dataaccess.GameDAO;
-import dataaccess.UserDAO;
+import dataaccess.*;
 import model.AuthData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,9 +13,9 @@ public class GameServiceTests {
 
     @BeforeEach
     public void setUp() {
-        AuthDAO authDAO = new AuthDAO();
-        GameDAO gameDAO = new GameDAO();
-        UserDAO userDAO = new UserDAO();
+        AuthDAO authDAO = new AuthMemoryDAO();
+        GameDAO gameDAO = new GameMemoryDAO();
+        UserDAO userDAO = new UserMemoryDAO();
         gameService = new GameService(authDAO, gameDAO, userDAO);
         authDAO.createAuth(new AuthData("banana", "Monkey"));
         authDAO.createAuth(new AuthData("apple", "Horse"));

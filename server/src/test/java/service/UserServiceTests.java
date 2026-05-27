@@ -1,8 +1,6 @@
 package service;
 
-import dataaccess.AuthDAO;
-import dataaccess.GameDAO;
-import dataaccess.UserDAO;
+import dataaccess.*;
 import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,9 +17,9 @@ public class UserServiceTests {
 
     @BeforeEach
     public void setUp() {
-        AuthDAO authDAO = new AuthDAO();
-        GameDAO gameDAO = new GameDAO();
-        UserDAO userDAO = new UserDAO();
+        AuthDAO authDAO = new AuthMemoryDAO();
+        GameDAO gameDAO = new GameMemoryDAO();
+        UserDAO userDAO = new UserMemoryDAO();
         userService = new UserService(gameDAO, userDAO,authDAO);
         UserService.RegisterResult registerResult = userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
         authToken = registerResult.authToken();
@@ -93,7 +91,7 @@ public class UserServiceTests {
     }
     @Test
     void testClear() {
-        UserService userService = new UserService( new GameDAO(),new UserDAO(),new AuthDAO());
+        UserService userService = new UserService( new GameMemoryDAO(),new UserMemoryDAO(),new AuthMemoryDAO());
         userService.clearUserData();
 
     }

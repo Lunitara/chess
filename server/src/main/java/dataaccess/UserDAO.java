@@ -5,25 +5,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-public class UserDAO {
-    ArrayList<UserData> allUsers = new ArrayList<>();
+public interface UserDAO {
 // CREATE OBJECTS FROM DATA STORE
-    public void createUser(UserData userdata) throws DataAccessException {
-        allUsers.add(userdata);
-    }
+     void createUser(UserData userdata) throws DataAccessException;
     //READ OBJECTS FROM DATA STORE
-    public UserData getUser(String username) {
-        for (int i = 0; i < allUsers.size(); i++) {
-            if (Objects.equals(allUsers.get(i).username(), username)) {
-                return allUsers.get(i);
-            }
-        }
-        return null;
-    }
+     UserData getUser(String username)  throws DataAccessException ;
 
 
     //DELETE OBJECTS FROM DATA STORE
-    public void clearUserData() {
-        allUsers.clear();
-    }
+     void clearUserData()  throws DataAccessException ;
 }

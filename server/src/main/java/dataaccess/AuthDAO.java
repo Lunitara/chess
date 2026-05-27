@@ -6,27 +6,13 @@ import model.UserData;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class AuthDAO {
+public interface AuthDAO {
     //CREATE OBJECTS FROM DATA STORE
-    ArrayList<AuthData> allAuths = new ArrayList<>();
-    public void createAuth(AuthData authData) {
-        allAuths.add(authData);
-    }
+     void createAuth(AuthData authData);
     //READ OBJECTS FROM DATA STORE
-    public AuthData getAuth(String authToken) {
-        for (AuthData allAuth : allAuths) {
-            if (Objects.equals(allAuth.authToken(), authToken)) {
-                return allAuth;
-            }
-        }
-        return null;
-    }
+     AuthData getAuth(String authToken);
     //DELETE OBJECTS FROM DATA STORE
 
-    public void deleteAuth(AuthData authData) {
-        allAuths.remove(authData);
-    }
-    public void clearAuthData() {
-        allAuths.clear();
-    }
+     void deleteAuth(AuthData authData);
+     void clearAuthData();
 }

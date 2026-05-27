@@ -10,6 +10,7 @@ public class SqlUserDAO implements UserDAO{
     public SqlUserDAO() throws DataAccessException {
         configureDatabase();
     }
+
     public void configureDatabase() throws DataAccessException {
         DatabaseManager.createDatabase();
         try (Connection conn = DatabaseManager.getConnection()) {
@@ -37,17 +38,17 @@ public class SqlUserDAO implements UserDAO{
     public void createUser(UserData userdata) throws DataAccessException{
         var statement = "INSERT INTO userdata (username, password, email) VALUES (?,?,?)";
         executeUpdate(statement, userdata.username(),userdata.password(),userdata.email());
-
     }
 
-    public UserData getUser(int id) throws DataAccessException {
+
+    public UserData getUser(String username) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT id, json FROM pet WHERE id=?";
+            var statement = "SELECT username, password, email FROM userdata WHERE username = ?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
-                ps.setInt(1, id);
+                ps.setString(1, username);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        //
+                        return readUser(rs);
                     }
                 }
             }
@@ -55,6 +56,18 @@ public class SqlUserDAO implements UserDAO{
             throw new DataAccessException("failed to get connection", ex);
         }
         return null;
+    }
+    public void clearUserData() throws DataAccessException{
+        var statement = "DELETE FROM userdata";
+        executeUpdate(statement);
+
+    }
+
+    private UserData readUser(ResultSet rs) throws SQLException {
+        var username = rs.getString("username");
+        var password = rs.getString("password");
+        var email = rs.getString("email");
+        return new UserData(username,password,email);
     }
 
     private int executeUpdate(String statement, Object... params) throws DataAccessException {
