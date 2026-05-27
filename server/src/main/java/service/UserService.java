@@ -1,6 +1,7 @@
 package service;
 
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
@@ -32,7 +33,7 @@ public class UserService {
     }
 
 
-    public RegisterResult register(UserData user) {
+    public RegisterResult register(UserData user)  throws DataAccessException {
         String authToken = AuthData.generateToken();
         UserData existingUser = users.getUser(user.username());
         if (existingUser != null) {
@@ -45,7 +46,7 @@ public class UserService {
         return new RegisterResult(user.username(), authToken);
     }
 
-    public LoginResult login(LoginRequest loginRequest) {
+    public LoginResult login(LoginRequest loginRequest)  throws DataAccessException {
         String authToken = AuthData.generateToken();
         UserData existingUser = users.getUser(loginRequest.username());
         if (existingUser != null) {
@@ -64,7 +65,7 @@ public class UserService {
 
     }
 
-    public void logout(String authToken) {
+    public void logout(String authToken)  throws DataAccessException{
         AuthData authData = auths.getAuth(authToken);
         if (authData == null) {
             throw new IllegalArgumentException("Error not logged in");
@@ -74,7 +75,7 @@ public class UserService {
         }
     }
 
-    public void clearUserData() {
+    public void clearUserData()  throws DataAccessException {
         users.clearUserData();
     }
 }

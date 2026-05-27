@@ -1,8 +1,6 @@
 package server;
 import com.google.gson.Gson;
-import dataaccess.AuthDAO;
-import dataaccess.GameDAO;
-import dataaccess.UserDAO;
+import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import io.javalin.json.JsonMapper;
@@ -25,12 +23,12 @@ public class Server {
     private final Gson gson = new Gson();
 
 
-    private  void clear(@NotNull Context context) {
+    private  void clear(@NotNull Context context)  throws DataAccessException {
         users.clearUserData();
         games.clearGameData();
         auths.clearAuthData();
     }
-    private  void register(@NotNull Context context) {
+    private  void register(@NotNull Context context)  throws DataAccessException{
         //context.bodyAsClass parses request body into record class probably
         try {
             UserData user = context.bodyAsClass(UserData.class);
@@ -57,7 +55,7 @@ public class Server {
         }
     }
     //login
-    private  void login(@NotNull Context context) {
+    private  void login(@NotNull Context context)  throws DataAccessException {
         //context.bodyAsClass parses request body into record class probably
         try {
             UserService.LoginRequest user = context.bodyAsClass(UserService.LoginRequest.class);
@@ -112,7 +110,7 @@ public class Server {
 
     }
     //
-    private  void logout(@NotNull Context context) {
+    private  void logout(@NotNull Context context)  throws DataAccessException {
         //context.bodyAsClass parses request body into record class probably
         try {
             String authToken = getAuthHeader(context);
@@ -198,7 +196,7 @@ public class Server {
 
     }
     //
-    public Server() {
+    public Server() throws DataAccessException {
         javalin = Javalin.create(config -> {
             config.staticFiles.add("web");
             config.jsonMapper(new JsonMapper() {
@@ -220,9 +218,9 @@ public class Server {
                 }
             });
         });
-        UserDAO usersdao = new UserDAO();
-        GameDAO gamesdao = new GameDAO();
-        AuthDAO authsdao = new AuthDAO();
+        UserDAO usersdao = new SqlUserDAO();
+        GameDAO gamesdao = new SqlGameDAO();
+        AuthDAO authsdao = new SqlAuthDAO();
         users = new UserService(gamesdao,usersdao,  authsdao);
         games = new GameService(  authsdao, gamesdao, usersdao);
         auths = new AuthService(usersdao, gamesdao, authsdao);

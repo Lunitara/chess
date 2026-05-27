@@ -1,6 +1,7 @@
 package service;
 
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
@@ -16,7 +17,7 @@ public class AuthService {
         this.auths = auths;
     }
 
-    public void clearAuthData() {
+    public void clearAuthData()  throws DataAccessException {
         auths.clearAuthData();
     }
 }

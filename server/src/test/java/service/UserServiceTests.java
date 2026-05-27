@@ -16,7 +16,7 @@ public class UserServiceTests {
     String authToken;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp()  throws DataAccessException{
         AuthDAO authDAO = new AuthMemoryDAO();
         GameDAO gameDAO = new GameMemoryDAO();
         UserDAO userDAO = new UserMemoryDAO();
@@ -28,14 +28,14 @@ public class UserServiceTests {
 
 
     @Test
-    void positiveTestRegister() {
+    void positiveTestRegister()  throws DataAccessException{
         //passes
         userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
     }
 
     @Test
-    void positiveTestLogin() {
+    void positiveTestLogin()  throws DataAccessException{
         //passes
         userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
@@ -44,14 +44,14 @@ public class UserServiceTests {
     }
 
     @Test
-    void positiveTestLogout() {
+    void positiveTestLogout() throws DataAccessException {
         //passes
         userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
     }
 
     @Test
-    void negativeTestRegister() {
+    void negativeTestRegister()  throws DataAccessException{
         userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
         //blank register spot
@@ -61,7 +61,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void negativeTestLogin() {
+    void negativeTestLogin()  throws DataAccessException{
         userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
         userService.login(new UserService.LoginRequest("Carl", "llama"));
@@ -76,7 +76,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void negativeTestLogout() {
+    void negativeTestLogout()  throws DataAccessException{
         userService.register(new UserData("Sam", "llama", "mon@gmail.com"));
         userService.logout(authToken);
         //cannot log out twice so fails

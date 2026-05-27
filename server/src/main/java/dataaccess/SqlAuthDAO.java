@@ -8,7 +8,7 @@ import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
 
 
-public class SqlAuthDAO {
+public class SqlAuthDAO implements AuthDAO{
     public SqlAuthDAO() throws DataAccessException {
         configureDatabase();
     }
