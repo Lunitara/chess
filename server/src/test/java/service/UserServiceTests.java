@@ -5,7 +5,6 @@ import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mindrot.jbcrypt.BCrypt;
 
 import javax.xml.crypto.Data;
 import java.util.Objects;
@@ -22,7 +21,7 @@ public class UserServiceTests {
         AuthDAO authDAO = new AuthMemoryDAO();
         GameDAO gameDAO = new GameMemoryDAO();
         UserDAO userDAO = new UserMemoryDAO();
-        String hashedPassword = BCrypt.hashpw("password", BCrypt.gensalt());
+
         userService = new UserService(gameDAO, userDAO,authDAO);
         UserService.RegisterResult registerResult = userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
         authToken = registerResult.authToken();

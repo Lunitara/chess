@@ -69,12 +69,12 @@ public class Server {
             }
             try {
                 UserService.LoginResult result = users.login(user);
+                context.status(200);
                 context.json(result);
-
             }
-            catch (IllegalArgumentException ex) {
+            catch (DataAccessException ex) {
                 context.status(401).result("{\"message\":\"error unauthorized\"}");
-                return;
+
             }
         }
         catch (IllegalStateException ex) {

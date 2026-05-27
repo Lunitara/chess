@@ -58,17 +58,13 @@ public class UserService {
             if (!verifyUser) {
                 throw new DataAccessException("Error password doesn't match");
             }
-            if (Objects.equals(existingUser.password(), loginRequest.password())) {
                 AuthData authData = new AuthData( authToken, existingUser.username());
                 auths.createAuth(authData);
                 return new LoginResult(existingUser.username(), authToken);
-            }
-            else {
-                throw new IllegalArgumentException("Passwords don't match");
-            }
+
         }
         else {
-            throw new IllegalArgumentException("Error null user");
+            throw new DataAccessException("Error null user");
         }
 
     }
