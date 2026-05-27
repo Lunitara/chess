@@ -6,6 +6,7 @@ import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Objects;
 
@@ -32,24 +33,31 @@ public class UserService {
     public record LoginRequest(String username, String password) {
     }
 
-
     public RegisterResult register(UserData user)  throws DataAccessException {
         String authToken = AuthData.generateToken();
         UserData existingUser = users.getUser(user.username());
         if (existingUser != null) {
             throw new IllegalArgumentException("Already Taken Exception");
         }
-        users.createUser(user);
+        String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+        UserData hashedUser = new UserData(user.username(), hashedPassword, user.email());
+        users.createUser(hashedUser);
         AuthData authData = new AuthData(authToken,user.username());
         auths.createAuth(authData);
 
         return new RegisterResult(user.username(), authToken);
     }
 
+
+
     public LoginResult login(LoginRequest loginRequest)  throws DataAccessException {
         String authToken = AuthData.generateToken();
         UserData existingUser = users.getUser(loginRequest.username());
         if (existingUser != null) {
+            boolean verifyUser = BCrypt.checkpw(loginRequest.password, existingUser.password());
+            if (!verifyUser) {
+                throw new DataAccessException("Error password doesn't match");
+            }
             if (Objects.equals(existingUser.password(), loginRequest.password())) {
                 AuthData authData = new AuthData( authToken, existingUser.username());
                 auths.createAuth(authData);

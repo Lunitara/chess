@@ -58,13 +58,13 @@ public class SqlAuthDAO implements AuthDAO{
         }
         return null;
     }
-    public void deleteAuth(AuthData authToken) throws DataAccessException{
-        var statement = "DELETE FROM authData WHERE authToken";
-        executeUpdate(statement);
+    public void deleteAuth(AuthData authData) throws DataAccessException{
+        var statement = "DELETE FROM authdata WHERE authToken = ?";
+        executeUpdate(statement, authData.authToken());
 
     }
     public void clearAuthData() throws DataAccessException{
-        var statement = "DELETE FROM authData";
+        var statement = "DELETE FROM authdata";
         executeUpdate(statement);
 
     }

@@ -34,8 +34,8 @@ public class SqlGameDAO implements GameDAO {
             """
             CREATE TABLE IF NOT EXISTS  gamedata (
               `gameID` int NOT NULL,
-              `whiteUsername` varchar(256) NOT NULL,
-              `blackUsername` varchar(256) NOT NULL,
+              `whiteUsername` varchar(256),
+              `blackUsername` varchar(256),
               `gameName` varchar(256) NOT NULL,
               `game` TEXT NOT NULL,
               PRIMARY KEY (gameID),
@@ -46,14 +46,15 @@ public class SqlGameDAO implements GameDAO {
             """
     };
     public int createGame(GameData gamedata) throws DataAccessException{
-        var statement = "INSERT INTO gamedata (gameID, whiteUsername, backUsername, gameName, game) VALUES (?,?, ?, ?, ?)";
-        executeUpdate(statement, gamedata.gameID(), gamedata.whiteUsername(), gamedata.blackUsername(), gamedata.gameName(), gamedata.game());
+        var statement = "INSERT INTO gamedata (gameID, whiteUsername, blackUsername, gameName, game) VALUES (?,?, ?, ?, ?)";
+        String gameJson = new Gson().toJson(gamedata.game());
+        executeUpdate(statement, gamedata.gameID(), gamedata.whiteUsername(), gamedata.blackUsername(), gamedata.gameName(), gameJson);
         return gamedata.gameID();
     }
     public Collection<GameData> listGames() throws DataAccessException {
         Collection<GameData> gameList = new ArrayList<>();
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT gameID, whiteUsername, backUsername, gameName, game FROM gamedata";
+            var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM gamedata";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -69,7 +70,7 @@ public class SqlGameDAO implements GameDAO {
 
     public GameData getGame(int gameID) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT gameID, whiteUsername, backUsername, gameName, game FROM gamedata WHERE gameID = ?";
+            var statement = "SELECT gameID, whiteUsername, blackUsername, gameName, game FROM gamedata WHERE gameID = ?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setInt(1, gameID);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -86,12 +87,14 @@ public class SqlGameDAO implements GameDAO {
 
     @Override
     public void updateGame(GameData gameData) throws DataAccessException {
-        var statement = "UPDATE gameID, whiteUsername, backUsername, gameName, game FROM gameData ";
-        executeUpdate(statement);
+        var statement = "UPDATE gamedata SET whiteUsername =?, blackUsername =?, gameName =?, game =? WHERE gameID =? ";
+        String gameJson = new Gson().toJson(gameData.game());
+
+        executeUpdate(statement, gameData.whiteUsername(),gameData.blackUsername(),gameData.gameName(),gameJson, gameData.gameID());
     }
 
     public void clearGameData() throws DataAccessException{
-        var statement = "DELETE FROM gameData";
+        var statement = "DELETE FROM gamedata";
         executeUpdate(statement);
 
     }

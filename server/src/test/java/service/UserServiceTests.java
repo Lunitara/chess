@@ -5,7 +5,9 @@ import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 
+import javax.xml.crypto.Data;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,6 +22,7 @@ public class UserServiceTests {
         AuthDAO authDAO = new AuthMemoryDAO();
         GameDAO gameDAO = new GameMemoryDAO();
         UserDAO userDAO = new UserMemoryDAO();
+        String hashedPassword = BCrypt.hashpw("password", BCrypt.gensalt());
         userService = new UserService(gameDAO, userDAO,authDAO);
         UserService.RegisterResult registerResult = userService.register(new UserData("Carl", "llama", "mon@gmail.com"));
         authToken = registerResult.authToken();
@@ -90,7 +93,7 @@ public class UserServiceTests {
         });
     }
     @Test
-    void testClear() {
+    void testClear() throws DataAccessException {
         UserService userService = new UserService( new GameMemoryDAO(),new UserMemoryDAO(),new AuthMemoryDAO());
         userService.clearUserData();
 

@@ -16,10 +16,12 @@ public class GameService {
     private UserDAO users;
     private GameDAO games;
     private AuthDAO auths;
+    private int newGameID = 1;
     public GameService(AuthDAO auths, GameDAO games, UserDAO users) {
         this.auths = auths;
         this.games = games;
         this.users = users;
+
     }
     public record CreateGameRequest(String authToken, String gameName) {
     }
@@ -35,8 +37,9 @@ public class GameService {
         if (existingAuth == null) {
             throw new IllegalArgumentException("error null");
         }
-        GameData gameData = new GameData(0,null,null,
+        GameData gameData = new GameData(newGameID,null,null,
                 createGameRequest.gameName(), new ChessGame());
+        newGameID++;
         int gameID = games.createGame(gameData);
         return new GameService.CreateGameResult(gameID);
     }
