@@ -23,12 +23,16 @@ public class Server {
     private final Gson gson = new Gson();
 
 
-    private  void clear(@NotNull Context context)  throws DataAccessException {
-        users.clearUserData();
-        games.clearGameData();
-        auths.clearAuthData();
+    private  void clear(@NotNull Context context)  {
+        try {
+            users.clearUserData();
+            games.clearGameData();
+            auths.clearAuthData();
+        } catch (DataAccessException e) {
+            context.status(500).result("{\"message\":\"error clearing data\"}");
+        }
     }
-    private  void register(@NotNull Context context)  throws DataAccessException{
+    private  void register(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
             UserData user = context.bodyAsClass(UserData.class);
@@ -44,6 +48,9 @@ public class Server {
                 UserService.RegisterResult result = users.register(user);
                 context.json(result);
             }
+            catch (DataAccessException e) {
+                context.status(500).result("{\"message\":\"error cannot register\"}");
+            }
             catch (IllegalArgumentException ex) {
                 context.status(403).result("{\"message\":\"error already exists\"}");
                 return;
@@ -55,7 +62,7 @@ public class Server {
         }
     }
     //login
-    private  void login(@NotNull Context context)  throws DataAccessException {
+    private  void login(@NotNull Context context)  {
         //context.bodyAsClass parses request body into record class probably
         try {
             UserService.LoginRequest user = context.bodyAsClass(UserService.LoginRequest.class);
@@ -73,17 +80,20 @@ public class Server {
                 context.json(result);
             }
             catch (DataAccessException ex) {
+                context.status(500).result("{\"message\":\"error unauthorized\"}");
+
+            }
+            catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error unauthorized\"}");
 
             }
         }
         catch (IllegalStateException ex) {
             context.status(400).result("Request body should be json");
-            return;
         }
     }
     //
-    private void listGames(@NotNull Context context) throws DataAccessException{
+    private void listGames(@NotNull Context context){
         //context.bodyAsClass parses request body into record class probably
 
         try {
@@ -100,17 +110,20 @@ public class Server {
                 context.json(result);
 
             }
+            catch (DataAccessException e) {
+                context.status(500).result("{\"message\":\"error cannot list games\"}");
+            }
             catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error unauthorized\"}");
             }
         }
         catch (IllegalStateException ex) {
-            context.status(400).result("Request body should be json");
+            context.status(400).result("{\"message\":\"error request body should be json\"}");
         }
 
     }
     //
-    private  void logout(@NotNull Context context)  throws DataAccessException {
+    private  void logout(@NotNull Context context)  {
         //context.bodyAsClass parses request body into record class probably
         try {
             String authToken = getAuthHeader(context);
@@ -123,6 +136,9 @@ public class Server {
                 users.logout(authToken);
 
             }
+            catch (DataAccessException e) {
+                context.status(500).result("{\"message\":\"error cannot logout\"}");
+            }
             catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error unauthorized\"}");
             }
@@ -133,7 +149,7 @@ public class Server {
         }
     }
     //
-    private  void createGame(@NotNull Context context) throws DataAccessException{
+    private  void createGame(@NotNull Context context){
         //context.bodyAsClass parses request body into record class probably
 
         try {
@@ -146,6 +162,9 @@ public class Server {
 
                 GameService.CreateGameResult result = games.createGame(new GameService.CreateGameRequest(getAuthHeader(context),game.gameName()));
                 context.json(result);
+            }
+            catch (DataAccessException e) {
+                context.status(500).result("{\"message\":\"error cannot create game\"}");
             }
             catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error already exists\"}");
@@ -162,7 +181,7 @@ public class Server {
         return context.header("Authorization");
     }
     //
-    private  void joinGame(@NotNull Context context) throws DataAccessException{
+    private  void joinGame(@NotNull Context context){
         //context.bodyAsClass parses request body into record class probably
         try {
             String authToken = getAuthHeader(context);
@@ -175,6 +194,9 @@ public class Server {
                 GameService.JoinGameRequest game = context.bodyAsClass(GameService.JoinGameRequest.class);
                 game = new GameService.JoinGameRequest(game.playerColor(), game.gameID(), authToken);
                 games.joinGame(game);
+            }
+            catch (DataAccessException e) {
+                context.status(500).result("{\"message\":\"error cannot join game\"}");
             }
             catch (IllegalArgumentException ex) {
                 context.status(400).result("{\"message\":\"error null game\"}");
@@ -222,6 +244,7 @@ public class Server {
         GameDAO gamesdao = new SqlGameDAO();
         AuthDAO authsdao = new SqlAuthDAO();
         DatabaseManager.configureDatabase();
+
         users = new UserService(gamesdao,usersdao,  authsdao);
         games = new GameService(  authsdao, gamesdao, usersdao);
         auths = new AuthService(usersdao, gamesdao, authsdao);

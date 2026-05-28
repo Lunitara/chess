@@ -102,8 +102,6 @@ public class DatabaseManager {
         } catch (SQLException e) {
             throw new DataAccessException(String.format("Unable to update database: %s, %s",
                     statement, e.getMessage()));
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
         }
     }
     /**

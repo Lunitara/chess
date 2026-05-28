@@ -33,7 +33,7 @@ public class SqlAuthDAO implements AuthDAO {
                 }
             }
         } catch (SQLException ex) {
-            throw new DataAccessException("failed to get connection", ex);
+            throw new DataAccessException("error failed to get connection", ex);
         }
         return null;
     }
