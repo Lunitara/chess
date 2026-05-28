@@ -22,7 +22,7 @@ public class SqlGameDAO implements GameDAO {
         var statement = "INSERT INTO gamedata (gameID, whiteUsername, " +
                 "blackUsername, gameName, game) VALUES (?,?, ?, ?, ?)";
         String gameJson = new Gson().toJson(gamedata.game());
-        executeUpdate(statement, gamedata.gameID(), gamedata.whiteUsername(),
+        DatabaseManager.executeUpdate(statement, gamedata.gameID(), gamedata.whiteUsername(),
                 gamedata.blackUsername(), gamedata.gameName(), gameJson);
         return gamedata.gameID();
     }
@@ -69,13 +69,13 @@ public class SqlGameDAO implements GameDAO {
                 "gameName =?, game =? WHERE gameID =? ";
         String gameJson = new Gson().toJson(gameData.game());
 
-        executeUpdate(statement, gameData.whiteUsername(), gameData.blackUsername(),
+        DatabaseManager.executeUpdate(statement, gameData.whiteUsername(), gameData.blackUsername(),
                 gameData.gameName(), gameJson, gameData.gameID());
     }
 
     public void clearGameData() throws DataAccessException {
         var statement = "DELETE FROM gamedata";
-        executeUpdate(statement);
+        DatabaseManager.executeUpdate(statement);
 
     }
 
@@ -88,36 +88,6 @@ public class SqlGameDAO implements GameDAO {
         String gameJson = rs.getString("game");
         ChessGame game = new Gson().fromJson(gameJson, ChessGame.class);
         return new GameData(gameID, whiteUsername, blackUsername, gameName, game);
-    }
-
-    private int executeUpdate(String statement, Object... params) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(statement,
-                    RETURN_GENERATED_KEYS)) {
-                for (int i = 0; i < params.length; i++) {
-                    Object param = params[i];
-                    if (param instanceof String p) {
-                        ps.setString(i + 1, p);
-                    } else if (param instanceof Integer p) {
-                        ps.setInt(i + 1, p);
-                    } else if (param instanceof GameData p) {
-                        ps.setString(i + 1,
-                                p.toString());
-                    } else if (param == null) {
-                        ps.setNull(i + 1, NULL);
-                    }
-                }
-                ps.executeUpdate();
-
-
-                return 0;
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException(String.format("Unable to update database: %s, %s",
-                    statement, e.getMessage()));
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 }

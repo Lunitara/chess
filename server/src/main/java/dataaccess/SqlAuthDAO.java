@@ -17,7 +17,7 @@ public class SqlAuthDAO implements AuthDAO {
 
     public void createAuth(AuthData authdata) throws DataAccessException {
         var statement = "INSERT INTO authdata (authToken, username) VALUES (?,?)";
-        executeUpdate(statement, authdata.authToken(), authdata.username());
+        DatabaseManager.executeUpdate(statement, authdata.authToken(), authdata.username());
     }
 
 
@@ -40,13 +40,13 @@ public class SqlAuthDAO implements AuthDAO {
 
     public void deleteAuth(AuthData authData) throws DataAccessException {
         var statement = "DELETE FROM authdata WHERE authToken = ?";
-        executeUpdate(statement, authData.authToken());
+        DatabaseManager.executeUpdate(statement, authData.authToken());
 
     }
 
     public void clearAuthData() throws DataAccessException {
         var statement = "DELETE FROM authdata";
-        executeUpdate(statement);
+        DatabaseManager.executeUpdate(statement);
 
     }
 
@@ -57,32 +57,4 @@ public class SqlAuthDAO implements AuthDAO {
         return new AuthData(authToken, username);
     }
 
-    private int executeUpdate(String statement, Object... params) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(statement,
-                    RETURN_GENERATED_KEYS)) {
-                for (int i = 0; i < params.length; i++) {
-                    Object param = params[i];
-                    if (param instanceof String p) {
-                        ps.setString(i + 1, p);
-                    } else if (param instanceof Integer p) {
-                        ps.setInt(i + 1, p);
-                    } else if (param instanceof AuthData p) {
-                        ps.setString(i + 1, p.toString());
-                    } else if (param == null) {
-                        ps.setNull(i + 1, NULL);
-                    }
-                }
-                ps.executeUpdate();
-
-
-                return 0;
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException(String.format("Unable to update database: %s, %s",
-                    statement, e.getMessage()));
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

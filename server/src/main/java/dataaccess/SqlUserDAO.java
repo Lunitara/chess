@@ -15,7 +15,7 @@ public class SqlUserDAO implements UserDAO {
 
     public void createUser(UserData userdata) throws DataAccessException {
         var statement = "INSERT INTO userdata (username, password, email) VALUES (?,?,?)";
-        executeUpdate(statement, userdata.username(), userdata.password(), userdata.email());
+        DatabaseManager.executeUpdate(statement, userdata.username(), userdata.password(), userdata.email());
     }
 
 
@@ -38,7 +38,7 @@ public class SqlUserDAO implements UserDAO {
 
     public void clearUserData() throws DataAccessException {
         var statement = "DELETE FROM userdata";
-        executeUpdate(statement);
+        DatabaseManager.executeUpdate(statement);
 
     }
 
@@ -49,32 +49,5 @@ public class SqlUserDAO implements UserDAO {
         return new UserData(username, password, email);
     }
 
-    private int executeUpdate(String statement, Object... params) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
-                for (int i = 0; i < params.length; i++) {
-                    Object param = params[i];
-                    if (param instanceof String p) {
-                        ps.setString(i + 1, p);
-                    } else if (param instanceof Integer p) {
-                        ps.setInt(i + 1, p);
-                    } else if (param instanceof UserData p) {
-                        ps.setString(i + 1,
-                                p.toString());
-                    } else if (param == null) {
-                        ps.setNull(i + 1, NULL);
-                    }
-                }
-                ps.executeUpdate();
 
-
-                return 0;
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException(String.format("Unable to update database: %s, %s",
-                    statement, e.getMessage()));
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

@@ -1,9 +1,10 @@
 package dataaccess;
 
+import model.UserData;
+
 import java.sql.*;
 import java.util.Properties;
-import com.google.gson.Gson;
-import model.*;
+
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
 
@@ -32,7 +33,7 @@ public class DatabaseManager {
             throw new DataAccessException("failed to create database", ex);
         }
     }
-    static private final String[] createStatements = {
+    static private final String[] CREATE_STATEMENTS = {
             """
             CREATE TABLE IF NOT EXISTS  authdata (
               `authToken` varchar(256) NOT NULL,
@@ -70,13 +71,39 @@ public class DatabaseManager {
     static public void configureDatabase() throws DataAccessException {
         createDatabase();
         try (Connection conn = DatabaseManager.getConnection()) {
-            for (String statement : createStatements) {
+            for (String statement : CREATE_STATEMENTS) {
                 try (var preparedStatement = conn.prepareStatement(statement)) {
                     preparedStatement.executeUpdate();
                 }
             }
         } catch (SQLException ex) {
             throw new DataAccessException("failed to get connection", ex);
+        }
+    }
+    public static int executeUpdate(String statement, Object... params) throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
+                for (int i = 0; i < params.length; i++) {
+                    Object param = params[i];
+                    if (param instanceof String p) {
+                        ps.setString(i + 1, p);
+                    } else if (param instanceof Integer p) {
+                        ps.setInt(i + 1, p);
+                    } else if (param instanceof UserData p) {
+                        ps.setString(i + 1,
+                                p.toString());
+                    } else if (param == null) {
+                        ps.setNull(i + 1, NULL);
+                    }
+                }
+                ps.executeUpdate();
+                return 0;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(String.format("Unable to update database: %s, %s",
+                    statement, e.getMessage()));
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
     /**
