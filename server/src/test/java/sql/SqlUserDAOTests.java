@@ -20,7 +20,7 @@ public class SqlUserDAOTests {
         userDAO.clearUserData();
     }
     @Test
-    void positiveTestRegister()  throws DataAccessException{
+    void positiveTestCreateUser()  throws DataAccessException{
         //passes
         String hashedPassword = BCrypt.hashpw("llama", BCrypt.gensalt());
         UserData testUser = new UserData("testingUsername", hashedPassword, "testingEmail");
@@ -30,7 +30,7 @@ public class SqlUserDAOTests {
     }
 
     @Test
-    void positiveTestLogin()  throws DataAccessException{
+    void positiveTestGetUser()  throws DataAccessException{
         //passes
         String hashedPassword = BCrypt.hashpw("apple", BCrypt.gensalt());
         UserData testUser = new UserData("testingUsername2", hashedPassword, "testingEmail");
@@ -40,24 +40,28 @@ public class SqlUserDAOTests {
     }
 
     @Test
-    void negativeTestLogin()  throws DataAccessException{
-        //put in wrong password
+    void negativeTestCreateUser()  throws DataAccessException{
+        //already logged in
+        String hashedPassword = BCrypt.hashpw("apple", BCrypt.gensalt());
+        UserData testUser = new UserData("testingUsername2", hashedPassword, "testingEmail");
+        userDAO.createUser(testUser);
+        UserData testUser2 = new UserData("testingUsername3", hashedPassword, "testingEmail");
+        assertThrows(IllegalArgumentException.class, () -> {
+        userDAO.createUser(testUser2);
+        });
+    }
+    @Test
+    void negativeTestGetUser()  throws DataAccessException{
+        //passes
         String hashedPassword = BCrypt.hashpw("apple", BCrypt.gensalt());
         UserData testUser = new UserData("testingUsername2", hashedPassword, "testingEmail");
         userDAO.createUser(testUser);
         assertThrows(IllegalArgumentException.class, () -> {
-                userDAO.getUser("wrongPassword");
-         });
-
+            userDAO.getUser("wrong Username");        });
     }
 
-    @Test
-    void negativeTestRegister()  throws DataAccessException{
-        //fails because password is blank
-        assertThrows(IllegalArgumentException.class, () -> {
-            userDAO.createUser(new UserData("Carl", "", "mon@gmail.com"));
-        });
-    }
+
+
     @Test
     void testClear()  throws DataAccessException {
         UserData testUser = new UserData("testingUsername", "testingPassword", "testingEmail");
