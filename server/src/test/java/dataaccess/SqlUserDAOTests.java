@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mindrot.jbcrypt.BCrypt;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SqlUserDAOTests {
@@ -41,19 +42,19 @@ public class SqlUserDAOTests {
         String hashedPassword = BCrypt.hashpw("apple", BCrypt.gensalt());
         UserData testUser = new UserData("testingUsername2", hashedPassword, "testingEmail");
         userDAO.createUser(testUser);
-        UserData testUser2 = new UserData("testingUsername3", hashedPassword, "testingEmail");
-        assertThrows(IllegalArgumentException.class, () -> {
+        UserData testUser2 = new UserData("testingUsername2", hashedPassword, "testingEmail");
+        assertThrows(DataAccessException.class, () -> {
         userDAO.createUser(testUser2);
         });
     }
     @Test
     void negativeTestGetUser()  throws DataAccessException{
-        //passes
+        //fails
         String hashedPassword = BCrypt.hashpw("apple", BCrypt.gensalt());
         UserData testUser = new UserData("testingUsername2", hashedPassword, "testingEmail");
         userDAO.createUser(testUser);
-        assertThrows(IllegalArgumentException.class, () -> {
-            userDAO.getUser("wrong Username");        });
+        assertNull(userDAO.getUser("wrong Username"));
+
     }
 
 

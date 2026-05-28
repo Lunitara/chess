@@ -5,8 +5,7 @@ import model.GameData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SqlGameDAOTests {
 
@@ -57,7 +56,7 @@ public class SqlGameDAOTests {
         ChessGame testingGame = new ChessGame();
         GameData testGame = new GameData(1234, null,null,"testGameName",testingGame);
         gameDAO.createGame(testGame);
-        assertEquals(2, gameDAO.listGames().size());
+        assertEquals(1, gameDAO.listGames().size());
 
     }
 
@@ -69,7 +68,7 @@ public class SqlGameDAOTests {
         gameDAO.createGame(testGame);
         ChessGame testingGame2 = new ChessGame();
         GameData testGame2 = new GameData(1234, null,null,"testGameName2",testingGame2);
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(DataAccessException.class, () -> {
             gameDAO.createGame(testGame2);
         });
     }
@@ -79,9 +78,9 @@ public class SqlGameDAOTests {
         ChessGame testingGame = new ChessGame();
         GameData testGame = new GameData(1234, null,null,"testGameName2",testingGame);
         gameDAO.createGame(testGame);
-        assertThrows(IllegalArgumentException.class, () -> {
-            gameDAO.getGame(1234);        });
-    }
+        assertNull(gameDAO.getGame(123));
+    };
+
 
     @Test
     void negativeUpdateGame()  throws DataAccessException{

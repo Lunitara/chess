@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mindrot.jbcrypt.BCrypt;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SqlAuthDAOTests {
@@ -50,10 +51,8 @@ public class SqlAuthDAOTests {
         AuthData testAuth = new AuthData("authTestToken", "Sam");
         authDAO.createAuth(testAuth);
         authDAO.deleteAuth(testAuth);
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertNull( authDAO.getAuth("authTestToken"));
 
-            authDAO.getAuth("testingAuthname2");
-    });
 
     }
 
@@ -64,18 +63,17 @@ public class SqlAuthDAOTests {
         AuthData testAuth = new AuthData("authTestToken", "Sam");
         authDAO.createAuth(testAuth);
         AuthData testAuth2 = new AuthData("authTestToken", "Sam");
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(DataAccessException.class, () -> {
             authDAO.createAuth(testAuth2);
         });
     }
     @Test
-    void negativeTestGetAuth()  throws DataAccessException{
-        //passes
+    void negativeTestGetAuth()  throws DataAccessException {
+        //fails because does not exist
         String hashedPassword = BCrypt.hashpw("apple", BCrypt.gensalt());
         AuthData testAuth = new AuthData("authTestToken", "Sam");
         authDAO.createAuth(testAuth);
-        assertThrows(IllegalArgumentException.class, () -> {
-            authDAO.getAuth("wrong authToken name");        });
+        assertNull(authDAO.getAuth("authTestToken5"));
     }
 
 
