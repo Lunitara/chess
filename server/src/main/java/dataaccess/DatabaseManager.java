@@ -32,8 +32,51 @@ public class DatabaseManager {
             throw new DataAccessException("failed to create database", ex);
         }
     }
-
-
+    private final String[] createStatements = {
+            """
+            CREATE TABLE IF NOT EXISTS  authdata (
+              `authToken` varchar(256) NOT NULL,
+              `username` varchar(256) NOT NULL,
+              PRIMARY KEY (authToken),
+              INDEX(username)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS  gamedata (
+              `gameID` int NOT NULL,
+              `whiteUsername` varchar(256),
+              `blackUsername` varchar(256),
+              `gameName` varchar(256) NOT NULL,
+              `game` TEXT NOT NULL,
+              PRIMARY KEY (gameID),
+              INDEX(whiteUsername),
+              INDEX(blackUsername),
+              INDEX(gameName)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS  userdata (
+              `username` varchar(256) NOT NULL,
+              `password` varchar(256) NOT NULL,
+              `email` varchar(256) NOT NULL,
+              PRIMARY KEY (username),
+              INDEX(password),
+              INDEX(email)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+            """
+    };
+    public void configureDatabase() throws DataAccessException {
+        createDatabase();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            for (String statement : createStatements) {
+                try (var preparedStatement = conn.prepareStatement(statement)) {
+                    preparedStatement.executeUpdate();
+                }
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("failed to get connection", ex);
+        }
+    }
     /**
      * Create a connection to the database and sets the catalog based upon the
      * properties specified in db.properties. Connections to the database should
