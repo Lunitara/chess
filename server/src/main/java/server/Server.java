@@ -221,6 +221,7 @@ public class Server {
         UserDAO usersdao = new SqlUserDAO();
         GameDAO gamesdao = new SqlGameDAO();
         AuthDAO authsdao = new SqlAuthDAO();
+        DatabaseManager.configureDatabase();
         users = new UserService(gamesdao,usersdao,  authsdao);
         games = new GameService(  authsdao, gamesdao, usersdao);
         auths = new AuthService(usersdao, gamesdao, authsdao);

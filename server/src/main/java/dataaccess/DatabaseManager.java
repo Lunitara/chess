@@ -23,7 +23,7 @@ public class DatabaseManager {
     /**
      * Creates the database if it does not already exist.
      */
-    static public void createDatabase() throws DataAccessException {
+    static private void createDatabase() throws DataAccessException {
         var statement = "CREATE DATABASE IF NOT EXISTS " + databaseName;
         try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
              var preparedStatement = conn.prepareStatement(statement)) {
@@ -32,7 +32,7 @@ public class DatabaseManager {
             throw new DataAccessException("failed to create database", ex);
         }
     }
-    private final String[] createStatements = {
+    static private final String[] createStatements = {
             """
             CREATE TABLE IF NOT EXISTS  authdata (
               `authToken` varchar(256) NOT NULL,
@@ -64,8 +64,10 @@ public class DatabaseManager {
               INDEX(email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """
+
     };
-    public void configureDatabase() throws DataAccessException {
+
+    static public void configureDatabase() throws DataAccessException {
         createDatabase();
         try (Connection conn = DatabaseManager.getConnection()) {
             for (String statement : createStatements) {
