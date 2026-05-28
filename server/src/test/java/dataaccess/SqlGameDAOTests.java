@@ -54,9 +54,12 @@ public class SqlGameDAOTests {
     void negativeListGame()  throws DataAccessException{
         //fails because there should only be 1
         ChessGame testingGame = new ChessGame();
-        GameData testGame = new GameData(1234, null,null,"testGameName",testingGame);
+        GameData testGame = new GameData(11, null,null,"testGameName",testingGame);
         gameDAO.createGame(testGame);
-        assertEquals(1, gameDAO.listGames().size());
+        ChessGame testingGame2 = new ChessGame();
+        GameData testGame2 = new GameData(23, null,null,"testGameName2",testingGame2);
+        gameDAO.createGame(testGame2);
+        assertEquals(2, gameDAO.listGames().size());
 
     }
 
