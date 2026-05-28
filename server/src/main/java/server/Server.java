@@ -17,9 +17,9 @@ import java.util.Objects;
 public class Server {
 
     private final Javalin javalin;
-    private  final UserService users;
-    private  final GameService games;
-    private  final AuthService auths;
+    private   UserService users;
+    private   GameService games;
+    private   AuthService auths;
     private final Gson gson = new Gson();
 
 
@@ -218,7 +218,7 @@ public class Server {
 
     }
     //
-    public Server() throws DataAccessException {
+    public Server(){
         javalin = Javalin.create(config -> {
             config.staticFiles.add("web");
             config.jsonMapper(new JsonMapper() {
@@ -240,24 +240,25 @@ public class Server {
                 }
             });
         });
-        UserDAO usersdao = new SqlUserDAO();
-        GameDAO gamesdao = new SqlGameDAO();
-        AuthDAO authsdao = new SqlAuthDAO();
-        DatabaseManager.configureDatabase();
+        try {
+            UserDAO usersdao = new SqlUserDAO();
+            GameDAO gamesdao = new SqlGameDAO();
+            AuthDAO authsdao = new SqlAuthDAO();
+            DatabaseManager.configureDatabase();
 
-        users = new UserService(gamesdao,usersdao,  authsdao);
-        games = new GameService(  authsdao, gamesdao, usersdao);
-        auths = new AuthService(usersdao, gamesdao, authsdao);
-        // Register your endpoints and exception handlers here.
-        javalin.delete("/db", this::clear);
-        javalin.post("/user", this::register);
-        javalin.post("/session", this::login);
-        javalin.delete("/session", this::logout);
-        javalin.get("/game", this::listGames);
-        javalin.post("/game", this::createGame);
-        javalin.put("/game", this::joinGame);
-
-
+            users = new UserService(gamesdao, usersdao, authsdao);
+            games = new GameService(authsdao, gamesdao, usersdao);
+            auths = new AuthService(usersdao, gamesdao, authsdao);
+            // Register your endpoints and exception handlers here.
+            javalin.delete("/db", this::clear);
+            javalin.post("/user", this::register);
+            javalin.post("/session", this::login);
+            javalin.delete("/session", this::logout);
+            javalin.get("/game", this::listGames);
+            javalin.post("/game", this::createGame);
+            javalin.put("/game", this::joinGame);
+        } catch (DataAccessException e) {
+        };
     }
 
 
