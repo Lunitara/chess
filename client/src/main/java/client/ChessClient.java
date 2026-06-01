@@ -1,8 +1,7 @@
 package client;
-
+import client.ServerFacade.ServerFacade;
 import java.util.Arrays;
 import java.util.Scanner;
-import
 import com.google.gson.Gson;
 import com.sun.nio.sctp.NotificationHandler;
 import model.*;
@@ -162,23 +161,13 @@ public class ChessClient {
     }
 
     private String playGame() {
-        for (Game pet : server.listGames()) {
-            if (pet.id() == id) {
-                return pet;
-            }
-        }
+        assertSignedIn();
         return null;
     }
 
     public String observeGame() {
         assertSignedIn();
-        GameList pets = server.listGames();
-        var result = new StringBuilder();
-        var gson = new Gson();
-        for (Game pet : pets) {
-            result.append(gson.toJson(pet)).append('\n');
-        }
-        return result.toString();
+        return null;
     }
 
 
