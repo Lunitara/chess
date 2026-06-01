@@ -4,8 +4,9 @@ import java.util.Scanner;
 import com.google.gson.Gson;
 import com.sun.nio.sctp.NotificationHandler;
 import model.*;
-import static java.awt.Color.BLUE;
-import static java.awt.Color.RED;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
+
+import static java.awt.Color.*;
 
 public class ChessClient  {
     private final ServerFacade server;
@@ -39,32 +40,30 @@ public class ChessClient  {
         System.out.println();
     }
 
-    public void notify(Notification notification) {
-        System.out.println(RED + notification.message());
-        printPrompt();
-    }
 
     private void printPrompt() {
-        System.out.print("\n" + RESET + ">>> " + GREEN);
+        String words = (state == State.SIGNEDOUT) ? "SIGNED_OUT" : "SIGNED_IN";
+        System.out.print("\n" + GREEN + words + ">>> " + WHITE);
     }
 
 
     public String eval(String input) {
         try {
-            String[] tokens = input.toLowerCase().split(" ");
+            String[] tokens = input.split(" ");
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
-            String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
-                case "signin" -> login(params);
-                case "rescue" -> rescuePet(params);
-                case "list" -> listPets();
-                case "signout" -> signOut();
-                case "adopt" -> adoptPet(params);
-                case "adoptall" -> adoptAllPets();
                 case "quit" -> "quit";
-                default -> help();
+                case "help" ->"help";
+                case "login" -> login();
+                case "register" -> register(tokens);
+                case "logout" -> logout();
+                case "createGame" -> createGame();
+                case "listGames" -> listGames();
+                case "playGame" -> playGame();
+                case "observeGame" -> observeGame();
+                default -> "Not an available command. Please type 'help' for options.";
             };
-        } catch (ResponseException ex) {
+        } catch (DataProcessingException ex) {
             return ex.getMessage();
         }
     }
@@ -75,17 +74,21 @@ public class ChessClient  {
     public String help() {
         if (state == State.SIGNEDOUT) {
             return """
-                    - login <username>
-                    - quit
+                    quit -- exits program
+                    help -- lists options
+                    login -- <USERNAME> <PASSWORD>
+                    register -- <USERNAME> <PASSWORD> <EMAIL>
                     """;
         }
         return """
-                - list
-                - adopt <pet id>
-                - rescue <name> <CAT|DOG|FROG|FISH>
-                - adoptAll
-                - signOut
-                - quit
+                quit -- exits program
+                help -- lists options
+                logout -- logs out of current session
+                create game -- <GameName> creates a new game
+                list games lists game options
+                play game -- <game ID number> [WHITE|BLACK]
+                observeGame <game ID number>
+                quit
                 """;
     }
 
@@ -96,7 +99,7 @@ public class ChessClient  {
         if (params.length >= 1) {
             state = State.SIGNEDIN;
             visitorName = String.join("-", params);
-            ws.enterPetShop(visitorName);
+            ws.enterGameShop(visitorName);
             return String.format("You signed in as %s.", visitorName);
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourname>");
@@ -106,7 +109,7 @@ public class ChessClient  {
         if (params.length >= 1) {
             state = State.SIGNEDIN;
             visitorName = String.join("-", params);
-            ws.enterPetShop(visitorName);
+            ws.enterGameShop(visitorName);
             return String.format("You signed in as %s.", visitorName);
         }
         throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourname>");
@@ -117,7 +120,7 @@ public class ChessClient  {
 
     public String logout() throws ResponseException {
         assertSignedIn();
-        ws.leavePetShop(visitorName);
+        ws.leaveGameShop(visitorName);
         state = State.SIGNEDOUT;
         return String.format("%s left the shop", visitorName);
     }
@@ -127,9 +130,9 @@ public class ChessClient  {
         if (params.length == 1) {
             try {
                 int id = Integer.parseInt(params[0]);
-                Pet pet = getPet(id);
+                Game pet = getGame(id);
                 if (pet != null) {
-                    server.deletePet(id);
+                    server.deleteGame(id);
                     return String.format("%s says %s", pet.name(), pet.sound());
                 }
             } catch (NumberFormatException ignored) {
@@ -141,17 +144,17 @@ public class ChessClient  {
 
     public String listGames() throws ResponseException {
         assertSignedIn();
-        PetList pets = server.listPets();
+        GameList pets = server.listGames();
         var result = new StringBuilder();
         var gson = new Gson();
-        for (Pet pet : pets) {
+        for (Game pet : pets) {
             result.append(gson.toJson(pet)).append('\n');
         }
         return result.toString();
     }
 
-    private Pet playGame(int id) throws ResponseException {
-        for (Pet pet : server.listPets()) {
+    private String playGame() throws ResponseException {
+        for (Game pet : server.listGames()) {
             if (pet.id() == id) {
                 return pet;
             }
@@ -162,12 +165,23 @@ public class ChessClient  {
     public String ObserveGame() throws ResponseException {
         assertSignedIn();
         var buffer = new StringBuilder();
-        for (Pet pet : server.listPets()) {
+        for (Game pet : server.listGames()) {
             buffer.append(String.format("%s says %s%n", pet.name(), pet.sound()));
         }
 
-        server.deleteAllPets();
+        server.deleteAllGames();
         return buffer.toString();
+    }
+
+    public String observeGame() throws ResponseException {
+        assertSignedIn();
+        GameList pets = server.listGames();
+        var result = new StringBuilder();
+        var gson = new Gson();
+        for (Game pet : pets) {
+            result.append(gson.toJson(pet)).append('\n');
+        }
+        return result.toString();
     }
 
 
