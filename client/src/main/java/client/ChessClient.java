@@ -1,5 +1,5 @@
 package client;
-import client.ServerFacade.ServerFacade;
+import client.ServerFacade;
 import java.util.Arrays;
 import java.util.Scanner;
 import com.google.gson.Gson;
@@ -33,9 +33,9 @@ public class ChessClient {
 
             try {
                 result = eval(line);
-                System.out.print(BLUE + result);
+                System.out.print(result);
             } catch (Throwable e) {
-                System.out.print(RED + "Error: " + e.getMessage());
+                System.out.print("Error: " + e.getMessage());
             }
         }
         System.out.println();
@@ -43,8 +43,14 @@ public class ChessClient {
 
 
     private void printPrompt() {
-        String words = (state == State.SIGNEDOUT) ? "SIGNED_OUT" : "SIGNED_IN";
-        System.out.print("\n" + GREEN + words + ">>> " + WHITE);
+        if (state == State.SIGNEDOUT) {
+            System.out.print("Chess 240 User >>> ");
+
+        }
+        else {
+            System.out.print(visitorName + " >>> ");
+
+        }
     }
 
 
@@ -54,12 +60,12 @@ public class ChessClient {
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             return switch (cmd) {
                 case "quit" -> "quit";
-                case "help" -> "help";
-                case "login" -> login();
+                case "help" -> help();
+                case "login" -> login(tokens);
                 case "register" -> register(tokens);
                 case "logout" -> logout();
-                case "createGame" -> createGame();
-                case "listGames" -> listGames();
+                case "createGame" -> createGame(tokens);
+                //case "listGames" -> listGames();
                 case "playGame" -> playGame();
                 case "observeGame" -> observeGame();
                 default -> "Not an available command. Please type 'help' for options.";
@@ -85,40 +91,54 @@ public class ChessClient {
                 quit -- exits program
                 help -- lists options
                 logout -- logs out of current session
-                create game -- <GameName> creates a new game
-                list games lists game options
-                play game -- <game ID number> [WHITE|BLACK]
+                createGame -- <GameName> creates a new game
+                listGames lists game options
+                playGame -- <game ID number> [WHITE|BLACK]
                 observeGame <game ID number>
                 quit
                 """;
     }
 
 
-    //PRELOGIN UI
+    //PRE-LOGIN UI
     public String login(String... params) {
         try {
             if (params.length == 3) {
                 String username = params[1];
+                String password = params[2];
+                AuthResult result = server.login(username, password);
                 this.visitorName = username;
                 state = State.SIGNEDIN;
-                return String.format("You signed in as %s.", username);
+                return String.format("You signed in as %s.", username + "\n");
+            }
+            else {
+                return String.format("Please put in the correct # of parameters. You put in " + params.length+ ".\n");
+
             }
 
         } catch (Throwable e) {
-            System.out.print(RED + "Error: cannot login" + e.getMessage());
+            return "Error: cannot login " + e.getMessage() + "\n";
         }
-        return "";
     }
 
     public String register(String... params) {
         try {
             if (params.length == 4) {
                 String username = params[1];
-                return String.format("Successfuly registered as %s.", username);
+                String password = params[2];
+                String email = params[3];
+                AuthResult result = server.register(username, password, email);
+                state = State.SIGNEDIN;
+                return String.format("Successfully registered as %s.", username  + "\n");
             }
+            else {
+                return "Please put in the correct # of parameters. You put in " + params.length + "\n";
+
+            }
+
         } catch (
                 Throwable e) {
-            System.out.print(RED + "Error: could not register" + e.getMessage());
+            System.out.print("Error: could not register " + e.getMessage() + "\n");
         }
         return "";
     }
@@ -138,16 +158,21 @@ public class ChessClient {
         try {
             if (params.length == 2) {
                 int gameName = Integer.parseInt(params[1]);
-                return String.format("%s Successfully created game ", gameName);
+                return String.format("%s Successfully created game ", gameName  + "\n");
+
+            }
+            else {
+                return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
 
             }
 
         } catch (Throwable e) {
-            System.out.print(RED + "Error: could not create game" + e.getMessage());
+            System.out.print("Error: could not create game " + e.getMessage() + "\n");
         }
         return "";
     }
 
+    /*
 
     public String listGames() {
         assertSignedIn();
@@ -159,6 +184,8 @@ public class ChessClient {
         }
         return result.toString();
     }
+
+     */
 
     private String playGame() {
         assertSignedIn();
@@ -173,8 +200,8 @@ public class ChessClient {
 
     private void assertSignedIn() {
         if (state == State.SIGNEDOUT) {
-            System.out.print(RED + "Error: could not fulfill request as" +
-                    " user is currently logged out");
+            System.out.print("Error: could not fulfill request as" +
+                    " user is currently logged out"  + "\n");
         }
     }
 }

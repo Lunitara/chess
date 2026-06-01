@@ -16,14 +16,14 @@ import java.util.Objects;
 import static java.awt.Color.RED;
 
 public class ServerFacade {
-     final HttpClient client = HttpClient.newHttpClient();
-     final String serverUrl;
+    final HttpClient client = HttpClient.newHttpClient();
+    final String serverUrl;
 
     public ServerFacade(String url) {
         serverUrl = url;
     }
 
-     HttpRequest buildRequest(String method, String path, Object body) {
+    HttpRequest buildRequest(String method, String path, Object body) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + path))
                 .method(method, makeRequestBody(body));
@@ -33,7 +33,7 @@ public class ServerFacade {
         return request.build();
     }
 
-     BodyPublisher makeRequestBody(Object request) {
+    BodyPublisher makeRequestBody(Object request) {
         if (request != null) {
             return BodyPublishers.ofString(new Gson().toJson(request));
         } else {
@@ -41,65 +41,59 @@ public class ServerFacade {
         }
     }
 
-     HttpResponse<String> sendRequest(HttpRequest request) {
+    HttpResponse<String> sendRequest(HttpRequest request) {
         try {
             return client.send(request, BodyHandlers.ofString());
         } catch (Throwable e) {
-            System.out.print(RED + "Error: could not create game" + e.getMessage());
+            System.out.print("Error: could not create game" + e.getMessage());
         }
         return null;
     }
 
 
-     <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) {
+    <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) {
         var status = response.statusCode();
-        if (!isSuccessful(status)) {
+        if (isSuccessful(status)) {
             var body = response.body();
-            if (body != null) {
-                System.out.print(RED + "Error: could not create game");
+            if (responseClass != null && body != null) {
+                return new Gson().fromJson(body, responseClass);
             }
+        } else {
 
-            System.out.print(RED + "Error: could not create game");
-
-
-            if (responseClass != null) {
-                return new Gson().fromJson(response.body(), responseClass);
+            String errorString = response.body();
+            if (errorString != null && errorString.contains("java.lang")) {
+                errorString = errorString.split("java.lang")[0];
             }
-
-
+            if (errorString == null) {
+                System.out.print("Error: could not perform action, status code: " + status + "\n");
+            }
+            System.out.print("Exception\n");
         }
         return null;
     }
 
-     boolean isSuccessful(int status) {
-        return status / 100 == 2;
-    }
+boolean isSuccessful(int status) {
+    return status / 100 == 2;
+}
 
-     AuthResult register(String username, String password, String email) {
-         var reqBody = new RegisterRequest(username, password, email);
-         var request = buildRequest("POST", "/user", null);
-         var response = sendRequest(request);
-         return handleResponse(response, AuthResult.class);
+AuthResult register(String username, String password, String email) {
+    var reqBody = new RegisterRequest(username, password, email);
+    var request = buildRequest("POST", "/user", null);
+    var response = sendRequest(request);
+    return handleResponse(response, AuthResult.class);
+}
 
-     }
-
-     AuthResult login(String username, String password) {
-         var reqBody = new LoginRequest(username, password);
-         var request = buildRequest("POST", "/session", null);
-         var response = sendRequest(request);
-         return handleResponse(response, AuthResult.class);
-
-    }
-
-    //fix so it pulls the individual games later
-      GameData listGames() {
-        var request = buildRequest("GET", "/game", null);
-        var response = sendRequest(request);
-        return handleResponse(response, GameData.class);
-
-    }
+AuthResult login(String username, String password) {
+    var reqBody = new LoginRequest(username, password);
+    var request = buildRequest("POST", "/session", null);
+    var response = sendRequest(request);
+    return handleResponse(response, AuthResult.class);
 
 }
+
+
+}
+
 record RegisterResult(String username, String authToken) {
 }
 
@@ -108,14 +102,21 @@ record RegisterRequest(String username, String password, String email) {
 
 record LoginResult(String username, String authToken) {
 }
+
 record LoginRequest(String username, String authToken) {
 }
+
 record CreateGameRequest(String authToken, String gameName) {
 }
+
 record CreateGameResult(int gameID) {
 }
+
 record JoinGameRequest(String playerColor, int gameID, String authToken) {
 }
+
 record ListGamesResult(Collection<GameData> games) {
 }
-record AuthResult(String username, String authToken) {}
+
+record AuthResult(String username, String authToken) {
+}
