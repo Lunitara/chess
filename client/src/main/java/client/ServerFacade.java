@@ -16,14 +16,14 @@ import java.util.Objects;
 import static java.awt.Color.RED;
 
 public class ServerFacade {
-    private final HttpClient client = HttpClient.newHttpClient();
-    private final String serverUrl;
+     final HttpClient client = HttpClient.newHttpClient();
+     final String serverUrl;
 
     public ServerFacade(String url) {
         serverUrl = url;
     }
 
-    private HttpRequest buildRequest(String method, String path, Object body) {
+     HttpRequest buildRequest(String method, String path, Object body) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + path))
                 .method(method, makeRequestBody(body));
@@ -33,7 +33,7 @@ public class ServerFacade {
         return request.build();
     }
 
-    private BodyPublisher makeRequestBody(Object request) {
+     BodyPublisher makeRequestBody(Object request) {
         if (request != null) {
             return BodyPublishers.ofString(new Gson().toJson(request));
         } else {
@@ -41,24 +41,25 @@ public class ServerFacade {
         }
     }
 
-    private HttpResponse<String> sendRequest(HttpRequest request) throws ResponseException {
+     HttpResponse<String> sendRequest(HttpRequest request) {
         try {
             return client.send(request, BodyHandlers.ofString());
         } catch (Throwable e) {
             System.out.print(RED + "Error: could not create game" + e.getMessage());
         }
+        return null;
     }
 
 
-    private <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) throws ResponseException {
+     <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) {
         var status = response.statusCode();
         if (!isSuccessful(status)) {
             var body = response.body();
             if (body != null) {
-                System.out.print(RED + "Error: could not create game" + e.getMessage());
+                System.out.print(RED + "Error: could not create game");
             }
 
-            System.out.print(RED + "Error: could not create game" + e.getMessage());
+            System.out.print(RED + "Error: could not create game");
 
 
             if (responseClass != null) {
@@ -70,22 +71,39 @@ public class ServerFacade {
         return null;
     }
 
-    private boolean isSuccessful(int status) {
+     boolean isSuccessful(int status) {
         return status / 100 == 2;
     }
 
-    private void register() {
+     void register() {
     }
 
-    private void login() {
+     void login() {
 
     }
 
-    private void listGames() {
-        var request = buildRequest("GET", "/pet", null);
+    //fix so it pulls the individual games later
+      GameData listGames() {
+        var request = buildRequest("GET", "/game", null);
         var response = sendRequest(request);
-        return handleResponse(response, PetList.class);
+        return handleResponse(response, GameData.class);
 
     }
 
+}
+record RegisterResult(String username, String authToken) {
+}
 
+record RegisterRequest(String username, String password, String email) {
+}
+
+record LoginResult(String username, String authToken) {
+}
+record CreateGameRequest(String authToken, String gameName) {
+}
+record CreateGameResult(int gameID) {
+}
+record JoinGameRequest(String playerColor, int gameID, String authToken) {
+}
+record ListGamesResult(Collection<GameData> games) {
+}

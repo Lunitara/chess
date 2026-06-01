@@ -1,7 +1,8 @@
 package client;
+import model.*;
 
 public class ClientMain {
-    private static Server server;
+    private Server server;
 
     public  void main(String[] args) {
         //var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);

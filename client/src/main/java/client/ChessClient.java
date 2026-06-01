@@ -151,7 +151,7 @@ public class ChessClient {
 
     public String listGames() {
         assertSignedIn();
-        GameData[] games = server.listGames(authToken);
+        GameData[] games = client.ServerFacade.listGames();
         var result = new StringBuilder();
         var gson = new Gson();
         for (GameData game : games) {
