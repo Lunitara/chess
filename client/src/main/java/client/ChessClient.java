@@ -2,7 +2,7 @@ package client;
 
 import java.util.Arrays;
 import java.util.Scanner;
-
+import
 import com.google.gson.Gson;
 import com.sun.nio.sctp.NotificationHandler;
 import model.*;
@@ -14,6 +14,7 @@ public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
     private String visitorName = null;
+
     public ChessClient(String serverUrl) {
         this.server = new ServerFacade(serverUrl);
     }
@@ -124,82 +125,69 @@ public class ChessClient {
     }
 
 
-
 // POST LOGIN UI
 
-public String logout() {
-    assertSignedIn();
-    visitorName = null;
-    state = State.SIGNEDOUT;
-    return String.format("%s Successfully logged out ", visitorName);
-}
+    public String logout() {
+        assertSignedIn();
+        visitorName = null;
+        state = State.SIGNEDOUT;
+        return String.format("%s Successfully logged out ", visitorName);
+    }
 
-public String createGame(String... params) {
-    assertSignedIn();
-    try {
-        if (params.length == 1) {
+    public String createGame(String... params) {
+        assertSignedIn();
+        try {
+            if (params.length == 2) {
+                int gameName = Integer.parseInt(params[1]);
+                return String.format("%s Successfully created game ", gameName);
 
-            int id = Integer.parseInt(params[0]);
-            Game pet = getGame(id);
-            if (pet != null) {
-                server.deleteGame(id);
-                return String.format("%s says %s", pet.name(), pet.sound());
+            }
+
+        } catch (Throwable e) {
+            System.out.print(RED + "Error: could not create game" + e.getMessage());
+        }
+        return "";
+    }
+
+
+    public String listGames() {
+        assertSignedIn();
+        GameData[] games = server.listGames(authToken);
+        var result = new StringBuilder();
+        var gson = new Gson();
+        for (GameData game : games) {
+            result.append(gson.toJson(game)).append('\n');
+        }
+        return result.toString();
+    }
+
+    private String playGame() {
+        for (Game pet : server.listGames()) {
+            if (pet.id() == id) {
+                return pet;
             }
         }
-
-    } catch (Throwable e) {
-        System.out.print(RED + "Error: " + e.getMessage());
+        return null;
     }
-}
 
-
-public String listGames() {
-    assertSignedIn();
-    GameList pets = server.listGames();
-    var result = new StringBuilder();
-    var gson = new Gson();
-    for (Game pet : pets) {
-        result.append(gson.toJson(pet)).append('\n');
+    public String observeGame() {
+        assertSignedIn();
+        GameList pets = server.listGames();
+        var result = new StringBuilder();
+        var gson = new Gson();
+        for (Game pet : pets) {
+            result.append(gson.toJson(pet)).append('\n');
+        }
+        return result.toString();
     }
-    return result.toString();
-}
 
-private String playGame() {
-    for (Game pet : server.listGames()) {
-        if (pet.id() == id) {
-            return pet;
+
+    private void assertSignedIn() {
+        if (state == State.SIGNEDOUT) {
+            System.out.print(RED + "Error: could not fulfill request as" +
+                    " user is currently logged out");
         }
     }
-    return null;
-}
-
-public String ObserveGame() {
-    assertSignedIn();
-    var buffer = new StringBuilder();
-    for (Game pet : server.listGames()) {
-        buffer.append(String.format("%s says %s%n", pet.name(), pet.sound()));
-    }
-
-    server.deleteAllGames();
-    return buffer.toString();
-}
-
-public String observeGame() {
-    assertSignedIn();
-    GameList pets = server.listGames();
-    var result = new StringBuilder();
-    var gson = new Gson();
-    for (Game pet : pets) {
-        result.append(gson.toJson(pet)).append('\n');
-    }
-    return result.toString();
 }
 
 
-private void assertSignedIn() {
-    if (state == State.SIGNEDOUT) {
-        throw new ResponseException(ResponseException.Code.ClientError, "You must sign in");
-    }
-}
-
-    }
