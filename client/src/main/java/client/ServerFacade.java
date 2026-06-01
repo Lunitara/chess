@@ -1,28 +1,24 @@
-package server;
-import com.google.gson.Gson;
-import dataaccess.*;
-import io.javalin.*;
-import io.javalin.http.Context;
-import io.javalin.json.JsonMapper;
-import model.GameData;
-import model.UserData;
-import org.jetbrains.annotations.NotNull;
-import service.UserService;
-import service.GameService;
-import service.AuthService;
+package client;
 
-import java.lang.reflect.Type;
+import com.google.gson.Gson;
+
+import model.*;
+import java.net.*;
+import java.net.http.*;
+import java.net.http.HttpRequest.BodyPublisher;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Objects;
 
-public class Server {
+public class ServerFacade {
+    private final HttpClient client = HttpClient.newHttpClient();
+    private final String serverUrl;
 
-    private final Javalin javalin;
-    private   UserService users;
-    private   GameService games;
-    private   AuthService auths;
-    private final Gson gson = new Gson();
-
-
+    public ServerFacade(String url) {
+        serverUrl = url;
+    }
+}
+/*
     public  void clear(@NotNull Context context)  {
         try {
             users.clearUserData();
@@ -216,58 +212,5 @@ public class Server {
             return;
         }
 
-    }
-    //
-    public Server(){
-        javalin = Javalin.create(config -> {
-            config.staticFiles.add("web");
-            config.jsonMapper(new JsonMapper() {
-                @NotNull
-                @Override
-                public <T> T fromJsonString(@NotNull String json, @NotNull Type targetType) {
-                    try {
-                        return gson.fromJson(json,targetType);
-                    }
-                    catch (Exception e) {
-                        throw new IllegalStateException("Request body should be json");
-                    }
-                }
 
-                @NotNull
-                @Override
-                public String toJsonString(@NotNull Object obj, @NotNull Type type) {
-                    return gson.toJson(obj,type);
-                }
-            });
-        });
-        try {
-            UserDAO usersdao = new SqlUserDAO();
-            GameDAO gamesdao = new SqlGameDAO();
-            AuthDAO authsdao = new SqlAuthDAO();
-            DatabaseManager.configureDatabase();
-
-            users = new UserService(gamesdao, usersdao, authsdao);
-            games = new GameService(authsdao, gamesdao, usersdao);
-            auths = new AuthService(usersdao, gamesdao, authsdao);
-            // Register your endpoints and exception handlers here.
-            javalin.delete("/db", this::clear);
-            javalin.post("/user", this::register);
-            javalin.post("/session", this::login);
-            javalin.delete("/session", this::logout);
-            javalin.get("/game", this::listGames);
-            javalin.post("/game", this::createGame);
-            javalin.put("/game", this::joinGame);
-        } catch (DataAccessException e) {
-        };
-    }
-
-
-    public int run(int desiredPort) {
-        javalin.start(desiredPort);
-        return javalin.port();
-    }
-
-    public void stop() {
-        javalin.stop();
-    }
-}
+*/
