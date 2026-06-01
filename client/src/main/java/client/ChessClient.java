@@ -1,6 +1,8 @@
 package client;
+
 import java.util.Arrays;
 import java.util.Scanner;
+
 import com.google.gson.Gson;
 import com.sun.nio.sctp.NotificationHandler;
 import model.*;
@@ -8,19 +10,18 @@ import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessi
 
 import static java.awt.Color.*;
 
-public class ChessClient  {
+public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
-
-    public ChessClient(String serverUrl){
+    private String visitorName = null;
+    public ChessClient(String serverUrl) {
         this.server = new ServerFacade(serverUrl);
     }
 
 
-
     public void run() {
-        System.out.println( "Welcome to CS 240 Stander Chess!");
-        System.out.println( "Type 'help' for a list of commands.");
+        System.out.println("Welcome to CS 240 Stander Chess!");
+        System.out.println("Type 'help' for a list of commands.");
 
         System.out.print(help());
 
@@ -53,7 +54,7 @@ public class ChessClient  {
             String cmd = (tokens.length > 0) ? tokens[0] : "help";
             return switch (cmd) {
                 case "quit" -> "quit";
-                case "help" ->"help";
+                case "help" -> "help";
                 case "login" -> login();
                 case "register" -> register(tokens);
                 case "logout" -> logout();
@@ -93,103 +94,112 @@ public class ChessClient  {
     }
 
 
-
     //PRELOGIN UI
-    public String login(String... params) throws ResponseException {
-        if (params.length >= 1) {
-            state = State.SIGNEDIN;
-            visitorName = String.join("-", params);
-            ws.enterGameShop(visitorName);
-            return String.format("You signed in as %s.", visitorName);
-        }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourname>");
-    }
-
-    public String register(String... params) throws ResponseException {
-        if (params.length >= 1) {
-            state = State.SIGNEDIN;
-            visitorName = String.join("-", params);
-            ws.enterGameShop(visitorName);
-            return String.format("You signed in as %s.", visitorName);
-        }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <yourname>");
-    }
-
-
-    // POSTLOGIN UI
-
-    public String logout() throws ResponseException {
-        assertSignedIn();
-        ws.leaveGameShop(visitorName);
-        state = State.SIGNEDOUT;
-        return String.format("%s left the shop", visitorName);
-    }
-
-    public String createGame(String... params) throws ResponseException {
-        assertSignedIn();
-        if (params.length == 1) {
-            try {
-                int id = Integer.parseInt(params[0]);
-                Game pet = getGame(id);
-                if (pet != null) {
-                    server.deleteGame(id);
-                    return String.format("%s says %s", pet.name(), pet.sound());
-                }
-            } catch (NumberFormatException ignored) {
+    public String login(String... params) {
+        try {
+            if (params.length == 3) {
+                String username = params[1];
+                this.visitorName = username;
+                state = State.SIGNEDIN;
+                return String.format("You signed in as %s.", username);
             }
+
+        } catch (Throwable e) {
+            System.out.print(RED + "Error: cannot login" + e.getMessage());
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected: <pet id>");
+        return "";
     }
 
-
-    public String listGames() throws ResponseException {
-        assertSignedIn();
-        GameList pets = server.listGames();
-        var result = new StringBuilder();
-        var gson = new Gson();
-        for (Game pet : pets) {
-            result.append(gson.toJson(pet)).append('\n');
-        }
-        return result.toString();
-    }
-
-    private String playGame() throws ResponseException {
-        for (Game pet : server.listGames()) {
-            if (pet.id() == id) {
-                return pet;
+    public String register(String... params) {
+        try {
+            if (params.length == 4) {
+                String username = params[1];
+                return String.format("Successfuly registered as %s.", username);
             }
+        } catch (
+                Throwable e) {
+            System.out.print(RED + "Error: could not register" + e.getMessage());
         }
-        return null;
-    }
-
-    public String ObserveGame() throws ResponseException {
-        assertSignedIn();
-        var buffer = new StringBuilder();
-        for (Game pet : server.listGames()) {
-            buffer.append(String.format("%s says %s%n", pet.name(), pet.sound()));
-        }
-
-        server.deleteAllGames();
-        return buffer.toString();
-    }
-
-    public String observeGame() throws ResponseException {
-        assertSignedIn();
-        GameList pets = server.listGames();
-        var result = new StringBuilder();
-        var gson = new Gson();
-        for (Game pet : pets) {
-            result.append(gson.toJson(pet)).append('\n');
-        }
-        return result.toString();
+        return "";
     }
 
 
 
-    private void assertSignedIn() throws ResponseException {
-        if (state == State.SIGNEDOUT) {
-            throw new ResponseException(ResponseException.Code.ClientError, "You must sign in");
-        }
-    }
+// POST LOGIN UI
 
+public String logout() {
+    assertSignedIn();
+    visitorName = null;
+    state = State.SIGNEDOUT;
+    return String.format("%s Successfully logged out ", visitorName);
 }
+
+public String createGame(String... params) {
+    assertSignedIn();
+    try {
+        if (params.length == 1) {
+
+            int id = Integer.parseInt(params[0]);
+            Game pet = getGame(id);
+            if (pet != null) {
+                server.deleteGame(id);
+                return String.format("%s says %s", pet.name(), pet.sound());
+            }
+        }
+
+    } catch (Throwable e) {
+        System.out.print(RED + "Error: " + e.getMessage());
+    }
+}
+
+
+public String listGames() {
+    assertSignedIn();
+    GameList pets = server.listGames();
+    var result = new StringBuilder();
+    var gson = new Gson();
+    for (Game pet : pets) {
+        result.append(gson.toJson(pet)).append('\n');
+    }
+    return result.toString();
+}
+
+private String playGame() {
+    for (Game pet : server.listGames()) {
+        if (pet.id() == id) {
+            return pet;
+        }
+    }
+    return null;
+}
+
+public String ObserveGame() {
+    assertSignedIn();
+    var buffer = new StringBuilder();
+    for (Game pet : server.listGames()) {
+        buffer.append(String.format("%s says %s%n", pet.name(), pet.sound()));
+    }
+
+    server.deleteAllGames();
+    return buffer.toString();
+}
+
+public String observeGame() {
+    assertSignedIn();
+    GameList pets = server.listGames();
+    var result = new StringBuilder();
+    var gson = new Gson();
+    for (Game pet : pets) {
+        result.append(gson.toJson(pet)).append('\n');
+    }
+    return result.toString();
+}
+
+
+private void assertSignedIn() {
+    if (state == State.SIGNEDOUT) {
+        throw new ResponseException(ResponseException.Code.ClientError, "You must sign in");
+    }
+}
+
+    }
