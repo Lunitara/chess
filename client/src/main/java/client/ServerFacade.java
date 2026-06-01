@@ -75,10 +75,19 @@ public class ServerFacade {
         return status / 100 == 2;
     }
 
-     void register() {
-    }
+     AuthResult register(String username, String password, String email) {
+         var reqBody = new RegisterRequest(username, password, email);
+         var request = buildRequest("POST", "/user", null);
+         var response = sendRequest(request);
+         return handleResponse(response, AuthResult.class);
 
-     void login() {
+     }
+
+     AuthResult login(String username, String password) {
+         var reqBody = new LoginRequest(username, password);
+         var request = buildRequest("POST", "/session", null);
+         var response = sendRequest(request);
+         return handleResponse(response, AuthResult.class);
 
     }
 
@@ -99,6 +108,8 @@ record RegisterRequest(String username, String password, String email) {
 
 record LoginResult(String username, String authToken) {
 }
+record LoginRequest(String username, String authToken) {
+}
 record CreateGameRequest(String authToken, String gameName) {
 }
 record CreateGameResult(int gameID) {
@@ -107,3 +118,4 @@ record JoinGameRequest(String playerColor, int gameID, String authToken) {
 }
 record ListGamesResult(Collection<GameData> games) {
 }
+record AuthResult(String username, String authToken) {}
