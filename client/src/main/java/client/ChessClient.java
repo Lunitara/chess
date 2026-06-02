@@ -95,7 +95,6 @@ public class ChessClient {
                 list lists game options
                 play -- <game ID number> [WHITE|BLACK]
                 observe <game ID number>
-                quit
                 """;
     }
 
@@ -198,7 +197,7 @@ public class ChessClient {
         try {
             ListGamesResult result = server.listGames(this.authToken);
             Collection<GameData> games = result.games();
-            if (games == null) {
+            if (games == null || games.isEmpty()) {
                 return String.format("No games to show.\n");
 
             }
