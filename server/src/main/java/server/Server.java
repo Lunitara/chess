@@ -153,7 +153,7 @@ public class Server {
         //context.bodyAsClass parses request body into record class probably
 
         try {
-            GameData game = context.bodyAsClass(GameData.class);
+            GameService.CreateGameRequest game = context.bodyAsClass(GameService.CreateGameRequest.class);
             if (Objects.equals(game.gameName(), "") || Objects.equals(game.gameName(), null)) {
                 context.status(400).result("{\"message\":\"error cannot have blank catagory\"}");
                 return;

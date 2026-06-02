@@ -64,8 +64,8 @@ public class ChessClient {
                 case "logout" -> logout();
                 case "create" -> create(tokens);
                 case "list" -> listGames();
-                case "play" -> joinGame();
-                case "observe" -> observeGame();
+                case "play" -> joinGame(tokens);
+                case "observe" -> observeGame(tokens);
                 default -> "Not an available command. Please type 'help' for options.\n";
             };
         } catch (DataProcessingException ex) {
@@ -92,9 +92,9 @@ public class ChessClient {
                 help -- lists options
                 logout -- logs out of current session
                 create -- <GameName> creates a new game
-                list lists game options
+                list -- lists game options
                 play -- <game ID number> [WHITE|BLACK]
-                observe <game ID number>
+                observe -- <game ID number>
                 """;
     }
 
@@ -204,8 +204,16 @@ public class ChessClient {
             var resultingString = new StringBuilder();
             resultingString.append("Current games:\n");
             var gson = new Gson();
+            String blackTaken = "empty";
+            String whiteTaken = "empty";
             for (GameData game : games) {
-                resultingString.append(String.format("Game name: %s || Game ID: %s ", game.gameName(), game.gameID() + "\n"));
+                if (game.whiteUsername() != null) {
+                    whiteTaken = game.whiteUsername();
+                }
+                if (game.blackUsername() != null) {
+                    blackTaken = game.blackUsername();
+                }
+                resultingString.append(String.format("Game Number: %s || Game name: %s || WHITE %s || BLACK %s", game.gameID(), game.gameName(),  whiteTaken, blackTaken + "\n"));
         }
             return resultingString.toString();
 
@@ -220,23 +228,41 @@ public class ChessClient {
         }
         try {
             if (params.length == 3) {
-                String gameName = params[1];
+                String gameName = params[0];
+                String playerColor = params[2];
+                int gameID = Integer.parseInt(params[1]);
                 ListGamesResult serverGames = server.listGames(this.authToken);
                 Collection<GameData> allGames = serverGames.games();
                 boolean gameExists =false;
+                String blackTaken =  "empty";
+                String whiteTaken = "empty";
+                GameData gameToJoin = null;
                 for (GameData game : allGames) {
-                    if (game.gameName().equals(gameName)) {
+                    if (game.gameID()==(gameID)) {
                         gameExists = true;
+                        gameToJoin = new GameData(game.gameID(),game.whiteUsername(),game.blackUsername(),game.gameName(),game.game());
                     }
                 }
                 if (!gameExists) {
-                    return String.format("Game does not exist.\n");
+                    return "Game does not exist.\n";
 
                 }
-                String playerColor = params[2];
-                CreateGameResult result = server.create(this.authToken, gameName);
-                JoinGameRequest serverGames2 = server.joinGame(playerColor,result.gameID(), this.authToken);
-                return String.format("Successfully created game %s", gameName + "\n");
+                if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE")) {
+                    return "White is already being used.\n";
+
+                }
+                if (gameToJoin.blackUsername() != null && Objects.equals(playerColor, "BLACK")) {
+                    return "Black is already being used.\n";
+
+                }
+                if (Objects.equals(playerColor, "WHITE")) {
+                    gameToJoin = new GameData(gameToJoin.gameID(), visitorName, gameToJoin.blackUsername(), gameToJoin.gameName(), gameToJoin.game());
+                }
+                if (Objects.equals(playerColor, "WHITE")) {
+                    gameToJoin = new GameData(gameToJoin.gameID(),  gameToJoin.blackUsername(),visitorName, gameToJoin.gameName(), gameToJoin.game());
+                }
+                JoinGameRequest serverGames2 = server.joinGame(playerColor,gameID, this.authToken);
+                return String.format("Successfully joined game %s", gameName + "\n");
 
             }
             else {
@@ -250,11 +276,24 @@ public class ChessClient {
         return "";
     }
 
-    public String observeGame(String... params) {
+    public String observeGame(String... params) throws Exception {
         if (!assertSignedIn()) {
             return "";
         }
-        return null;
+        try {
+            if (params.length == 3) {
+                int gameID = Integer.parseInt(params[1]);
+                server.joinGame(null, gameID, this.authToken);
+                return String.format("Successfully observing game %s", gameID + "\n");
+            }
+            else {
+                return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
+            }
+        } catch (Exception e) {
+            return "Error: could not observe game.\n";
+
+        }
+
     }
 
 

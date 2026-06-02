@@ -103,6 +103,12 @@ public class ServerFacade {
         var response = sendRequest(request);
         return handleResponse(response, JoinGameRequest.class);
     }
+    ObserveGameRequest observeGame(int gameID, String authToken) throws Exception {
+        var reqBody = new ObserveGameRequest(gameID);
+        var request = buildRequest("PUT", "/game", reqBody, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, ObserveGameRequest.class);
+    }
 
 }
 
@@ -125,6 +131,8 @@ record CreateGameResult(int gameID) {
 }
 
 record JoinGameRequest(String playerColor, int gameID) {
+}
+record ObserveGameRequest(int gameID) {
 }
 
 record ListGamesResult(Collection<GameData> games) {
