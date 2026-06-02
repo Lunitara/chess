@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import model.*;
 import model.GameData;
 
+import java.io.IOException;
 import java.net.*;
 import java.net.http.*;
 import java.net.http.HttpRequest.BodyPublisher;
@@ -23,35 +24,31 @@ public class ServerFacade {
         serverUrl = url;
     }
 
-    HttpRequest buildRequest(String method, String path, Object body) {
+    private HttpRequest buildRequest(String method, String path, Object body) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + path))
+                .header("Content-Type", "application/json")
                 .method(method, makeRequestBody(body));
-        if (body != null) {
-            request.setHeader("Content-Type", "application/json");
-        }
+
         return request.build();
     }
 
-    BodyPublisher makeRequestBody(Object request) {
-        if (request != null) {
-            return BodyPublishers.ofString(new Gson().toJson(request));
-        } else {
-            return BodyPublishers.noBody();
+    HttpRequest.BodyPublisher makeRequestBody(Object body) {
+        if (body == null) {
+            return HttpRequest.BodyPublishers.noBody();
         }
+        String jsonText = new com.google.gson.Gson().toJson(body);
+        System.out.println("CLIENT IS SENDING JSON: " + jsonText);
+        return HttpRequest.BodyPublishers.ofString(jsonText);
     }
 
-    HttpResponse<String> sendRequest(HttpRequest request) {
-        try {
+    HttpResponse<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
+            var client = HttpClient.newHttpClient();
             return client.send(request, BodyHandlers.ofString());
-        } catch (Throwable e) {
-            System.out.print("Error: could not create game" + e.getMessage());
-        }
-        return null;
     }
 
 
-    <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) {
+    <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) throws Exception {
         var status = response.statusCode();
         if (isSuccessful(status)) {
             var body = response.body();
@@ -67,7 +64,7 @@ public class ServerFacade {
             if (errorString == null) {
                 System.out.print("Error: could not perform action, status code: " + status + "\n");
             }
-            System.out.print("Exception\n");
+            throw new Exception(errorString);
         }
         return null;
     }
@@ -76,16 +73,16 @@ boolean isSuccessful(int status) {
     return status / 100 == 2;
 }
 
-AuthResult register(String username, String password, String email) {
+AuthResult register(String username, String password, String email) throws Exception {
     var reqBody = new RegisterRequest(username, password, email);
-    var request = buildRequest("POST", "/user", null);
+    var request = buildRequest("POST", "/user", reqBody);
     var response = sendRequest(request);
     return handleResponse(response, AuthResult.class);
 }
 
-AuthResult login(String username, String password) {
+AuthResult login(String username, String password) throws Exception {
     var reqBody = new LoginRequest(username, password);
-    var request = buildRequest("POST", "/session", null);
+    var request = buildRequest("POST", "/session", reqBody);
     var response = sendRequest(request);
     return handleResponse(response, AuthResult.class);
 
@@ -103,7 +100,7 @@ record RegisterRequest(String username, String password, String email) {
 record LoginResult(String username, String authToken) {
 }
 
-record LoginRequest(String username, String authToken) {
+record LoginRequest(String username, String password) {
 }
 
 record CreateGameRequest(String authToken, String gameName) {

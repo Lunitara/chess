@@ -68,7 +68,7 @@ public class ChessClient {
                 //case "listGames" -> listGames();
                 case "playGame" -> playGame();
                 case "observeGame" -> observeGame();
-                default -> "Not an available command. Please type 'help' for options.";
+                default -> "Not an available command. Please type 'help' for options.\n";
             };
         } catch (DataProcessingException ex) {
             return ex.getMessage();
@@ -103,13 +103,14 @@ public class ChessClient {
     //PRE-LOGIN UI
     public String login(String... params) {
         try {
+            assertSignedIn();
             if (params.length == 3) {
                 String username = params[1];
                 String password = params[2];
-                AuthResult result = server.login(username, password);
                 this.visitorName = username;
+                AuthResult result = server.login(username, password);
                 state = State.SIGNEDIN;
-                return String.format("You signed in as %s.", username + "\n");
+                return String.format("You signed in as %s", username + "\n");
             }
             else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length+ ".\n");
@@ -117,7 +118,7 @@ public class ChessClient {
             }
 
         } catch (Throwable e) {
-            return "Error: cannot login " + e.getMessage() + "\n";
+            return "Error: cannot login. Make sure username and password are correct.\n";
         }
     }
 
@@ -138,9 +139,8 @@ public class ChessClient {
 
         } catch (
                 Throwable e) {
-            System.out.print("Error: could not register " + e.getMessage() + "\n");
+            return "Error: could not register user.\n";
         }
-        return "";
     }
 
 

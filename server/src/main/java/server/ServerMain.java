@@ -9,7 +9,6 @@ public class ServerMain {
         UserDAO userDAO = new SqlUserDAO();
         GameDAO gameDAO = new SqlGameDAO();
         AuthDAO authDAO = new SqlAuthDAO();
-
         Server server = new Server();
         server.run(8080);
 
