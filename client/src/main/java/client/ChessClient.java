@@ -205,10 +205,9 @@ public class ChessClient {
             }
             var resultingString = new StringBuilder();
             resultingString.append("Current games:\n");
-            var gson = new Gson();
-            String blackTaken = "empty";
-            String whiteTaken = "empty";
             for (GameData game : games) {
+                String blackTaken = "empty";
+                String whiteTaken = "empty";
                 if (game.whiteUsername() != null) {
                     whiteTaken = game.whiteUsername();
                 }
@@ -260,11 +259,26 @@ public class ChessClient {
                 if (Objects.equals(playerColor, "WHITE")) {
                     gameToJoin = new GameData(gameToJoin.gameID(), visitorName, gameToJoin.blackUsername(), gameToJoin.gameName(), gameToJoin.game());
                 }
-                if (Objects.equals(playerColor, "WHITE")) {
+                if (Objects.equals(playerColor, "BLACK")) {
                     gameToJoin = new GameData(gameToJoin.gameID(),  gameToJoin.blackUsername(),visitorName, gameToJoin.gameName(), gameToJoin.game());
                 }
-                JoinGameRequest serverGames2 = server.joinGame(playerColor,gameID, this.authToken);
-                return String.format("Successfully joined game %s", gameName + "\n");
+                JoinGameRequest requesttojoin = server.joinGame(playerColor,gameID, this.authToken);
+                ListGamesResult allServerGames = server.listGames(this.authToken);
+                ChessGame targetGame = null;
+                String gamesName = "";
+                for (GameData game : allServerGames.games()) {
+                    if (game.gameID() == gameID) {
+                        targetGame = game.game();
+                        gamesName = game.gameName();
+                        break;
+                    }
+                }
+                if (targetGame == null) {
+                    return String.format("Joined but can't show board");
+
+                }
+                String board = makeBoard(targetGame,playerColor);
+                return String.format("Successfully joined game %s %s", gamesName, board +"\n");
 
             }
             else {
@@ -273,9 +287,8 @@ public class ChessClient {
             }
 
         } catch (Throwable e) {
-            System.out.print("Error: could not play game.\n");
+            return "Error: could not play game.\n";
         }
-        return "";
     }
 
     public String observeGame(String... params) throws Exception {
@@ -301,23 +314,34 @@ public String makeBoard(ChessGame game, String playerColor) {
     StringBuilder sb = new StringBuilder();
     String black = EscapeSequences.SET_BG_COLOR_BLACK;
     String orange = EscapeSequences.SET_BG_COLOR_ORANGE;
+    String reset = EscapeSequences.RESET_BG_COLOR;
         if (Objects.equals(playerColor, "WHITE") || playerColor == null) {
             for (int i = 8; i >0; i++) {
                 for (int j = 8; j > 0; j++) {
-                    sb.append(black + "u2003" + EscapeSequences.RESET_BG_COLOR);
+                    if ((i + j) % 2 ==0) {
+                        sb.append(black + "u2003" + reset);
+                    }
+                    else {
+                        sb.append(orange + "u2003" + reset);
+                    }
                 }
+                sb.append("\n");
             }
 
         }
     if (Objects.equals(playerColor, "BLACK") || playerColor == null) {
         for (int i = 8; i >0; i++) {
             for (int j = 8; j > 0; j++) {
-                sb.append(orange + "u2003" + EscapeSequences.RESET_BG_COLOR);
-            }
+                if ((i + j) % 2 ==0) {
+                    sb.append(orange + "u2003" + reset);
+                }
+                else {
+                    sb.append(black + "u2003" + reset);
+                }            }
         }
 
     }
-    return sb;
+    return sb.toString();
 }
 
     private boolean assertSignedIn() {
