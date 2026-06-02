@@ -1,10 +1,12 @@
 package client;
+import chess.ChessGame;
 import model.GameData;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Scanner;
 import com.google.gson.Gson;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
+import ui.EscapeSequences;
 
 public class ChessClient {
     private final ServerFacade server;
@@ -281,7 +283,7 @@ public class ChessClient {
             return "";
         }
         try {
-            if (params.length == 3) {
+            if (params.length == 2) {
                 int gameID = Integer.parseInt(params[1]);
                 server.joinGame(null, gameID, this.authToken);
                 return String.format("Successfully observing game %s", gameID + "\n");
@@ -295,7 +297,28 @@ public class ChessClient {
         }
 
     }
+public String makeBoard(ChessGame game, String playerColor) {
+    StringBuilder sb = new StringBuilder();
+    String black = EscapeSequences.SET_BG_COLOR_BLACK;
+    String orange = EscapeSequences.SET_BG_COLOR_ORANGE;
+        if (Objects.equals(playerColor, "WHITE") || playerColor == null) {
+            for (int i = 8; i >0; i++) {
+                for (int j = 8; j > 0; j++) {
+                    sb.append(black + "u2003" + EscapeSequences.RESET_BG_COLOR);
+                }
+            }
 
+        }
+    if (Objects.equals(playerColor, "BLACK") || playerColor == null) {
+        for (int i = 8; i >0; i++) {
+            for (int j = 8; j > 0; j++) {
+                sb.append(orange + "u2003" + EscapeSequences.RESET_BG_COLOR);
+            }
+        }
+
+    }
+    return sb;
+}
 
     private boolean assertSignedIn() {
         if (state == State.SIGNEDOUT) {
