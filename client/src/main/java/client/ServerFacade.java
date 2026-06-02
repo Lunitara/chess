@@ -97,7 +97,12 @@ public class ServerFacade {
         var response = sendRequest(request);
         return handleResponse(response, ListGamesResult.class);
     }
-
+    JoinGameRequest joinGame(String playerColor, int gameID, String authToken) throws Exception {
+        var reqBody = new JoinGameRequest(playerColor, gameID);
+        var request = buildRequest("PUT", "/game", reqBody, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, JoinGameRequest.class);
+    }
 
 }
 
@@ -119,7 +124,7 @@ record CreateGameRequest(String gameName) {
 record CreateGameResult(int gameID) {
 }
 
-record JoinGameRequest(String playerColor, int gameID, String authToken) {
+record JoinGameRequest(String playerColor, int gameID) {
 }
 
 record ListGamesResult(Collection<GameData> games) {

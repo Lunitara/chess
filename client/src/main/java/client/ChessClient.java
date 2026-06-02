@@ -64,7 +64,7 @@ public class ChessClient {
                 case "logout" -> logout();
                 case "create" -> create(tokens);
                 case "list" -> listGames();
-                case "play" -> playGame();
+                case "play" -> joinGame();
                 case "observe" -> observeGame();
                 default -> "Not an available command. Please type 'help' for options.\n";
             };
@@ -214,14 +214,43 @@ public class ChessClient {
         }
     }
 
-    private String playGame() {
+    private String joinGame(String... params) {
         if (!assertSignedIn()) {
             return "";
         }
-        return null;
+        try {
+            if (params.length == 3) {
+                String gameName = params[1];
+                ListGamesResult serverGames = server.listGames(this.authToken);
+                Collection<GameData> allGames = serverGames.games();
+                boolean gameExists =false;
+                for (GameData game : allGames) {
+                    if (game.gameName().equals(gameName)) {
+                        gameExists = true;
+                    }
+                }
+                if (!gameExists) {
+                    return String.format("Game does not exist.\n");
+
+                }
+                String playerColor = params[2];
+                CreateGameResult result = server.create(this.authToken, gameName);
+                JoinGameRequest serverGames2 = server.joinGame(playerColor,result.gameID(), this.authToken);
+                return String.format("Successfully created game %s", gameName + "\n");
+
+            }
+            else {
+                return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
+
+            }
+
+        } catch (Throwable e) {
+            System.out.print("Error: could not play game.\n");
+        }
+        return "";
     }
 
-    public String observeGame() {
+    public String observeGame(String... params) {
         if (!assertSignedIn()) {
             return "";
         }
