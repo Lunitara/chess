@@ -206,7 +206,7 @@ public class ChessClient {
             resultingString.append("Current games:\n");
             var gson = new Gson();
             for (GameData game : games) {
-                resultingString.append(gson.toJson(game)).append('\n');
+                resultingString.append(String.format("Game name: %s || Game ID: %s ", game.gameName(), game.gameID() + "\n"));
         }
             return resultingString.toString();
 
