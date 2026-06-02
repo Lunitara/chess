@@ -1,18 +1,16 @@
 package client;
-import client.ServerFacade;
-import java.util.Arrays;
+import model.GameData;
+import java.util.Collection;
+import java.util.Objects;
 import java.util.Scanner;
 import com.google.gson.Gson;
-import com.sun.nio.sctp.NotificationHandler;
-import model.*;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
-
-import static java.awt.Color.*;
 
 public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
     private String visitorName = null;
+    public String authToken;
 
     public ChessClient(String serverUrl) {
         this.server = new ServerFacade(serverUrl);
@@ -64,14 +62,16 @@ public class ChessClient {
                 case "login" -> login(tokens);
                 case "register" -> register(tokens);
                 case "logout" -> logout();
-                case "createGame" -> createGame(tokens);
-                //case "listGames" -> listGames();
-                case "playGame" -> playGame();
-                case "observeGame" -> observeGame();
+                case "create" -> create(tokens);
+                case "list" -> listGames();
+                case "play" -> playGame();
+                case "observe" -> observeGame();
                 default -> "Not an available command. Please type 'help' for options.\n";
             };
         } catch (DataProcessingException ex) {
             return ex.getMessage();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -91,10 +91,10 @@ public class ChessClient {
                 quit -- exits program
                 help -- lists options
                 logout -- logs out of current session
-                createGame -- <GameName> creates a new game
-                listGames lists game options
-                playGame -- <game ID number> [WHITE|BLACK]
-                observeGame <game ID number>
+                create -- <GameName> creates a new game
+                list lists game options
+                play -- <game ID number> [WHITE|BLACK]
+                observe <game ID number>
                 quit
                 """;
     }
@@ -103,13 +103,17 @@ public class ChessClient {
     //PRE-LOGIN UI
     public String login(String... params) {
         try {
-            assertSignedIn();
             if (params.length == 3) {
                 String username = params[1];
+                if (Objects.equals(this.visitorName, username)) {
+                    return String.format("Already logged in as " + username + ".\n");
+                }
                 String password = params[2];
-                this.visitorName = username;
                 AuthResult result = server.login(username, password);
+                this.visitorName = username;
                 state = State.SIGNEDIN;
+                this.authToken = result.authToken();
+
                 return String.format("You signed in as %s", username + "\n");
             }
             else {
@@ -130,6 +134,9 @@ public class ChessClient {
                 String email = params[3];
                 AuthResult result = server.register(username, password, email);
                 state = State.SIGNEDIN;
+                this.visitorName = username;
+                this.authToken = result.authToken();
+
                 return String.format("Successfully registered as %s.", username  + "\n");
             }
             else {
@@ -139,7 +146,7 @@ public class ChessClient {
 
         } catch (
                 Throwable e) {
-            return "Error: could not register user.\n";
+            return "Error: user already exists. \n";
         }
     }
 
@@ -148,17 +155,28 @@ public class ChessClient {
 
     public String logout() {
         assertSignedIn();
-        visitorName = null;
         state = State.SIGNEDOUT;
-        return String.format("%s Successfully logged out ", visitorName);
+        this.authToken = null;
+        return String.format("Successfully logged out.\n");
     }
 
-    public String createGame(String... params) {
-        assertSignedIn();
+    public String create(String... params) {
+        if (!assertSignedIn()) {
+            return "";
+        }
         try {
             if (params.length == 2) {
-                int gameName = Integer.parseInt(params[1]);
-                return String.format("%s Successfully created game ", gameName  + "\n");
+                String gameName = params[1];
+                ListGamesResult serverGames = server.listGames(this.authToken);
+                Collection<GameData> allGames = serverGames.games();
+                for (GameData game : allGames) {
+                    if (game.gameName().equals(gameName)) {
+                        return String.format("Game name must be unique.\n");
+
+                    }
+                }
+                CreateGameResult result = server.create(this.authToken, gameName);
+                return String.format("Successfully created game %s", gameName + "\n");
 
             }
             else {
@@ -167,42 +185,58 @@ public class ChessClient {
             }
 
         } catch (Throwable e) {
-            System.out.print("Error: could not create game " + e.getMessage() + "\n");
+            System.out.print("Error: could not create game.\n");
         }
         return "";
     }
 
-    /*
 
-    public String listGames() {
-        assertSignedIn();
-        GameData[] games = client.ServerFacade.listGames();
-        var result = new StringBuilder();
-        var gson = new Gson();
-        for (GameData game : games) {
-            result.append(gson.toJson(game)).append('\n');
+    public String listGames() throws Exception {
+         if (!assertSignedIn()) {
+             return "";
+         }
+        try {
+            ListGamesResult result = server.listGames(this.authToken);
+            Collection<GameData> games = result.games();
+            if (games == null) {
+                return String.format("No games to show.\n");
+
+            }
+            var resultingString = new StringBuilder();
+            resultingString.append("Current games:\n");
+            var gson = new Gson();
+            for (GameData game : games) {
+                resultingString.append(gson.toJson(game)).append('\n');
         }
-        return result.toString();
+            return resultingString.toString();
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-     */
-
     private String playGame() {
-        assertSignedIn();
+        if (!assertSignedIn()) {
+            return "";
+        }
         return null;
     }
 
     public String observeGame() {
-        assertSignedIn();
+        if (!assertSignedIn()) {
+            return "";
+        }
         return null;
     }
 
 
-    private void assertSignedIn() {
+    private boolean assertSignedIn() {
         if (state == State.SIGNEDOUT) {
             System.out.print("Error: could not fulfill request as" +
                     " user is currently logged out"  + "\n");
+            return false;
         }
+        return true;
     }
 }
 

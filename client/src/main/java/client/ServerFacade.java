@@ -2,19 +2,14 @@ package client;
 
 import com.google.gson.Gson;
 
-import model.*;
 import model.GameData;
 
 import java.io.IOException;
 import java.net.*;
 import java.net.http.*;
-import java.net.http.HttpRequest.BodyPublisher;
-import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Collection;
-import java.util.Objects;
 
-import static java.awt.Color.RED;
 
 public class ServerFacade {
     final HttpClient client = HttpClient.newHttpClient();
@@ -24,11 +19,14 @@ public class ServerFacade {
         serverUrl = url;
     }
 
-    private HttpRequest buildRequest(String method, String path, Object body) {
+    private HttpRequest buildRequest(String method, String path, Object body, String authToken) {
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(serverUrl + path))
-                .header("Content-Type", "application/json")
-                .method(method, makeRequestBody(body));
+                .header("Content-Type", "application/json");
+        if (authToken != null) {
+            request.header("Authorization", authToken);
+        }
+        request.method(method, makeRequestBody(body));
 
         return request.build();
     }
@@ -38,13 +36,12 @@ public class ServerFacade {
             return HttpRequest.BodyPublishers.noBody();
         }
         String jsonText = new com.google.gson.Gson().toJson(body);
-        System.out.println("CLIENT IS SENDING JSON: " + jsonText);
         return HttpRequest.BodyPublishers.ofString(jsonText);
     }
 
     HttpResponse<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
-            var client = HttpClient.newHttpClient();
-            return client.send(request, BodyHandlers.ofString());
+        var client = HttpClient.newHttpClient();
+        return client.send(request, BodyHandlers.ofString());
     }
 
 
@@ -69,24 +66,37 @@ public class ServerFacade {
         return null;
     }
 
-boolean isSuccessful(int status) {
-    return status / 100 == 2;
-}
+    boolean isSuccessful(int status) {
+        return status / 100 == 2;
+    }
 
-AuthResult register(String username, String password, String email) throws Exception {
-    var reqBody = new RegisterRequest(username, password, email);
-    var request = buildRequest("POST", "/user", reqBody);
-    var response = sendRequest(request);
-    return handleResponse(response, AuthResult.class);
-}
+    AuthResult register(String username, String password, String email) throws Exception {
+        var reqBody = new RegisterRequest(username, password, email);
+        var request = buildRequest("POST", "/user", reqBody, null);
+        var response = sendRequest(request);
+        return handleResponse(response, AuthResult.class);
+    }
 
-AuthResult login(String username, String password) throws Exception {
-    var reqBody = new LoginRequest(username, password);
-    var request = buildRequest("POST", "/session", reqBody);
-    var response = sendRequest(request);
-    return handleResponse(response, AuthResult.class);
+    AuthResult login(String username, String password) throws Exception {
+        var reqBody = new LoginRequest(username, password);
+        var request = buildRequest("POST", "/session", reqBody, null);
+        var response = sendRequest(request);
+        return handleResponse(response, AuthResult.class);
 
-}
+    }
+
+    CreateGameResult create(String authToken, String gameName) throws Exception {
+        var reqBody = new CreateGameRequest(gameName);
+        var request = buildRequest("POST", "/game", reqBody, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, CreateGameResult.class);
+    }
+
+    ListGamesResult listGames(String authToken) throws Exception {
+        var request = buildRequest("GET", "/game", null, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, ListGamesResult.class);
+    }
 
 
 }
@@ -103,7 +113,7 @@ record LoginResult(String username, String authToken) {
 record LoginRequest(String username, String password) {
 }
 
-record CreateGameRequest(String authToken, String gameName) {
+record CreateGameRequest(String gameName) {
 }
 
 record CreateGameResult(int gameID) {
