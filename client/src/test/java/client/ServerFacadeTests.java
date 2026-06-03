@@ -51,7 +51,6 @@ public class ServerFacadeTests {
     @Test
     void registerNegative() throws Exception {
         var authData = serverFacade.register("player1", "password", "p1@email.com");
-        serverFacade.register("player1", "password", "p1@email.com");
         //cannot register same person twice
 
         assertThrows(Exception.class, () -> {
@@ -68,8 +67,6 @@ public class ServerFacadeTests {
 
     @Test
     void loginNegative() throws Exception {
-        var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", "password");
         //cannot login the same person twice
         assertThrows(Exception.class, () -> {
             serverFacade.login("chap", "password");
@@ -78,7 +75,6 @@ public class ServerFacadeTests {
     @Test
     void logoutPositive() throws Exception {
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", authToken.authToken());
         serverFacade.logout("chap", authToken.authToken());
 
     }
@@ -87,7 +83,6 @@ public class ServerFacadeTests {
     void logoutNegative() throws Exception {
         //cannot logout if wasn't logged in
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", authToken.authToken());
         serverFacade.logout("chap", authToken.authToken());
         assertThrows(Exception.class, () -> {
             serverFacade.logout("chap", authToken.authToken());
@@ -97,7 +92,6 @@ public class ServerFacadeTests {
     @Test
     void createPositive() throws Exception {
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", authToken.authToken());
         serverFacade.create(authToken.authToken(), "firstGame");
 
     }
@@ -106,9 +100,7 @@ public class ServerFacadeTests {
     void createNegative() throws Exception {
         //cannot create if name is the same
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", authToken.authToken());
-        serverFacade.create("chap", authToken.authToken());
-        serverFacade.create(authToken.authToken(), "firstGame");
+        serverFacade.logout("chap", authToken.authToken());
         assertThrows(Exception.class, () -> {
             serverFacade.create(authToken.authToken(), "firstGame");
         });
@@ -117,11 +109,8 @@ public class ServerFacadeTests {
     @Test
     void listPositive() throws Exception {
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", authToken.authToken());
-        serverFacade.create("chap", authToken.authToken());
+        serverFacade.create(authToken.authToken(), "thegame");
         client.ListGamesResult games = serverFacade.listGames(authToken.authToken());
-        assertTrue(games.games().isEmpty());
-        serverFacade.listGames(authToken.authToken());
         assertTrue(games.games().size() == 1);
     }
 
@@ -129,26 +118,24 @@ public class ServerFacadeTests {
     void listNegative() throws Exception {
         //cannot checking that it'll be false if the amount is wrong
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", authToken.authToken());
-        serverFacade.create("chap", authToken.authToken());
+
+        serverFacade.create(authToken.authToken(), "thegame");
         client.ListGamesResult games = serverFacade.listGames(authToken.authToken());
         assertFalse(games.games().isEmpty());
     }
     @Test
     void playPositive() throws Exception {
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", authToken.authToken());
-        serverFacade.create("chap", authToken.authToken());
-
-        serverFacade.joinGame("WHITE", 1, authToken.authToken());
+        CreateGameResult game = serverFacade.create(authToken.authToken(), "chap");
+        serverFacade.joinGame("WHITE", game.gameID(), authToken.authToken());
     }
 
     @Test
     void playNegative() throws Exception {
         //cannot checking that it'll be false if the amount is wrong
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.create("chap", authToken.authToken());
-        serverFacade.joinGame("WHITE", 1, authToken.authToken());
+        CreateGameResult game = serverFacade.create(authToken.authToken(), "chap");
+        serverFacade.joinGame("WHITE", game.gameID(), authToken.authToken());
         var authToken2 = serverFacade.register("second", "password", "p1@email.com");
         assertThrows(Exception.class, () -> {
             serverFacade.joinGame("WHITE", 1, authToken.authToken());
@@ -159,7 +146,7 @@ public class ServerFacadeTests {
     void observePositive() throws Exception {
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
         serverFacade.login("chap", authToken.authToken());
-        serverFacade.create("chap", authToken.authToken());
+        serverFacade.create(authToken.authToken(), "chap");
 
         serverFacade.observeGame( 1, authToken.authToken());
     }
@@ -168,7 +155,7 @@ public class ServerFacadeTests {
     void observeNegative() throws Exception {
         //cannot checking that it'll be false if the amount is wrong
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.create("chap", authToken.authToken());
+        serverFacade.create(authToken.authToken(), "chap");
         serverFacade.logout("chap", authToken.authToken());
 
         serverFacade.observeGame( 1, authToken.authToken());

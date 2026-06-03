@@ -319,6 +319,20 @@ public class ChessClient {
         try {
             if (params.length == 2) {
                 int gameID = Integer.parseInt(params[1]);
+                ListGamesResult serverGames = server.listGames(this.authToken);
+                Collection<GameData> allGames = serverGames.games();
+                boolean gameExists = false;
+                GameData gameToJoin = null;
+                for (GameData game : allGames) {
+                    if (game.gameID() == (gameID)) {
+                        gameExists = true;
+                        gameToJoin = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+                    }
+                }
+                if (gameToJoin == null || !gameExists) {
+                    return "Game does not exist.\n";
+
+                }
                 server.joinGame(null, gameID, this.authToken);
                 return String.format("Successfully observing game %s", gameID + "\n");
             } else {
