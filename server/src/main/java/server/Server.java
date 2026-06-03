@@ -202,6 +202,10 @@ public class Server {
                 context.status(500).result("{\"message\":\"error cannot join game\"}");
             return;
             }
+            catch (IllegalCallerException ex) {
+                context.status(400).result("{\"message\":\"error no good color\"}");
+                return;
+            }
             catch (IllegalArgumentException ex) {
                 context.status(400).result("{\"message\":\"error null game\"}");
                 return;
@@ -214,10 +218,7 @@ public class Server {
                 context.status(401).result("{\"message\":\"error null auth\"}");
                 return;
             }
-            catch (IllegalCallerException ex) {
-                context.status(400).result("{\"message\":\"error no good color\"}");
-                return;
-            }
+
         }
         catch (IllegalStateException ex) {
             context.status(400).result("{\"message\":\"error Request body should be json\"}");

@@ -111,7 +111,6 @@ public class ChessClient {
 
     //PRE-LOGIN UI
     public String login(String... params) {
-        assertinGame();
         if (state == State.SIGNEDIN) {
             return String.format("User already logged in.\n");
 
@@ -240,7 +239,7 @@ public class ChessClient {
     }
 
     private String joinGame(String... params) {
-        if (!assertSignedIn() || assertinGame()) {
+        if (!assertSignedIn()) {
             return "";
         }
         try {
@@ -313,7 +312,7 @@ public class ChessClient {
     }
 
     public String observeGame(String... params) throws Exception {
-        if (!assertSignedIn() || assertinGame()) {
+        if (!assertSignedIn()) {
             return "";
         }
         try {
@@ -327,14 +326,15 @@ public class ChessClient {
                     if (game.gameID() == (gameID)) {
                         gameExists = true;
                         gameToJoin = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+                        break;
                     }
                 }
                 if (gameToJoin == null || !gameExists) {
                     return "Game does not exist.\n";
-
                 }
                 server.joinGame(null, gameID, this.authToken);
-                return String.format("Successfully observing game %s", gameID + "\n");
+
+                return String.format("Successfully observing game %s", gameID + "\n" + makeBoardPlayerWhite());
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
@@ -542,10 +542,10 @@ public class ChessClient {
     private boolean assertinGame() {
         if (this.gamestate == InGame.INGAME) {
             System.out.print("Error: could not fulfill request as" +
-                    " user playing a match" + "\n");
-            return false;
+                    " user is playing a match" + "\n");
+            return true;
         }
-        return true;
+        return false;
     }
 }
 

@@ -60,26 +60,28 @@ public class GameService {
         if (gameData == null) {
             throw new IllegalArgumentException("error null game");
         }
-        if (!Objects.equals(joinGameRequest.playerColor, "WHITE") &&
-                !Objects.equals(joinGameRequest.playerColor, "BLACK")) {
-            throw new IllegalCallerException("error unauthorized (color not available)");
-        }
-        if (checkColorAvailability(gameData, joinGameRequest.playerColor)) {
-
-            if (Objects.equals(joinGameRequest.playerColor, "BLACK")) {
-                gameData = new GameData(gameData.gameID(), gameData.whiteUsername(),
-                        existingAuth.username(),gameData.gameName(),gameData.game());
+        String color = joinGameRequest.playerColor();
+        if (color != null) {
+            if (!Objects.equals(joinGameRequest.playerColor, "WHITE") &&
+                    !Objects.equals(joinGameRequest.playerColor, "BLACK")) {
+                throw new IllegalCallerException("error unauthorized (color not available)");
             }
-            if (Objects.equals(joinGameRequest.playerColor, "WHITE")) {
-                gameData = new GameData(gameData.gameID(), existingAuth.username(),
-                        gameData.blackUsername(),gameData.gameName(),gameData.game());
-            }
-            games.updateGame(gameData);
-        }
-        else {
-            throw new IllegalAccessError("error unauthorized (color not available)");
-        }
 
+            if (checkColorAvailability(gameData, joinGameRequest.playerColor)) {
+
+                if (Objects.equals(joinGameRequest.playerColor, "BLACK")) {
+                    gameData = new GameData(gameData.gameID(), gameData.whiteUsername(),
+                            existingAuth.username(), gameData.gameName(), gameData.game());
+                }
+                if (Objects.equals(joinGameRequest.playerColor, "WHITE")) {
+                    gameData = new GameData(gameData.gameID(), existingAuth.username(),
+                            gameData.blackUsername(), gameData.gameName(), gameData.game());
+                }
+                games.updateGame(gameData);
+            } else {
+                throw new IllegalAccessError("error unauthorized (color not available)");
+            }
+        }
     }
 
     public ListGamesResult listGames(String authToken)  throws DataAccessException {
