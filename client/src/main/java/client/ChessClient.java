@@ -186,7 +186,7 @@ public class ChessClient {
             }
 
         } catch (Throwable e) {
-            System.out.print("Error: could not create game.\n");
+            System.out.print("Error: could not create game. " + e.getMessage() + "\n");
         }
         return "";
     }
@@ -229,7 +229,6 @@ public class ChessClient {
         }
         try {
             if (params.length == 3) {
-                String gameName = params[0];
                 String playerColor = params[2];
                 int gameID = Integer.parseInt(params[1]);
                 ListGamesResult serverGames = server.listGames(this.authToken);
@@ -244,7 +243,7 @@ public class ChessClient {
                         gameToJoin = new GameData(game.gameID(),game.whiteUsername(),game.blackUsername(),game.gameName(),game.game());
                     }
                 }
-                if (!gameExists) {
+                if (gameToJoin == null || !gameExists) {
                     return "Game does not exist.\n";
 
                 }
@@ -260,7 +259,7 @@ public class ChessClient {
                     gameToJoin = new GameData(gameToJoin.gameID(), visitorName, gameToJoin.blackUsername(), gameToJoin.gameName(), gameToJoin.game());
                 }
                 if (Objects.equals(playerColor, "BLACK")) {
-                    gameToJoin = new GameData(gameToJoin.gameID(),  gameToJoin.blackUsername(),visitorName, gameToJoin.gameName(), gameToJoin.game());
+                    gameToJoin = new GameData(gameToJoin.gameID(),  gameToJoin.whiteUsername(),visitorName, gameToJoin.gameName(), gameToJoin.game());
                 }
                 JoinGameRequest requesttojoin = server.joinGame(playerColor,gameID, this.authToken);
                 ListGamesResult allServerGames = server.listGames(this.authToken);
@@ -278,7 +277,7 @@ public class ChessClient {
 
                 }
                 String board = makeBoard(targetGame,playerColor);
-                return String.format("Successfully joined game %s %s", gamesName, board +"\n");
+                return String.format("Successfully joined game %s", gamesName + "\n" + board +"\n");
 
             }
             else {
@@ -287,7 +286,7 @@ public class ChessClient {
             }
 
         } catch (Throwable e) {
-            return "Error: could not play game.\n";
+            return "Error: could not play game." + e.getMessage() + "\n";
         }
     }
 
@@ -316,13 +315,13 @@ public String makeBoard(ChessGame game, String playerColor) {
     String orange = EscapeSequences.SET_BG_COLOR_ORANGE;
     String reset = EscapeSequences.RESET_BG_COLOR;
         if (Objects.equals(playerColor, "WHITE") || playerColor == null) {
-            for (int i = 8; i >0; i++) {
-                for (int j = 8; j > 0; j++) {
+            for (int i = 8; i >0; i--) {
+                for (int j = 8; j > 0; j--) {
                     if ((i + j) % 2 ==0) {
-                        sb.append(black + "u2003" + reset);
+                        sb.append(black +  "\u2003" +"\u2003"  + reset);
                     }
                     else {
-                        sb.append(orange + "u2003" + reset);
+                        sb.append(orange +  "\u2003" +"\u2003"  + reset);
                     }
                 }
                 sb.append("\n");
@@ -330,15 +329,17 @@ public String makeBoard(ChessGame game, String playerColor) {
 
         }
     if (Objects.equals(playerColor, "BLACK") || playerColor == null) {
-        for (int i = 8; i >0; i++) {
-            for (int j = 8; j > 0; j++) {
+        for (int i = 8; i >0; i--) {
+            for (int j = 8; j > 0; j--) {
                 if ((i + j) % 2 ==0) {
-                    sb.append(orange + "u2003" + reset);
+                    sb.append(orange + "\u2003" + "\u2003" +reset);
                 }
                 else {
-                    sb.append(black + "u2003" + reset);
-                }            }
+                    sb.append(black + "\u2003" +"\u2003" + reset);
+                }
+
         }
+            sb.append("\n");}
 
     }
     return sb.toString();

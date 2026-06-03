@@ -194,21 +194,28 @@ public class Server {
                 GameService.JoinGameRequest game = context.bodyAsClass(GameService.JoinGameRequest.class);
                 game = new GameService.JoinGameRequest(game.playerColor(), game.gameID(), authToken);
                 games.joinGame(game);
+                context.status(200).result("{}");
+                return;
             }
             catch (DataAccessException e) {
                 context.status(500).result("{\"message\":\"error cannot join game\"}");
+            return;
             }
             catch (IllegalArgumentException ex) {
                 context.status(400).result("{\"message\":\"error null game\"}");
+                return;
             }
             catch (IllegalAccessError ex) {
                 context.status(403).result("{\"message\":\"error color already used\"}");
+                return;
             }
             catch (IllegalStateException ex) {
                 context.status(401).result("{\"message\":\"error null auth\"}");
+                return;
             }
             catch (IllegalCallerException ex) {
                 context.status(400).result("{\"message\":\"error no good color\"}");
+                return;
             }
         }
         catch (IllegalStateException ex) {
