@@ -28,6 +28,7 @@ public class Server {
             users.clearUserData();
             games.clearGameData();
             auths.clearAuthData();
+            context.status(200).result("{}");
         } catch (DataAccessException e) {
             context.status(500).result("{\"message\":\"error clearing data\"}");
         }

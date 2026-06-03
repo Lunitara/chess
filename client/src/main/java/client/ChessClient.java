@@ -2,7 +2,6 @@ package client;
 
 import chess.ChessGame;
 import model.GameData;
-
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Scanner;
@@ -16,6 +15,7 @@ public class ChessClient {
     private State state = State.SIGNEDOUT;
     private String visitorName = null;
     public String authToken;
+    private InGame gamestate = InGame.OUTGAME;
 
     public ChessClient(String serverUrl) {
         this.server = new ServerFacade(serverUrl);
@@ -91,6 +91,12 @@ public class ChessClient {
                     register -- <USERNAME> <PASSWORD> <EMAIL>
                     """;
         }
+        else if (gamestate == InGame.INGAME) {
+            return """
+                    quit -- exits program
+                    help -- lists options
+                    """;
+        }
         return """
                 quit -- exits program
                 help -- lists options
@@ -105,12 +111,14 @@ public class ChessClient {
 
     //PRE-LOGIN UI
     public String login(String... params) {
+        assertinGame();
+        if (state == State.SIGNEDIN) {
+            return String.format("User already logged in.\n");
+
+        }
         try {
             if (params.length == 3) {
                 String username = params[1];
-                if (Objects.equals(this.visitorName, username)) {
-                    return String.format("Already logged in as " + username + ".\n");
-                }
                 String password = params[2];
                 AuthResult result = server.login(username, password);
                 this.visitorName = username;
@@ -129,6 +137,7 @@ public class ChessClient {
     }
 
     public String register(String... params) {
+        assertinGame();
         try {
             if (params.length == 4) {
                 String username = params[1];
@@ -138,7 +147,6 @@ public class ChessClient {
                 state = State.SIGNEDIN;
                 this.visitorName = username;
                 this.authToken = result.authToken();
-
                 return String.format("Successfully registered as %s.", username + "\n");
             } else {
                 return "Please put in the correct # of parameters. You put in " + params.length + "\n";
@@ -147,22 +155,29 @@ public class ChessClient {
 
         } catch (
                 Throwable e) {
-            return "Error: user already exists. \n";
+            return "Error: user already exists.\n";
         }
     }
 
 
 // POST LOGIN UI
 
-    public String logout() {
-        assertSignedIn();
-        state = State.SIGNEDOUT;
-        this.authToken = null;
-        return String.format("Successfully logged out.\n");
+    public String logout() throws Exception {
+        try {
+            assertSignedIn();
+            assertinGame();
+            server.logout(visitorName, this.authToken);
+            state = State.SIGNEDOUT;
+            this.authToken = null;
+            return String.format("Successfully logged out.\n");
+        } catch (Exception e) {
+            return String.format("Failed to logout"+ e.getMessage() + "\n");
+        }
     }
 
     public String create(String... params) {
-        if (!assertSignedIn()) {
+
+        if (!assertSignedIn() ||assertinGame()) {
             return "";
         }
         try {
@@ -192,7 +207,7 @@ public class ChessClient {
 
 
     public String listGames() throws Exception {
-        if (!assertSignedIn()) {
+        if (!assertSignedIn() || assertinGame()) {
             return "";
         }
         try {
@@ -204,6 +219,7 @@ public class ChessClient {
             }
             var resultingString = new StringBuilder();
             resultingString.append("Current games:\n");
+            int gameNumber = 1;
             for (GameData game : games) {
                 String blackTaken = "empty";
                 String whiteTaken = "empty";
@@ -213,7 +229,8 @@ public class ChessClient {
                 if (game.blackUsername() != null) {
                     blackTaken = game.blackUsername();
                 }
-                resultingString.append(String.format("Game Number: %s || Game name: %s || WHITE %s || BLACK %s", game.gameID(), game.gameName(), whiteTaken, blackTaken + "\n"));
+                resultingString.append(String.format("Game Number: %s || Game name: %s || WHITE %s || BLACK %s", gameNumber, game.gameName(), whiteTaken, blackTaken + "\n"));
+            gameNumber++;
             }
             return resultingString.toString();
 
@@ -223,7 +240,7 @@ public class ChessClient {
     }
 
     private String joinGame(String... params) {
-        if (!assertSignedIn()) {
+        if (!assertSignedIn() || assertinGame()) {
             return "";
         }
         try {
@@ -282,6 +299,7 @@ public class ChessClient {
                 if (Objects.equals(playerColor, "BLACK")) {
                     board = makeBoardPlayerBlack();
                 }
+                gamestate = InGame.INGAME;
                 return String.format("Successfully joined game %s", gamesName + "\n" + board + "\n");
 
             } else {
@@ -295,7 +313,7 @@ public class ChessClient {
     }
 
     public String observeGame(String... params) throws Exception {
-        if (!assertSignedIn()) {
+        if (!assertSignedIn() || assertinGame()) {
             return "";
         }
         try {
@@ -308,10 +326,9 @@ public class ChessClient {
             }
         } catch (Exception e) {
             return "Error: could not observe game.\n";
-
         }
-
     }
+
 
     public String makeBoardPlayerWhite() {
         StringBuilder sb = new StringBuilder();
@@ -350,47 +367,36 @@ public class ChessClient {
                 sb.append(orange).append("\u2003").append("♟").append("\u2003").append(reset);
 
             }
-
-
         }
         sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
-
         sb.append("\n");
         int count = 6;
         //lines in between
         for (int i = 4; i > 0; i--) {
             sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
-
             for (int j = 8; j > 0; j--) {
                 if ((i + j) % 2 == 0) {
                     sb.append(orange).append("\u2003").append("\u2003").append("\u2003").append(reset);
                 } else {
                     sb.append(black).append("\u2003").append("\u2003").append("\u2003").append(reset);
                 }
-
             }
             sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
-
             sb.append("\n");
             count--;
         }
         sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
-
         //bottom white
         for (int j = 8; j > 0; j--) {
             if ((j) % 2 == 0) {
                 sb.append(orange).append("\u2003").append("♙").append("\u2003").append(reset);
             } else {
                 sb.append(black).append("\u2003").append("♙").append("\u2003").append(reset);
-
             }
-
         }
         sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
-
         sb.append("\n");
         sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
-
         sb.append(black).append("\u2003").append("♖").append("\u2003").append(reset);
         sb.append(orange).append("\u2003").append("♘").append("\u2003").append(reset);
         sb.append(black).append("\u2003").append("♗").append("\u2003").append(reset);
@@ -400,7 +406,6 @@ public class ChessClient {
         sb.append(black).append("\u2003").append("♘").append("\u2003").append(reset);
         sb.append(orange).append("\u2003").append("♖").append("\u2003").append(reset);
         sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
-
         sb.append("\n");
         sb.append(gray).append("   ").append("\u2003").append(reset);
         sb.append(gray).append("\u2003").append("a ").append("\u2003").append(reset);
@@ -453,17 +458,13 @@ public class ChessClient {
                 sb.append(orange).append("\u2003").append("♙").append("\u2003").append(reset);
 
             }
-
-
         }
         sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
-
         sb.append("\n");
         int count = 6;
         //lines in between
         for (int i = 4; i > 0; i--) {
             sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
-
             for (int j = 8; j > 0; j--) {
                 if ((i + j) % 2 == 0) {
                     sb.append(orange).append("\u2003").append("\u2003").append("\u2003").append(reset);
@@ -478,7 +479,6 @@ public class ChessClient {
             count--;
         }
         sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
-
         //bottom white
         for (int j = 8; j > 0; j--) {
             if ((j) % 2 == 0) {
@@ -487,13 +487,10 @@ public class ChessClient {
                 sb.append(black).append("\u2003").append("♟").append("\u2003").append(reset);
 
             }
-
         }
         sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
-
         sb.append("\n");
         sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
-
         sb.append(black).append("\u2003").append("♜").append("\u2003").append(reset);
         sb.append(orange).append("\u2003").append("♞").append("\u2003").append(reset);
         sb.append(black).append("\u2003").append("♝").append("\u2003").append(reset);
@@ -503,7 +500,6 @@ public class ChessClient {
         sb.append(black).append("\u2003").append("♞").append("\u2003").append(reset);
         sb.append(orange).append("\u2003").append("♜").append("\u2003").append(reset);
         sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
-
         sb.append("\n");
         sb.append(gray).append("   ").append("\u2003").append(reset);
         sb.append(gray).append("\u2003").append("h ").append("\u2003").append(reset);
@@ -525,6 +521,14 @@ public class ChessClient {
         if (this.state == State.SIGNEDOUT) {
             System.out.print("Error: could not fulfill request as" +
                     " user is currently logged out" + "\n");
+            return false;
+        }
+        return true;
+    }
+    private boolean assertinGame() {
+        if (this.gamestate == InGame.INGAME) {
+            System.out.print("Error: could not fulfill request as" +
+                    " user playing a match" + "\n");
             return false;
         }
         return true;

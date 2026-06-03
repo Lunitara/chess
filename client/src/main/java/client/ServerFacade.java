@@ -84,6 +84,13 @@ public class ServerFacade {
         return handleResponse(response, AuthResult.class);
 
     }
+    AuthResult logout(String username, String authToken) throws Exception {
+        var reqBody = new LogoutRequest(username);
+        var request = buildRequest("DELETE", "/session", reqBody, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, AuthResult.class);
+
+    }
 
     CreateGameResult create(String authToken, String gameName) throws Exception {
         var reqBody = new CreateGameRequest(gameName);
@@ -110,10 +117,10 @@ public class ServerFacade {
         return handleResponse(response, ObserveGameRequest.class);
     }
 
-    void clear(String authToken) throws Exception {
-        var request = buildRequest("DELETE", "/game", null, authToken);
+    public void clear() throws Exception {
+        var request = buildRequest("DELETE", "/db", null, null);
         var response = sendRequest(request);
-        return handleResponse(response, Clear.class);
+        handleResponse(response, Clear.class);
     }
 
 }
@@ -124,16 +131,18 @@ record RegisterResult(String username, String authToken) {
 record RegisterRequest(String username, String password, String email) {
 }
 
-record clear(String authToken) {
-}
 
 record LoginRequest(String username, String password) {
+}
+record LogoutRequest(String username) {
 }
 
 record CreateGameRequest(String gameName) {
 }
 
 record CreateGameResult(int gameID) {
+}
+record Clear() {
 }
 
 record JoinGameRequest(String playerColor, int gameID) {
