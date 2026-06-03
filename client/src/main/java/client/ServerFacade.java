@@ -111,7 +111,7 @@ public class ServerFacade {
         return handleResponse(response, JoinGameRequest.class);
     }
     ObserveGameRequest observeGame(int gameID, String authToken) throws Exception {
-        var reqBody = new ObserveGameRequest(gameID);
+        var reqBody = new JoinGameRequest("OBSERVER", gameID);
         var request = buildRequest("PUT", "/game", reqBody, authToken);
         var response = sendRequest(request);
         return handleResponse(response, ObserveGameRequest.class);

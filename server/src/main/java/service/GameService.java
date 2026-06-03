@@ -52,6 +52,7 @@ public class GameService {
     }
 
     public void joinGame(JoinGameRequest joinGameRequest)  throws DataAccessException{
+
         model.GameData gameData = games.getGame(joinGameRequest.gameID());
         AuthData existingAuth = auths.getAuth(joinGameRequest.authToken());
         if (existingAuth == null) {
@@ -61,19 +62,20 @@ public class GameService {
             throw new IllegalArgumentException("error null game");
         }
         String color = joinGameRequest.playerColor();
-        if (color != null) {
-            if (!Objects.equals(joinGameRequest.playerColor, "WHITE") &&
-                    !Objects.equals(joinGameRequest.playerColor, "BLACK")) {
-                throw new IllegalCallerException("error unauthorized (color not available)");
+        if (color == null ||(!color.equals("WHITE") && !color.equals("BLACK"))) {
+            if ("OBSERVER".equals(color)) {
+                return;
             }
+            throw new IllegalCallerException("error unauthorized (color not available)");
+        }
 
-            if (checkColorAvailability(gameData, joinGameRequest.playerColor)) {
+            if (checkColorAvailability(gameData, color)) {
 
-                if (Objects.equals(joinGameRequest.playerColor, "BLACK")) {
+                if (Objects.equals(color, "BLACK")) {
                     gameData = new GameData(gameData.gameID(), gameData.whiteUsername(),
                             existingAuth.username(), gameData.gameName(), gameData.game());
                 }
-                if (Objects.equals(joinGameRequest.playerColor, "WHITE")) {
+                if (Objects.equals(color, "WHITE")) {
                     gameData = new GameData(gameData.gameID(), existingAuth.username(),
                             gameData.blackUsername(), gameData.gameName(), gameData.game());
                 }
@@ -81,7 +83,7 @@ public class GameService {
             } else {
                 throw new IllegalAccessError("error unauthorized (color not available)");
             }
-        }
+
     }
 
     public ListGamesResult listGames(String authToken)  throws DataAccessException {

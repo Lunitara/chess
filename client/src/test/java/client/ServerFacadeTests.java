@@ -145,20 +145,16 @@ public class ServerFacadeTests {
     @Test
     void observePositive() throws Exception {
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.login("chap", authToken.authToken());
-        serverFacade.create(authToken.authToken(), "chap");
-
-        serverFacade.observeGame( 1, authToken.authToken());
+        CreateGameResult game = serverFacade.create(authToken.authToken(), "chap");
+        serverFacade.observeGame(game.gameID(), authToken.authToken());
     }
 
     @Test
     void observeNegative() throws Exception {
         //cannot checking that it'll be false if the amount is wrong
         var authToken = serverFacade.register("chap", "password", "p1@email.com");
-        serverFacade.create(authToken.authToken(), "chap");
+        CreateGameResult game = serverFacade.create(authToken.authToken(), "chap");
         serverFacade.logout("chap", authToken.authToken());
-
-        serverFacade.observeGame( 1, authToken.authToken());
 
         assertThrows(Exception.class, () -> {
             serverFacade.observeGame( 1, authToken.authToken());

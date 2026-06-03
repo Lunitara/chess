@@ -184,6 +184,7 @@ public class Server {
     //
     private  void joinGame(@NotNull Context context){
         //context.bodyAsClass parses request body into record class probably
+        System.out.println("RAW BODY RECEIVED: " + context.body());
         try {
             String authToken = getAuthHeader(context);
             if (authToken.equals("")) {
@@ -198,10 +199,7 @@ public class Server {
                 context.status(200).result("{}");
                 return;
             }
-            catch (DataAccessException e) {
-                context.status(500).result("{\"message\":\"error cannot join game\"}");
-            return;
-            }
+
             catch (IllegalCallerException ex) {
                 context.status(400).result("{\"message\":\"error no good color\"}");
                 return;
@@ -217,6 +215,14 @@ public class Server {
             catch (IllegalStateException ex) {
                 context.status(401).result("{\"message\":\"error null auth\"}");
                 return;
+            }
+            catch (DataAccessException e) {
+                context.status(500).result("{\"message\":\"error cannot join game\"}");
+                return;
+            }
+            catch (Exception ex) {
+                // Fallback catch-all for malformed JSON request text bodies
+                context.status(400).result("{\"message\":\"error Request body should be json\"}");
             }
 
         }
