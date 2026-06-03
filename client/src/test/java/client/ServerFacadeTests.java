@@ -22,7 +22,7 @@ public class ServerFacadeTests {
     //need to clear before each
     @BeforeEach
     public void setUp() {
-        //serverFacade.clear();
+        serverFacade.clear();
     }
 
 
@@ -40,7 +40,7 @@ public class ServerFacadeTests {
     //below register test was an example test of what they should look like
     @Test
     void register() throws Exception {
-        //var authData = facade.register("player1", "password", "p1@email.com");
-       // assertTrue(authData.authToken().length() > 10);
+        var authData = serverFacade.register("player1", "password", "p1@email.com");
+        assertTrue(authData.authToken().length() > 10);
     }
 }

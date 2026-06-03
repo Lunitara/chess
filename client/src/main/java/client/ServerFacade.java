@@ -110,6 +110,12 @@ public class ServerFacade {
         return handleResponse(response, ObserveGameRequest.class);
     }
 
+    void clear(String authToken) throws Exception {
+        var request = buildRequest("DELETE", "/game", null, authToken);
+        var response = sendRequest(request);
+        return handleResponse(response, Clear.class);
+    }
+
 }
 
 record RegisterResult(String username, String authToken) {
@@ -118,7 +124,7 @@ record RegisterResult(String username, String authToken) {
 record RegisterRequest(String username, String password, String email) {
 }
 
-record LoginResult(String username, String authToken) {
+record clear(String authToken) {
 }
 
 record LoginRequest(String username, String password) {

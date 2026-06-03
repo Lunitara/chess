@@ -32,7 +32,7 @@ public class Server {
             context.status(500).result("{\"message\":\"error clearing data\"}");
         }
     }
-    private  void register(@NotNull Context context) {
+    public void register(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
             UserData user = context.bodyAsClass(UserData.class);

@@ -1,9 +1,12 @@
 package client;
+
 import chess.ChessGame;
 import model.GameData;
+
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Scanner;
+
 import com.google.gson.Gson;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
 import ui.EscapeSequences;
@@ -46,8 +49,7 @@ public class ChessClient {
         if (state == State.SIGNEDOUT) {
             System.out.print("Chess 240 User >>> ");
 
-        }
-        else {
+        } else {
             System.out.print(visitorName + " >>> ");
 
         }
@@ -116,9 +118,8 @@ public class ChessClient {
                 this.authToken = result.authToken();
 
                 return String.format("You signed in as %s", username + "\n");
-            }
-            else {
-                return String.format("Please put in the correct # of parameters. You put in " + params.length+ ".\n");
+            } else {
+                return String.format("Please put in the correct # of parameters. You put in " + params.length + ".\n");
 
             }
 
@@ -138,9 +139,8 @@ public class ChessClient {
                 this.visitorName = username;
                 this.authToken = result.authToken();
 
-                return String.format("Successfully registered as %s.", username  + "\n");
-            }
-            else {
+                return String.format("Successfully registered as %s.", username + "\n");
+            } else {
                 return "Please put in the correct # of parameters. You put in " + params.length + "\n";
 
             }
@@ -179,8 +179,7 @@ public class ChessClient {
                 CreateGameResult result = server.create(this.authToken, gameName);
                 return String.format("Successfully created game %s", gameName + "\n");
 
-            }
-            else {
+            } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
 
             }
@@ -193,9 +192,9 @@ public class ChessClient {
 
 
     public String listGames() throws Exception {
-         if (!assertSignedIn()) {
-             return "";
-         }
+        if (!assertSignedIn()) {
+            return "";
+        }
         try {
             ListGamesResult result = server.listGames(this.authToken);
             Collection<GameData> games = result.games();
@@ -214,8 +213,8 @@ public class ChessClient {
                 if (game.blackUsername() != null) {
                     blackTaken = game.blackUsername();
                 }
-                resultingString.append(String.format("Game Number: %s || Game name: %s || WHITE %s || BLACK %s", game.gameID(), game.gameName(),  whiteTaken, blackTaken + "\n"));
-        }
+                resultingString.append(String.format("Game Number: %s || Game name: %s || WHITE %s || BLACK %s", game.gameID(), game.gameName(), whiteTaken, blackTaken + "\n"));
+            }
             return resultingString.toString();
 
         } catch (Exception e) {
@@ -233,14 +232,14 @@ public class ChessClient {
                 int gameID = Integer.parseInt(params[1]);
                 ListGamesResult serverGames = server.listGames(this.authToken);
                 Collection<GameData> allGames = serverGames.games();
-                boolean gameExists =false;
-                String blackTaken =  "empty";
+                boolean gameExists = false;
+                String blackTaken = "empty";
                 String whiteTaken = "empty";
                 GameData gameToJoin = null;
                 for (GameData game : allGames) {
-                    if (game.gameID()==(gameID)) {
+                    if (game.gameID() == (gameID)) {
                         gameExists = true;
-                        gameToJoin = new GameData(game.gameID(),game.whiteUsername(),game.blackUsername(),game.gameName(),game.game());
+                        gameToJoin = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
                     }
                 }
                 if (gameToJoin == null || !gameExists) {
@@ -259,9 +258,9 @@ public class ChessClient {
                     gameToJoin = new GameData(gameToJoin.gameID(), visitorName, gameToJoin.blackUsername(), gameToJoin.gameName(), gameToJoin.game());
                 }
                 if (Objects.equals(playerColor, "BLACK")) {
-                    gameToJoin = new GameData(gameToJoin.gameID(),  gameToJoin.whiteUsername(),visitorName, gameToJoin.gameName(), gameToJoin.game());
+                    gameToJoin = new GameData(gameToJoin.gameID(), gameToJoin.whiteUsername(), visitorName, gameToJoin.gameName(), gameToJoin.game());
                 }
-                JoinGameRequest requesttojoin = server.joinGame(playerColor,gameID, this.authToken);
+                JoinGameRequest requesttojoin = server.joinGame(playerColor, gameID, this.authToken);
                 ListGamesResult allServerGames = server.listGames(this.authToken);
                 ChessGame targetGame = null;
                 String gamesName = "";
@@ -276,11 +275,16 @@ public class ChessClient {
                     return String.format("Joined but can't show board");
 
                 }
-                String board = makeBoard(targetGame,playerColor);
-                return String.format("Successfully joined game %s", gamesName + "\n" + board +"\n");
+                String board = "";
+                if (Objects.equals(playerColor, "WHITE") || playerColor == null) {
+                    board = makeBoardPlayerWhite();
+                }
+                if (Objects.equals(playerColor, "BLACK")) {
+                    board = makeBoardPlayerBlack();
+                }
+                return String.format("Successfully joined game %s", gamesName + "\n" + board + "\n");
 
-            }
-            else {
+            } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
 
             }
@@ -299,8 +303,7 @@ public class ChessClient {
                 int gameID = Integer.parseInt(params[1]);
                 server.joinGame(null, gameID, this.authToken);
                 return String.format("Successfully observing game %s", gameID + "\n");
-            }
-            else {
+            } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
         } catch (Exception e) {
@@ -309,50 +312,224 @@ public class ChessClient {
         }
 
     }
-public String makeBoard(ChessGame game, String playerColor) {
-    StringBuilder sb = new StringBuilder();
-    String black = EscapeSequences.SET_BG_COLOR_BLACK;
-    String orange = EscapeSequences.SET_BG_COLOR_ORANGE;
-    String reset = EscapeSequences.RESET_BG_COLOR;
-        if (Objects.equals(playerColor, "WHITE") || playerColor == null) {
-            for (int i = 8; i >0; i--) {
-                for (int j = 8; j > 0; j--) {
-                    if ((i + j) % 2 ==0) {
-                        sb.append(black +  "\u2003" +"\u2003"  + reset);
-                    }
-                    else {
-                        sb.append(orange +  "\u2003" +"\u2003"  + reset);
-                    }
+
+    public String makeBoardPlayerWhite() {
+        StringBuilder sb = new StringBuilder();
+        String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
+        String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
+        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
+        String reset = EscapeSequences.RESET_BG_COLOR;
+        sb.append(gray).append("   ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("a ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("b").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("c ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("d").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("e ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("f").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("g ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("h").append("\u2003").append(reset);
+        sb.append(gray).append("   ").append("\u2003").append(reset);
+        sb.append("\n");
+        sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♜").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♞").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♝").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♛").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♚").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♝").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♞").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♜").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+        sb.append("\n");
+        sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
+        //pawns
+        for (int j = 8; j > 0; j--) {
+            if ((j) % 2 == 0) {
+                sb.append(black).append("\u2003").append("♟").append("\u2003").append(reset);
+            } else {
+                sb.append(orange).append("\u2003").append("♟").append("\u2003").append(reset);
+
+            }
+
+
+        }
+        sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
+
+        sb.append("\n");
+        int count = 6;
+        //lines in between
+        for (int i = 4; i > 0; i--) {
+            sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
+
+            for (int j = 8; j > 0; j--) {
+                if ((i + j) % 2 == 0) {
+                    sb.append(orange).append("\u2003").append("\u2003").append("\u2003").append(reset);
+                } else {
+                    sb.append(black).append("\u2003").append("\u2003").append("\u2003").append(reset);
                 }
-                sb.append("\n");
+
+            }
+            sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
+
+            sb.append("\n");
+            count--;
+        }
+        sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
+
+        //bottom white
+        for (int j = 8; j > 0; j--) {
+            if ((j) % 2 == 0) {
+                sb.append(orange).append("\u2003").append("♙").append("\u2003").append(reset);
+            } else {
+                sb.append(black).append("\u2003").append("♙").append("\u2003").append(reset);
+
             }
 
         }
-    if (Objects.equals(playerColor, "BLACK") || playerColor == null) {
-        for (int i = 8; i >0; i--) {
-            for (int j = 8; j > 0; j--) {
-                if ((i + j) % 2 ==0) {
-                    sb.append(orange + "\u2003" + "\u2003" +reset);
-                }
-                else {
-                    sb.append(black + "\u2003" +"\u2003" + reset);
-                }
+        sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
+
+        sb.append("\n");
+        sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
+
+        sb.append(black).append("\u2003").append("♖").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♘").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♗").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♕").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♔").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♗").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♘").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♖").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
+
+        sb.append("\n");
+        sb.append(gray).append("   ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("a ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("b").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("c ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("d").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("e ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("f").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("g ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("h").append("\u2003").append(reset);
+        sb.append(gray).append("   ").append("\u2003").append(reset);
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    public String makeBoardPlayerBlack() {
+        StringBuilder sb = new StringBuilder();
+        String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
+        String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
+        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
+        String reset = EscapeSequences.RESET_BG_COLOR;
+        sb.append(gray).append("   ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("h ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("g").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("f ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("e").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("d ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("c").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("b ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("a").append("\u2003").append(reset);
+        sb.append(gray).append("   ").append("\u2003").append(reset);
+        sb.append("\n");
+        sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♖").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♘").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♗").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♕").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♔").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♗").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♘").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♖").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
+        sb.append("\n");
+        sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
+        //pawns
+        for (int j = 8; j > 0; j--) {
+            if ((j) % 2 == 0) {
+                sb.append(black).append("\u2003").append("♙").append("\u2003").append(reset);
+            } else {
+                sb.append(orange).append("\u2003").append("♙").append("\u2003").append(reset);
+
+            }
+
 
         }
-            sb.append("\n");}
+        sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
 
+        sb.append("\n");
+        int count = 6;
+        //lines in between
+        for (int i = 4; i > 0; i--) {
+            sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
+
+            for (int j = 8; j > 0; j--) {
+                if ((i + j) % 2 == 0) {
+                    sb.append(orange).append("\u2003").append("\u2003").append("\u2003").append(reset);
+                } else {
+                    sb.append(black).append("\u2003").append("\u2003").append("\u2003").append(reset);
+                }
+
+            }
+            sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
+
+            sb.append("\n");
+            count--;
+        }
+        sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
+
+        //bottom white
+        for (int j = 8; j > 0; j--) {
+            if ((j) % 2 == 0) {
+                sb.append(orange).append("\u2003").append("♟").append("\u2003").append(reset);
+            } else {
+                sb.append(black).append("\u2003").append("♟").append("\u2003").append(reset);
+
+            }
+
+        }
+        sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
+
+        sb.append("\n");
+        sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
+
+        sb.append(black).append("\u2003").append("♜").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♞").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♝").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♛").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♚").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♝").append("\u2003").append(reset);
+        sb.append(black).append("\u2003").append("♞").append("\u2003").append(reset);
+        sb.append(orange).append("\u2003").append("♜").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+
+        sb.append("\n");
+        sb.append(gray).append("   ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("h ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("g").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("f ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("e").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("d ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("c").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("b ").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("a").append("\u2003").append(reset);
+        sb.append(gray).append("   ").append("\u2003").append(reset);
+        sb.append("\n");
+        return sb.toString();
     }
-    return sb.toString();
-}
+
+
 
     private boolean assertSignedIn() {
-        if (state == State.SIGNEDOUT) {
+        if (this.state == State.SIGNEDOUT) {
             System.out.print("Error: could not fulfill request as" +
-                    " user is currently logged out"  + "\n");
+                    " user is currently logged out" + "\n");
             return false;
         }
         return true;
     }
 }
+
 
 
