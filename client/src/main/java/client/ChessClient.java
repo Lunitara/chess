@@ -188,7 +188,8 @@ public class ChessClient {
                 if (game.blackUsername() != null) {
                     blackTaken = game.blackUsername();
                 }
-                resultingString.append(String.format("Game Number: %s || Game name: %s || WHITE %s || BLACK %s", gameNumber, game.gameName(), whiteTaken, blackTaken + "\n"));
+                resultingString.append(String.format("Game Number: %s || Game name: %s || WHITE %s || BLACK %s",
+                        gameNumber, game.gameName(), whiteTaken, blackTaken + "\n"));
                 gameNumber++;
             }
             return resultingString.toString();
