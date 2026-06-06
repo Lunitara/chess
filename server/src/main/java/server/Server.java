@@ -252,11 +252,13 @@ public class Server {
             UserDAO usersdao = new SqlUserDAO();
             GameDAO gamesdao = new SqlGameDAO();
             AuthDAO authsdao = new SqlAuthDAO();
+
             DatabaseManager.configureDatabase();
 
             users = new UserService(gamesdao, usersdao, authsdao);
             games = new GameService(authsdao, gamesdao, usersdao);
             auths = new AuthService(usersdao, gamesdao, authsdao);
+            handler.populate(games,auths,users,gamesdao,authsdao,usersdao);
             // Register your endpoints and exception handlers here.
             javalin.delete("/db", this::clear);
             javalin.post("/user", this::register);

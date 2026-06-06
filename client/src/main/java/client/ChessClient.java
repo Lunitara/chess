@@ -398,7 +398,6 @@ public class ChessClient {
             sb.append(gray).append("\u2003").append("b ").append("\u2003").append(reset);
             sb.append(gray).append("\u2003").append("a").append("\u2003").append(reset);
             sb.append(gray).append("   ").append("\u2003").append(reset);
-            sb.append("\n");
         } else {
             sb.append(gray).append("   ").append("\u2003").append(reset);
             sb.append(gray).append("\u2003").append("a ").append("\u2003").append(reset);

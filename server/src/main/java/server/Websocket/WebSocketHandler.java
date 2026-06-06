@@ -9,7 +9,6 @@ import service.AuthService;
 import service.GameService;
 import service.UserService;
 import websocket.commands.UserGameCommand;
-import websocket.messages.ServerMessage;
 import com.google.gson.Gson;
 import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsCloseHandler;
@@ -18,14 +17,16 @@ import io.javalin.websocket.WsConnectHandler;
 import io.javalin.websocket.WsMessageContext;
 import io.javalin.websocket.WsMessageHandler;
 import org.eclipse.jetty.websocket.api.Session;
+import websocket.messages.ServerMessage;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsCloseHandler {
-    private final ConcurrentHashMap<Session, playerInfo> connections = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Integer, Session> observers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Session, PlayerInfo> connections = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, RunningGame> runningGames = new ConcurrentHashMap<>();
 
     private GameService gameService;
     private AuthService authService;
@@ -33,7 +34,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private GameDAO gameDAO;
     private AuthDAO authDAO;
     private UserDAO userDAO;
-    public WebSocketHandler(GameService gameService, AuthService authService, UserService userService, GameDAO gameDAO, AuthDAO authDAO, UserDAO userDAO) {
+
+    public void populate(GameService gameService, AuthService authService, UserService userService, GameDAO gameDAO, AuthDAO authDAO, UserDAO userDAO) {
         this.gameService = gameService;
         this.authService = authService;
         this.userService = userService;
@@ -63,22 +65,58 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
     private void connect(UserGameCommand action, Session session) {
-        System.out.println("Succesffuly conencted to game through websocket");
+
+        System.out.println("Successfully connected to game through websocket");
         try {
             String username = authDAO.getAuth(action.getAuthToken()).username();
             GameData data = gameDAO.getGame(action.getGameID());
+            RunningGame runningGame = runningGames.get(action.getGameID());
+            websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            String newMessage = new Gson().toJson(message);
             if (Objects.equals(data.whiteUsername(), username)) {
-                connections.put(session, new playerInfo(true, action.getGameID()));
-            }
-            else {
-                connections.put(session, new playerInfo(false, action.getGameID()));
+                connections.put(session, new PlayerInfo(true, action.getGameID()));
+                runningGames.put(action.getGameID(), new RunningGame(runningGame.observers,session, runningGame.blackPlayer()));
+                message.notificationString = username + " joined the game as white player.";
+                newMessage = new Gson().toJson(message);
+                try {
+                    if (runningGame.blackPlayer != null) {
 
+                        runningGame.blackPlayer.getRemote().sendString(newMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("sending a message to black player that white player joined failed");
+
+                }
+            } else if (Objects.equals(data.blackUsername(), username)) {
+                connections.put(session, new PlayerInfo(false, action.getGameID()));
+                runningGames.put(action.getGameID(), new RunningGame(runningGame.observers, runningGame.whitePlayer(),session));
+                message.notificationString = username + " joined the game as black player.";
+                newMessage = new Gson().toJson(message);
+                try {
+                    if (runningGame.whitePlayer != null) {
+                        runningGame.whitePlayer.getRemote().sendString(newMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("sending a message to white player that black player joined failed");
+
+                }
+            } else {
+                connections.put(session, new PlayerInfo(false, action.getGameID()));
+                runningGame.observers.add(session);
+                message.notificationString = username + " joined the game as an observer";
+                newMessage = new Gson().toJson(message);
+            }
+            for (Session observer:runningGame.observers) {
+                try {
+                    observer.getRemote().sendString(newMessage);
+                } catch (IOException e) {
+                    runningGame.observers.remove(observer);
+                    System.out.println("observer lost connection.");
+                }
             }
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
         }
-        return;
-
 
     }
 
@@ -95,6 +133,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     public void handleClose(WsCloseContext ctx) {
         System.out.println("Websocket closed");
     }
-    record playerInfo(boolean playerIsWhite, int gameID) {
+    record RunningGame(List<Session> observers, Session whitePlayer, Session blackPlayer) {
+
+    }
+    record PlayerInfo(boolean playerIsWhite, int gameID) {
     }
 }
