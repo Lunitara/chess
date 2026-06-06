@@ -1,9 +1,9 @@
 package client;
 import chess.ChessGame;
 import model.GameData;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Scanner;
+
+import java.util.*;
+
 import com.google.gson.Gson;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
 import ui.EscapeSequences;
@@ -13,6 +13,7 @@ public class ChessClient {
     private State state = State.SIGNEDOUT;
     private String visitorName = null;
     public String authToken;
+    public Map<Integer, Integer> gameNumberTOGameID= new HashMap<>();
 
     public ChessClient(String serverUrl) {
         this.server = new ServerFacade(serverUrl);
@@ -158,9 +159,8 @@ public class ChessClient {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
         } catch (Throwable e) {
-            System.out.print("Error: could not create game. Check the list of games. \n");
+            return String.format("Could not create game");
         }
-        return "";
     }
     public String listGames() throws Exception {
         if (!assertSignedIn()) {
@@ -175,7 +175,10 @@ public class ChessClient {
             var resultingString = new StringBuilder();
             resultingString.append("Current games:\n");
             int gameNumber = 1;
+            gameNumberTOGameID.clear();
+
             for (GameData game : games) {
+                gameNumberTOGameID.put(gameNumber, game.gameID());
                 String blackTaken = "empty";
                 String whiteTaken = "empty";
                 if (game.whiteUsername() != null) {
@@ -190,6 +193,7 @@ public class ChessClient {
             }
             return resultingString.toString();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -200,7 +204,8 @@ public class ChessClient {
         try {
             if (params.length == 3) {
                 String playerColor = params[2];
-                int gameID = Integer.parseInt(params[1]);
+                int gameNumber = Integer.parseInt(params[1]);
+                int gameID = gameNumberTOGameID.get(gameNumber);
                 ListGamesResult serverGames = server.listGames(this.authToken);
                 Collection<GameData> allGames = serverGames.games();
                 GameData gameToJoin = null;
@@ -248,23 +253,24 @@ public class ChessClient {
         }
         try {
             if (params.length == 2) {
-                int gameID = Integer.parseInt(params[1]);
+                int gameNumber = Integer.parseInt(params[1]);
+                int gameID = gameNumberTOGameID.get(gameNumber);
                 ListGamesResult serverGames = server.listGames(this.authToken);
                 Collection<GameData> allGames = serverGames.games();
-                boolean gameExists = false;
                 GameData gameToJoin = null;
                 for (GameData game : allGames) {
                     if (game.gameID() == (gameID)) {
-                        gameExists = true;
                         gameToJoin = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
                         break;
                     }
                 }
-                if (gameToJoin == null || !gameExists) {
+                if (gameToJoin == null) {
                     return "Game does not exist.\n";
                 }
                 server.observeGame(gameToJoin.gameID(), this.authToken);
-                return String.format("Successfully observing game %s", gameID + "\n" + makeBoardPlayerWhite());
+                System.out.printf("Successfully observing game %s", gameID + "\n" + makeBoardPlayerWhite());
+                Websocket.joinGame("OBSERVER", gameID, this.authToken);
+                return "Game Over";
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
@@ -398,6 +404,7 @@ public class ChessClient {
             sb.append(gray).append("\u2003").append("b ").append("\u2003").append(reset);
             sb.append(gray).append("\u2003").append("a").append("\u2003").append(reset);
             sb.append(gray).append("   ").append("\u2003").append(reset);
+
         } else {
             sb.append(gray).append("   ").append("\u2003").append(reset);
             sb.append(gray).append("\u2003").append("a ").append("\u2003").append(reset);
@@ -418,6 +425,7 @@ public class ChessClient {
         String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
         String reset = EscapeSequences.RESET_BG_COLOR;
         setUpAlphabet(sb, "BLACK");
+        sb.append("\n");
         sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
         setUpPieces(sb, "WHITE", "BLACK");
         sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);

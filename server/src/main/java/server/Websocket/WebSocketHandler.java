@@ -20,6 +20,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +53,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     @Override
     public void handleMessage(WsMessageContext ctx) {
-        try {
             UserGameCommand action = new Gson().fromJson(ctx.message(), UserGameCommand.class);
             switch (action.getCommandType()) {
                 case CONNECT -> connect(action, ctx.session);
@@ -60,9 +60,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 case LEAVE -> leave(action, ctx.session);
                 case RESIGN -> resign(action, ctx.session);
             }
-        } catch (Exception ex) {
-            System.out.println("Failed to connect, make move, leave, or resign");
-        }
     }
     private void connect(UserGameCommand action, Session session) {
 
@@ -71,6 +68,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String username = authDAO.getAuth(action.getAuthToken()).username();
             GameData data = gameDAO.getGame(action.getGameID());
             RunningGame runningGame = runningGames.get(action.getGameID());
+            if (runningGame == null) {
+                runningGame = new RunningGame(List.of(),null, null);
+            }
             websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             String newMessage = new Gson().toJson(message);
             if (Objects.equals(data.whiteUsername(), username)) {

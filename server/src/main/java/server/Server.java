@@ -161,6 +161,7 @@ public class Server {
                 context.json(result);
             } catch (DataAccessException e) {
                 context.status(500).result("{\"message\":\"error cannot create game\"}");
+                e.printStackTrace();
             } catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error already exists\"}");
                 return;

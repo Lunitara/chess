@@ -6,14 +6,15 @@ import model.UserData;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Random;
 
 public class GameMemoryDAO implements GameDAO{
     //CREATE OBJECTS FROM DATA STORE
     private int counter = 0;
     ArrayList<GameData> allGames = new ArrayList<>();
     public int createGame(GameData gameData) {
-        counter++;
         GameData newGame = new GameData(counter,gameData.whiteUsername(),gameData.blackUsername(),gameData.gameName(),gameData.game());
+        counter++;
         allGames.add(newGame);
         return counter;
     }

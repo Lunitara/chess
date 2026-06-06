@@ -10,6 +10,7 @@ import model.GameData;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
 
 public class GameService {
@@ -37,9 +38,11 @@ public class GameService {
         if (existingAuth == null) {
             throw new IllegalArgumentException("error null");
         }
+        Random rand = new Random();
+        newGameID = rand.nextInt();
+        System.out.println(newGameID);
         GameData gameData = new GameData(newGameID,null,null,
                 createGameRequest.gameName(), new ChessGame());
-        newGameID++;
         int gameID = games.createGame(gameData);
         return new GameService.CreateGameResult(gameID);
     }

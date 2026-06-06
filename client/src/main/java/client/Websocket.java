@@ -68,7 +68,9 @@ public class Websocket extends Endpoint {
         this.session.addMessageHandler(new MessageHandler.Whole<String>() {
             public void onMessage(String message) {
                 ServerMessage newMessage = new Gson().fromJson(message, ServerMessage.class);
-                System.out.println(newMessage);
+                switch (newMessage.getServerMessageType()) {
+                    case NOTIFICATION -> System.out.println(newMessage.notificationString);
+                }
             }
         });
     }
