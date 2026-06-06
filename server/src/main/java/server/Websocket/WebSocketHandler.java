@@ -20,6 +20,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import websocket.messages.ServerMessage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -69,7 +70,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             GameData data = gameDAO.getGame(action.getGameID());
             RunningGame runningGame = runningGames.get(action.getGameID());
             if (runningGame == null) {
-                runningGame = new RunningGame(List.of(),null, null);
+                runningGame = new RunningGame(new ArrayList<>(),null, null);
             }
             websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             String newMessage = new Gson().toJson(message);
@@ -105,6 +106,23 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 runningGame.observers.add(session);
                 message.notificationString = username + " joined the game as an observer";
                 newMessage = new Gson().toJson(message);
+                try {
+                    if (runningGame.whitePlayer != null) {
+                        runningGame.whitePlayer.getRemote().sendString(newMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("observer failed to send a message to white that an observer joined");
+
+                }
+                try {
+                    if (runningGame.blackPlayer != null) {
+
+                        runningGame.blackPlayer.getRemote().sendString(newMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("observer failed to send a message to black that an observer joined");
+
+                }
             }
             for (Session observer:runningGame.observers) {
                 try {
