@@ -1,4 +1,5 @@
 package server;
+
 import com.google.gson.Gson;
 import dataaccess.*;
 import io.javalin.*;
@@ -6,7 +7,9 @@ import io.javalin.http.Context;
 import io.javalin.json.JsonMapper;
 import model.GameData;
 import model.UserData;
+
 import org.jetbrains.annotations.NotNull;
+import server.Websocket.WebSocketHandler;
 import service.UserService;
 import service.GameService;
 import service.AuthService;
@@ -17,13 +20,13 @@ import java.util.Objects;
 public class Server {
 
     private final Javalin javalin;
-    private   UserService users;
-    private   GameService games;
-    private   AuthService auths;
+    private UserService users;
+    private GameService games;
+    private AuthService auths;
     private final Gson gson = new Gson();
 
 
-    public  void clear(@NotNull Context context)  {
+    public void clear(@NotNull Context context) {
         try {
             users.clearUserData();
             games.clearGameData();
@@ -33,6 +36,7 @@ public class Server {
             context.status(500).result("{\"message\":\"error clearing data\"}");
         }
     }
+
     public void register(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
@@ -48,22 +52,20 @@ public class Server {
             try {
                 UserService.RegisterResult result = users.register(user);
                 context.json(result);
-            }
-            catch (DataAccessException e) {
+            } catch (DataAccessException e) {
                 context.status(500).result("{\"message\":\"error cannot register\"}");
-            }
-            catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException ex) {
                 context.status(403).result("{\"message\":\"error already exists\"}");
                 return;
             }
-        }
-        catch (IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             context.status(400).result("Request body should be json");
             return;
         }
     }
+
     //login
-    private  void login(@NotNull Context context)  {
+    private void login(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
             UserService.LoginRequest user = context.bodyAsClass(UserService.LoginRequest.class);
@@ -79,22 +81,20 @@ public class Server {
                 UserService.LoginResult result = users.login(user);
                 context.status(200);
                 context.json(result);
-            }
-            catch (DataAccessException ex) {
+            } catch (DataAccessException ex) {
                 context.status(500).result("{\"message\":\"error unauthorized\"}");
 
-            }
-            catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error unauthorized\"}");
 
             }
-        }
-        catch (IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             context.status(400).result("Request body should be json");
         }
     }
+
     //
-    private void listGames(@NotNull Context context){
+    private void listGames(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
 
         try {
@@ -110,21 +110,19 @@ public class Server {
                 GameService.ListGamesResult result = games.listGames(authToken);
                 context.json(result);
 
-            }
-            catch (DataAccessException e) {
+            } catch (DataAccessException e) {
                 context.status(500).result("{\"message\":\"error cannot list games\"}");
-            }
-            catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error unauthorized\"}");
             }
-        }
-        catch (IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             context.status(400).result("{\"message\":\"error request body should be json\"}");
         }
 
     }
+
     //
-    private  void logout(@NotNull Context context)  {
+    private void logout(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         try {
             String authToken = getAuthHeader(context);
@@ -136,21 +134,19 @@ public class Server {
             try {
                 users.logout(authToken);
 
-            }
-            catch (DataAccessException e) {
+            } catch (DataAccessException e) {
                 context.status(500).result("{\"message\":\"error cannot logout\"}");
-            }
-            catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error unauthorized\"}");
             }
-        }
-        catch (IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             context.status(400).result("{\"message\":\"error Request body should be json\"}");
             return;
         }
     }
+
     //
-    private  void createGame(@NotNull Context context){
+    private void createGame(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
 
         try {
@@ -161,28 +157,27 @@ public class Server {
             }
             try {
 
-                GameService.CreateGameResult result = games.createGame(new GameService.CreateGameRequest(getAuthHeader(context),game.gameName()));
+                GameService.CreateGameResult result = games.createGame(new GameService.CreateGameRequest(getAuthHeader(context), game.gameName()));
                 context.json(result);
-            }
-            catch (DataAccessException e) {
+            } catch (DataAccessException e) {
                 context.status(500).result("{\"message\":\"error cannot create game\"}");
-            }
-            catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException ex) {
                 context.status(401).result("{\"message\":\"error already exists\"}");
                 return;
             }
-        }
-        catch (IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             context.status(400).result("Request body should be json");
             return;
         }
     }
+
     private String getAuthHeader(Context context) {
         //way to get the auth header I guess
         return context.header("Authorization");
     }
+
     //
-    private  void joinGame(@NotNull Context context){
+    private void joinGame(@NotNull Context context) {
         //context.bodyAsClass parses request body into record class probably
         System.out.println("RAW BODY RECEIVED: " + context.body());
         try {
@@ -198,63 +193,61 @@ public class Server {
                 games.joinGame(game);
                 context.status(200).result("{}");
                 return;
-            }
-
-            catch (IllegalCallerException ex) {
+            } catch (IllegalCallerException ex) {
                 context.status(400).result("{\"message\":\"error no good color\"}");
                 return;
-            }
-            catch (IllegalArgumentException ex) {
+            } catch (IllegalArgumentException ex) {
                 context.status(400).result("{\"message\":\"error null game\"}");
                 return;
-            }
-            catch (IllegalAccessError ex) {
+            } catch (IllegalAccessError ex) {
                 context.status(403).result("{\"message\":\"error color already used\"}");
                 return;
-            }
-            catch (IllegalStateException ex) {
+            } catch (IllegalStateException ex) {
                 context.status(401).result("{\"message\":\"error null auth\"}");
                 return;
-            }
-            catch (DataAccessException e) {
+            } catch (DataAccessException e) {
                 context.status(500).result("{\"message\":\"error cannot join game\"}");
                 return;
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 // Fallback catch-all for malformed JSON request text bodies
                 context.status(400).result("{\"message\":\"error Request body should be json\"}");
             }
 
-        }
-        catch (IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             context.status(400).result("{\"message\":\"error Request body should be json\"}");
             return;
         }
 
     }
-    //
-    public Server(){
-        javalin = Javalin.create(config -> {
-            config.staticFiles.add("web");
-            config.jsonMapper(new JsonMapper() {
-                @NotNull
-                @Override
-                public <T> T fromJsonString(@NotNull String json, @NotNull Type targetType) {
-                    try {
-                        return gson.fromJson(json,targetType);
-                    }
-                    catch (Exception e) {
-                        throw new IllegalStateException("Request body should be json");
-                    }
-                }
 
-                @NotNull
-                @Override
-                public String toJsonString(@NotNull Object obj, @NotNull Type type) {
-                    return gson.toJson(obj,type);
-                }
-            });
-        });
+    //
+    public Server() {
+        WebSocketHandler handler = new WebSocketHandler();
+        javalin = Javalin.create(config -> {
+                    config.staticFiles.add("web");
+                    config.jsonMapper(new JsonMapper() {
+                        @NotNull
+                        @Override
+                        public <T> T fromJsonString(@NotNull String json, @NotNull Type targetType) {
+                            try {
+                                return gson.fromJson(json, targetType);
+                            } catch (Exception e) {
+                                throw new IllegalStateException("Request body should be json");
+                            }
+                        }
+
+                        @NotNull
+                        @Override
+                        public String toJsonString(@NotNull Object obj, @NotNull Type type) {
+                            return gson.toJson(obj, type);
+                        }
+                    });
+                })
+                .ws("/ws", ws -> {
+                    ws.onConnect(handler);
+                    ws.onMessage(handler);
+                    ws.onClose(handler);
+                });
         try {
             UserDAO usersdao = new SqlUserDAO();
             GameDAO gamesdao = new SqlGameDAO();
@@ -272,13 +265,16 @@ public class Server {
             javalin.get("/game", this::listGames);
             javalin.post("/game", this::createGame);
             javalin.put("/game", this::joinGame);
+
         } catch (DataAccessException e) {
-        };
+        }
+        ;
     }
 
 
     public int run(int desiredPort) {
         javalin.start(desiredPort);
+
         return javalin.port();
     }
 

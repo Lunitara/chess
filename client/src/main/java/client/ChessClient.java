@@ -7,12 +7,13 @@ import java.util.Scanner;
 import com.google.gson.Gson;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
 import ui.EscapeSequences;
+import client.Websocket;
 public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
     private String visitorName = null;
     public String authToken;
-    private InGame gamestate = InGame.OUTGAME;
+
     public ChessClient(String serverUrl) {
         this.server = new ServerFacade(serverUrl);
     }
@@ -72,11 +73,6 @@ public class ChessClient {
                     login -- <USERNAME> <PASSWORD>
                     register -- <USERNAME> <PASSWORD> <EMAIL>
                     """;
-        } else if (gamestate == InGame.INGAME) {
-            return """
-                    quit -- exits program
-                    help -- lists options
-                    """;
         }
         return """
                 quit -- exits program
@@ -110,7 +106,7 @@ public class ChessClient {
         }
     }
     public String register(String... params) {
-        assertinGame();
+
         try {
             if (params.length == 4) {
                 String username = params[1];
@@ -133,7 +129,7 @@ public class ChessClient {
     public String logout() throws Exception {
         try {
             assertSignedIn();
-            assertinGame();
+
             server.logout(visitorName, this.authToken);
             state = State.SIGNEDOUT;
             this.authToken = null;
@@ -143,7 +139,7 @@ public class ChessClient {
         }
     }
     public String create(String... params) {
-        if (!assertSignedIn() || assertinGame()) {
+        if (!assertSignedIn()) {
             return "";
         }
         try {
@@ -162,12 +158,12 @@ public class ChessClient {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
         } catch (Throwable e) {
-            System.out.print("Error: could not create game. " + e.getMessage() + "\n");
+            System.out.print("Error: could not create game. Check the list of games. \n");
         }
         return "";
     }
     public String listGames() throws Exception {
-        if (!assertSignedIn() || assertinGame()) {
+        if (!assertSignedIn()) {
             return "";
         }
         try {
@@ -207,17 +203,13 @@ public class ChessClient {
                 int gameID = Integer.parseInt(params[1]);
                 ListGamesResult serverGames = server.listGames(this.authToken);
                 Collection<GameData> allGames = serverGames.games();
-                boolean gameExists = false;
-                String blackTaken = "empty";
-                String whiteTaken = "empty";
                 GameData gameToJoin = null;
                 for (GameData game : allGames) {
                     if (game.gameID() == (gameID)) {
-                        gameExists = true;
-                        gameToJoin = new GameData(game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
+                        gameToJoin = game;
                     }
                 }
-                if (gameToJoin == null || !gameExists) {
+                if (gameToJoin == null) {
                     return "Game does not exist.\n";
                 }
                 if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE")) {
@@ -232,20 +224,6 @@ public class ChessClient {
                 if (Objects.equals(playerColor, "BLACK")) {
                     gameToJoin = new GameData(gameToJoin.gameID(), gameToJoin.whiteUsername(), visitorName, gameToJoin.gameName(), gameToJoin.game());
                 }
-                JoinGameRequest requesttojoin = server.joinGame(playerColor, gameID, this.authToken);
-                ListGamesResult allServerGames = server.listGames(this.authToken);
-                ChessGame targetGame = null;
-                String gamesName = "";
-                for (GameData game : allServerGames.games()) {
-                    if (game.gameID() == gameID) {
-                        targetGame = game.game();
-                        gamesName = game.gameName();
-                        break;
-                    }
-                }
-                if (targetGame == null) {
-                    return String.format("Joined but can't show board");
-                }
                 String board = "";
                 if (Objects.equals(playerColor, "WHITE") || playerColor == null) {
                     board = makeBoardPlayerWhite();
@@ -253,13 +231,15 @@ public class ChessClient {
                 if (Objects.equals(playerColor, "BLACK")) {
                     board = makeBoardPlayerBlack();
                 }
-                gamestate = InGame.INGAME;
-                return String.format("Successfully joined game %s", gamesName + "\n" + board + "\n");
+                server.joinGame(playerColor, gameID, this.authToken);
+                System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board + "\n");
+                Websocket.joinGame(playerColor, gameID, this.authToken);
+                return "Game Over";
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
         } catch (Throwable e) {
-            return "Error: could not play game." + e.getMessage() + "\n";
+            return "Error: could not play game. Make sure it is typed in the correct format.\n";
         }
     }
     public String observeGame(String... params) throws Exception {
@@ -283,7 +263,7 @@ public class ChessClient {
                 if (gameToJoin == null || !gameExists) {
                     return "Game does not exist.\n";
                 }
-                server.joinGame(null, gameID, this.authToken);
+                server.observeGame(gameToJoin.gameID(), this.authToken);
                 return String.format("Successfully observing game %s", gameID + "\n" + makeBoardPlayerWhite());
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
@@ -299,9 +279,14 @@ public class ChessClient {
         String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
         String reset = EscapeSequences.RESET_BG_COLOR;
         setUpAlphabet(sb, "WHITE");
+        sb.append("\n");
         sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
-        setUpPieces(sb, "BLACK");
+
+        setUpPieces(sb, "BLACK", "WHITE");
+        sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+        sb.append("\n");
         sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
+
         //pawns
         for (int j = 8; j > 0; j--) {
             if ((j) % 2 == 0) {
@@ -340,37 +325,63 @@ public class ChessClient {
         sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
         sb.append("\n");
         sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
-        setUpPieces(sb, "BLACK");
+        setUpPieces(sb, "WHITE", "WHITE");
         sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
         sb.append("\n");
         setUpAlphabet(sb, "WHITE");
         sb.append("\n");
         return sb.toString();
     }
-    public void setUpPieces(StringBuilder sb, String color) {
+    public void setUpPieces(StringBuilder sb, String color, String turn) {
         String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
         String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
         String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
         String reset = EscapeSequences.RESET_BG_COLOR;
         if (Objects.equals(color, "BLACK")) {
-            sb.append(orange).append("\u2003").append("♜").append("\u2003").append(reset);
-            sb.append(black).append("\u2003").append("♞").append("\u2003").append(reset);
-            sb.append(orange).append("\u2003").append("♝").append("\u2003").append(reset);
-            sb.append(black).append("\u2003").append("♛").append("\u2003").append(reset);
-            sb.append(orange).append("\u2003").append("♚").append("\u2003").append(reset);
-            sb.append(black).append("\u2003").append("♝").append("\u2003").append(reset);
-            sb.append(orange).append("\u2003").append("♞").append("\u2003").append(reset);
-            sb.append(black).append("\u2003").append("♜").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+            if (Objects.equals(turn, "BLACK")) {
+                sb.append(black).append("\u2003").append("♜").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♞").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♝").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♚").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♛").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♝").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♞").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♜").append("\u2003").append(reset);
+            }
+
+            else {
+                sb.append(orange).append("\u2003").append("♜").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♞").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♝").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♛").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♚").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♝").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♞").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♜").append("\u2003").append(reset);
+            }
         } else {
-            sb.append(black).append("\u2003").append("♖").append("\u2003").append(reset);
-            sb.append(orange).append("\u2003").append("♘").append("\u2003").append(reset);
-            sb.append(black).append("\u2003").append("♗").append("\u2003").append(reset);
-            sb.append(orange).append("\u2003").append("♕").append("\u2003").append(reset);
-            sb.append(black).append("\u2003").append("♔").append("\u2003").append(reset);
-            sb.append(orange).append("\u2003").append("♗").append("\u2003").append(reset);
-            sb.append(black).append("\u2003").append("♘").append("\u2003").append(reset);
-            sb.append(orange).append("\u2003").append("♖").append("\u2003").append(reset);
+            if (Objects.equals(turn, "BLACK")) {
+                sb.append(orange).append("\u2003").append("♖").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♘").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♗").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♔").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♕").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♗").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♘").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♖").append("\u2003").append(reset);
+            }
+            else {
+                sb.append(black).append("\u2003").append("♖").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♘").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♗").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♕").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♔").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♗").append("\u2003").append(reset);
+                sb.append(black).append("\u2003").append("♘").append("\u2003").append(reset);
+                sb.append(orange).append("\u2003").append("♖").append("\u2003").append(reset);
+
+            }
+
         }
     }
     public void setUpAlphabet(StringBuilder sb, String color) {
@@ -408,10 +419,11 @@ public class ChessClient {
         String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
         String reset = EscapeSequences.RESET_BG_COLOR;
         setUpAlphabet(sb, "BLACK");
-        sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
-        setUpPieces(sb, "BLACK");
+        sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
+        setUpPieces(sb, "WHITE", "BLACK");
+        sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
         sb.append("\n");
-        sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("2").append("\u2003").append(reset);
         //pawns
         for (int j = 8; j > 0; j--) {
             if ((j) % 2 == 0) {
@@ -420,9 +432,9 @@ public class ChessClient {
                 sb.append(orange).append("\u2003").append("♙").append("\u2003").append(reset);
             }
         }
-        sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append("2").append("\u2003").append(reset);
         sb.append("\n");
-        int count = 6;
+        int count = 3;
         //lines in between
         for (int i = 4; i > 0; i--) {
             sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
@@ -435,9 +447,9 @@ public class ChessClient {
             }
             sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
             sb.append("\n");
-            count--;
+            count++;
         }
-        sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append(7).append("\u2003").append(reset);
         //bottom white
         for (int j = 8; j > 0; j--) {
             if ((j) % 2 == 0) {
@@ -446,10 +458,12 @@ public class ChessClient {
                 sb.append(black).append("\u2003").append("♟").append("\u2003").append(reset);
             }
         }
-        sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
+        sb.append(gray).append("\u2003").append(7).append("\u2003").append(reset);
         sb.append("\n");
-        sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
-        setUpPieces(sb, "WHITE");
+        sb.append(gray).append("\u2003").append(8).append("\u2003").append(reset);
+        setUpPieces(sb, "BLACK", "BLACK");
+        sb.append(gray).append("\u2003").append(8).append("\u2003").append(reset);
+
         sb.append("\n");
         setUpAlphabet(sb, "BLACK");
         sb.append("\n");
@@ -462,13 +476,5 @@ public class ChessClient {
             return false;
         }
         return true;
-    }
-    private boolean assertinGame() {
-        if (this.gamestate == InGame.INGAME) {
-            System.out.print("Error: could not fulfill request as" +
-                    " user is playing a match" + "\n");
-            return true;
-        }
-        return false;
     }
 }

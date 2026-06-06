@@ -104,17 +104,17 @@ public class ServerFacade {
         var response = sendRequest(request);
         return handleResponse(response, ListGamesResult.class);
     }
-    JoinGameRequest joinGame(String playerColor, int gameID, String authToken) throws Exception {
+    void joinGame(String playerColor, int gameID, String authToken) throws Exception {
         var reqBody = new JoinGameRequest(playerColor, gameID);
         var request = buildRequest("PUT", "/game", reqBody, authToken);
         var response = sendRequest(request);
-        return handleResponse(response, JoinGameRequest.class);
+        handleResponse(response, JoinGameRequest.class);
     }
-    ObserveGameRequest observeGame(int gameID, String authToken) throws Exception {
+    void observeGame(int gameID, String authToken) throws Exception {
         var reqBody = new JoinGameRequest("OBSERVER", gameID);
         var request = buildRequest("PUT", "/game", reqBody, authToken);
         var response = sendRequest(request);
-        return handleResponse(response, ObserveGameRequest.class);
+        handleResponse(response, ObserveGameRequest.class);
     }
 
     public void clear() throws Exception {
