@@ -1,13 +1,11 @@
 package client;
-import chess.ChessGame;
 import model.GameData;
 
 import java.util.*;
 
-import com.google.gson.Gson;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
 import ui.EscapeSequences;
-import client.Websocket;
+
 public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
@@ -88,7 +86,7 @@ public class ChessClient {
     //PRE-LOGIN UI
     public String login(String... params) {
         if (state == State.SIGNEDIN) {
-            return String.format("User already logged in.\n");
+            return "User already logged in.\n";
         }
         try {
             if (params.length == 3) {
@@ -127,14 +125,14 @@ public class ChessClient {
         }
     }
 // POST LOGIN UI
-    public String logout() throws Exception {
+    public String logout() {
         try {
             assertSignedIn();
 
             server.logout(visitorName, this.authToken);
             state = State.SIGNEDOUT;
             this.authToken = null;
-            return String.format("Successfully logged out.\n");
+            return "Successfully logged out.\n";
         } catch (Exception e) {
             return String.format("Failed to logout" + e.getMessage() + "\n");
         }
@@ -150,7 +148,7 @@ public class ChessClient {
                 Collection<GameData> allGames = serverGames.games();
                 for (GameData game : allGames) {
                     if (game.gameName().equals(gameName)) {
-                        return String.format("Game name must be unique.\n");
+                        return "Game name must be unique.\n";
                     }
                 }
                 CreateGameResult result = server.create(this.authToken, gameName);
@@ -159,10 +157,10 @@ public class ChessClient {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
         } catch (Throwable e) {
-            return String.format("Could not create game");
+            return "Could not create game";
         }
     }
-    public String listGames() throws Exception {
+    public String listGames() {
         if (!assertSignedIn()) {
             return "";
         }
@@ -170,7 +168,7 @@ public class ChessClient {
             ListGamesResult result = server.listGames(this.authToken);
             Collection<GameData> games = result.games();
             if (games == null || games.isEmpty()) {
-                return String.format("No games to show.\n");
+                return "No games to show.\n";
             }
             var resultingString = new StringBuilder();
             resultingString.append("Current games:\n");
@@ -248,7 +246,7 @@ public class ChessClient {
 
         return "";
     }
-    public String observeGame(String... params) throws Exception {
+    public String observeGame(String... params) {
         if (!assertSignedIn()) {
             return "";
         }
