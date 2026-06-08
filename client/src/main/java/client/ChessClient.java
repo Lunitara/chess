@@ -11,7 +11,7 @@ import client.Websocket;
 public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
-    private String visitorName = null;
+    public static String visitorName = null;
     public String authToken;
     public Map<Integer, Integer> gameNumberTOGameID= new HashMap<>();
 
@@ -217,10 +217,10 @@ public class ChessClient {
                 if (gameToJoin == null) {
                     return "Game does not exist.\n";
                 }
-                if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE")) {
+                if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE") && !gameToJoin.whiteUsername().equals(visitorName)) {
                     return "White is already being used.\n";
                 }
-                if (gameToJoin.blackUsername() != null && Objects.equals(playerColor, "BLACK")) {
+                if (gameToJoin.blackUsername() != null && Objects.equals(playerColor, "BLACK") && !gameToJoin.whiteUsername().equals(visitorName)) {
                     return "Black is already being used.\n";
                 }
                 if (Objects.equals(playerColor, "WHITE")) {
@@ -237,15 +237,16 @@ public class ChessClient {
                     board = makeBoardPlayerBlack();
                 }
                 server.joinGame(playerColor, gameID, this.authToken);
-                System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board + "\n");
+                System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
                 Websocket.joinGame(playerColor, gameID, this.authToken);
-                return "Game Over";
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
         } catch (Throwable e) {
             return "Error: could not play game. Make sure it is typed in the correct format.\n";
         }
+
+        return "";
     }
     public String observeGame(String... params) throws Exception {
         if (!assertSignedIn()) {
@@ -268,7 +269,7 @@ public class ChessClient {
                     return "Game does not exist.\n";
                 }
                 server.observeGame(gameToJoin.gameID(), this.authToken);
-                System.out.printf("Successfully observing game %s", gameID + "\n" + makeBoardPlayerWhite());
+                System.out.printf("Successfully observing game %s", gameID + "\n" + makeBoardPlayerWhite() + "\n");
                 Websocket.joinGame("OBSERVER", gameID, this.authToken);
                 return "Game Over";
             } else {
@@ -335,7 +336,6 @@ public class ChessClient {
         sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
         sb.append("\n");
         setUpAlphabet(sb, "WHITE");
-        sb.append("\n");
         return sb.toString();
     }
     public void setUpPieces(StringBuilder sb, String color, String turn) {
@@ -473,7 +473,6 @@ public class ChessClient {
 
         sb.append("\n");
         setUpAlphabet(sb, "BLACK");
-        sb.append("\n");
         return sb.toString();
     }
     private boolean assertSignedIn() {

@@ -1,4 +1,5 @@
 package server.Websocket;
+import chess.ChessGame;
 import chess.ChessMove;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
@@ -36,6 +37,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private GameDAO gameDAO;
     private AuthDAO authDAO;
     private UserDAO userDAO;
+    public boolean isObserver = false;
 
     public void populate(GameService gameService, AuthService authService, UserService userService, GameDAO gameDAO, AuthDAO authDAO, UserDAO userDAO) {
         this.gameService = gameService;
@@ -57,7 +59,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             UserGameCommand action = new Gson().fromJson(ctx.message(), UserGameCommand.class);
             switch (action.getCommandType()) {
                 case CONNECT -> connect(action, ctx.session);
-                case MAKE_MOVE -> makeMove(action.getMove(), ctx.session);
+                case MAKE_MOVE -> makeMove(action, action.getMove(), ctx.session);
                 case LEAVE -> leave(action, ctx.session);
                 case RESIGN -> resign(action, ctx.session);
             }
@@ -65,6 +67,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void connect(UserGameCommand action, Session session) {
 
         System.out.println("Successfully connected to game through websocket");
+
         try {
             String username = authDAO.getAuth(action.getAuthToken()).username();
             GameData data = gameDAO.getGame(action.getGameID());
@@ -104,6 +107,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             } else {
                 connections.put(session, new PlayerInfo(false, action.getGameID()));
                 runningGame.observers.add(session);
+                isObserver = true;
                 message.notificationString = username + " joined the game as an observer";
                 newMessage = new Gson().toJson(message);
                 try {
@@ -138,12 +142,141 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     }
 
-    private void makeMove(ChessMove move, Session session) {
+    private void makeMove(UserGameCommand action,ChessMove move, Session session) {
+        try {
+            GameData data = gameDAO.getGame(action.getGameID());
+            if (data.game().isGameOver()) {
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                message.notificationString = "Cannot make a move as game is over";
+
+            }
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
     private void leave(UserGameCommand action, Session session) {
+        System.out.println("Successfully disconnected to game through websocket");
+
+        try {
+            String username = authDAO.getAuth(action.getAuthToken()).username();
+            GameData data = gameDAO.getGame(action.getGameID());
+            RunningGame runningGame = runningGames.get(action.getGameID());
+            if (runningGame == null) {
+                runningGame = new RunningGame(new ArrayList<>(),null, null);
+            }
+            websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            String newMessage = new Gson().toJson(message);
+            if (Objects.equals(data.whiteUsername(), username)) {
+                message.notificationString = username + " exited the game as white player.";
+                newMessage = new Gson().toJson(message);
+                try {
+                    if (runningGame.blackPlayer != null) {
+
+                        runningGame.blackPlayer.getRemote().sendString(newMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("sending a message to black player that white player left failed");
+
+                }
+            } else if (Objects.equals(data.blackUsername(), username)) {
+                message.notificationString = username + " left the game as black player.";
+                newMessage = new Gson().toJson(message);
+                try {
+                    if (runningGame.whitePlayer != null) {
+                        runningGame.whitePlayer.getRemote().sendString(newMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("sending a message to white player that black player left failed");
+
+                }
+            } else {
+                message.notificationString = username + " left the game as an observer";
+                newMessage = new Gson().toJson(message);
+                try {
+                    if (runningGame.whitePlayer != null) {
+                        runningGame.whitePlayer.getRemote().sendString(newMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("observer failed to send a message to white that an observer left");
+
+                }
+                try {
+                    if (runningGame.blackPlayer != null) {
+
+                        runningGame.blackPlayer.getRemote().sendString(newMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("observer failed to send a message to black that an observer left");
+
+                }
+            }
+            for (Session observer:runningGame.observers) {
+                try {
+                    observer.getRemote().sendString(newMessage);
+                } catch (IOException e) {
+                    runningGame.observers.remove(observer);
+                    System.out.println("observer lost connection.");
+                }
+            }
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void resign(UserGameCommand action, Session session) {
+        System.out.println("Successfully resigned from game through websocket");
+
+        try {
+
+            String username = authDAO.getAuth(action.getAuthToken()).username();
+            GameData data = gameDAO.getGame(action.getGameID());
+            if (data.game().isGameOver()) {
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                message.notificationString = username + " can't resign as game is already over.";
+            }
+            else {
+                data.game().resigned(true);
+                gameDAO.updateGame(data);
+                RunningGame runningGame = runningGames.get(action.getGameID());
+                if (runningGame == null) {
+                    runningGame = new RunningGame(new ArrayList<>(), null, null);
+                }
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                String newMessage = new Gson().toJson(message);
+                if (Objects.equals(data.whiteUsername(), username)) {
+
+                    message.notificationString = username + " resigned from the game as white player.";
+                    newMessage = new Gson().toJson(message);
+                    try {
+                        if (runningGame.blackPlayer != null) {
+
+                            runningGame.blackPlayer.getRemote().sendString(newMessage);
+                        }
+                    } catch (IOException e) {
+                        System.out.println("sending a message to black player that white player resigning failed");
+
+                    }
+                } else if (Objects.equals(data.blackUsername(), username)) {
+                    message.notificationString = username + " resigned from the game as black player.";
+                    newMessage = new Gson().toJson(message);
+                    try {
+                        if (runningGame.whitePlayer != null) {
+                            runningGame.whitePlayer.getRemote().sendString(newMessage);
+                        }
+                    } catch (IOException e) {
+                        System.out.println("sending a message to white player that black player resigning failed");
+
+                    }
+                } else {
+                    message.notificationString = "observers can't resign";
+                    newMessage = new Gson().toJson(message);
+                }
+            }
+
+        }
+        catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

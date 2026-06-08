@@ -12,47 +12,94 @@ import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class Websocket extends Endpoint {
     private Session session;
-    private String playerColor;
+    public String playerColor;
     private int gameID;
     private String authToken;
 
-    public static void joinGame(String playerColor, int gameID, String authToken) throws Exception {
+    public static void joinGame(String playerColor, int gameID, String authToken){
 
+        try {
+            Websocket client = new Websocket(playerColor, gameID, authToken);
+            client.send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
+            Scanner scanner = new Scanner(System.in);
+            String username = ChessClient.visitorName;
+            while (true) {
+                System.out.printf(username + " >>> ");
 
-        Websocket client = new Websocket(playerColor,gameID,authToken);
-        client.send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter a message you want to echo:");
-        while (true) {
-            String[] tokens = scanner.nextLine().split(" ");
-            String cmd = (tokens.length > 0) ? tokens[0] : "help";
-            switch (cmd) {
-                case "help" -> help();
-                case "redraw" -> redrawBoard();
-                case "leave" -> leaveGame();
-                case "move" -> makeMove(tokens);
-                case "resign" -> resign();
-                case "highlight" -> highlightMoves(tokens);
-                default -> System.out.println("Not an available command. Please type 'help' for options.\n");
+                String[] tokens = scanner.nextLine().split(" ");
+                String cmd = (tokens.length > 0) ? tokens[0] : "help";
+                if (Objects.equals(playerColor, "OBSERVER")) {
+                    switch (cmd) {
+                        case "help" -> help(playerColor);
+                        case "redraw" -> redrawBoard();
+                        case "leave" -> {
+                            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
+                            client.send(command);
+                            System.out.println("Left the game.");
+                            return;
+                        }
+                        case "highlight" -> highlightMoves(tokens);
+                        default -> System.out.println("Not an available command. Please type 'help' for options.\n");
+                    }
+                }
+                else {
+                    switch (cmd) {
+                        case "help" -> help(playerColor);
+                        case "redraw" -> redrawBoard();
+                        case "leave" -> {
+                            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
+                            client.send(command);
+                            System.out.println("Left the game.");
+                            return;
+                        }
+                        case "move" -> makeMove(tokens);
+                        case "resign" -> {
+                            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
+                            client.send(command);
+                            System.out.println("Resigned the game.");
+                            return;
+                        }
+                        case "highlight" -> highlightMoves(tokens);
+                        default -> System.out.println("Not an available command. Please type 'help' for options.\n");
+                    }
+                }
+
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
 
-    private static void leaveGame() {
-    }
+
     private static void redrawBoard() {
     }
-    private static void help() {
+    private static String help(String playerColor) {
+        if (Objects.equals(playerColor, "OBSERVER")) {
+            return """
+                    help -- lists options
+                    redraw -- redraws current board
+                    leave -- leaves current game
+                    highlight -- <CHESSPIECE POSITION> highlights possible move options
+                    """;
+        }
+        return """
+                help -- lists options
+                redraw -- redraws current board
+                leave -- leaves current game
+                move -- <old ChessPiece position> <new ChessPiece position> moves piece to new position
+                resign -- forfeits current game
+                highlight -- <ChessPiece position> highlights possible move options
+                """;
     }
     private static void makeMove(String[] tokens) {
     }
-    private static void resign() {
-    }
+
     private static void highlightMoves(String[] tokens) {
     }
 

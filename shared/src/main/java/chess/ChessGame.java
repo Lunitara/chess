@@ -18,7 +18,7 @@ public class ChessGame {
     private boolean whiteRightRookorKingMoved;
     private boolean blackLeftRookorKingMoved;
     private boolean blackRightRookorKingMoved;
-
+    private boolean isResigned;
 
     public ChessGame() {
         this.color = TeamColor.WHITE;
@@ -28,6 +28,7 @@ public class ChessGame {
         this.whiteLeftRookorKingMoved = false;
         this.blackLeftRookorKingMoved = false;
         this.blackRightRookorKingMoved = false;
+        this.isResigned = false;
     }
 
     /**
@@ -46,6 +47,21 @@ public class ChessGame {
         color = team;
     }
 
+    public boolean isGameOver() {
+        if (this.isInCheckmate(color)) {
+            return true;
+        }
+        if (this.isInStalemate(color)) {
+            return true;
+        }
+        if (this.isResigned) {
+            return true;
+        }
+        return false;
+    }
+    public void resigned(boolean status) {
+        this.isResigned = status;
+    }
     /**
      * Enum identifying the 2 possible teams in a chess game
      */
