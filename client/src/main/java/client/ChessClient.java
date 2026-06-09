@@ -215,11 +215,29 @@ public class ChessClient {
                 if (gameToJoin == null) {
                     return "Game does not exist.\n";
                 }
-                if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE") && !gameToJoin.whiteUsername().equals(visitorName)) {
-                    return "White is already being used.\n";
+                if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE")) {
+                    if (gameToJoin.whiteUsername().equals(visitorName)) {
+                        String board = makeBoardPlayerWhite();
+                        System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
+                        Websocket.joinGame(playerColor, gameID, this.authToken);
+                        return "";
+                    }
+                    else {
+                        return "White is already being used.\n";
+
+                    }
                 }
-                if (gameToJoin.blackUsername() != null && Objects.equals(playerColor, "BLACK") && !gameToJoin.whiteUsername().equals(visitorName)) {
-                    return "Black is already being used.\n";
+                if (gameToJoin.blackUsername() != null && Objects.equals(playerColor, "BLACK")) {
+                    if (gameToJoin.blackUsername().equals(visitorName)) {
+                        String board = makeBoardPlayerBlack();
+                        System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
+                        Websocket.joinGame(playerColor, gameID, this.authToken);
+                        return "";
+                    }
+                    else {
+                        return "Black is already being used.\n";
+
+                    }
                 }
                 if (Objects.equals(playerColor, "WHITE")) {
                     gameToJoin = new GameData(gameToJoin.gameID(), visitorName, gameToJoin.blackUsername(), gameToJoin.gameName(), gameToJoin.game());
@@ -237,6 +255,7 @@ public class ChessClient {
                 server.joinGame(playerColor, gameID, this.authToken);
                 System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
                 Websocket.joinGame(playerColor, gameID, this.authToken);
+                return "";
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
@@ -244,7 +263,6 @@ public class ChessClient {
             return "Error: could not play game. Make sure it is typed in the correct format.\n";
         }
 
-        return "";
     }
     public String observeGame(String... params) {
         if (!assertSignedIn()) {

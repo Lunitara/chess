@@ -80,7 +80,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             if (Objects.equals(data.whiteUsername(), username)) {
                 connections.put(session, new PlayerInfo(true, action.getGameID()));
                 runningGames.put(action.getGameID(), new RunningGame(runningGame.observers,session, runningGame.blackPlayer()));
-                message.notificationString = username + " joined the game as white player.";
+                message.notificationString ="\n" + username + " joined the game as white player.";
                 newMessage = new Gson().toJson(message);
                 try {
                     if (runningGame.blackPlayer != null) {
@@ -94,7 +94,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             } else if (Objects.equals(data.blackUsername(), username)) {
                 connections.put(session, new PlayerInfo(false, action.getGameID()));
                 runningGames.put(action.getGameID(), new RunningGame(runningGame.observers, runningGame.whitePlayer(),session));
-                message.notificationString = username + " joined the game as black player.\n";
+                message.notificationString ="\n" + username + " joined the game as black player.";
                 newMessage = new Gson().toJson(message);
                 try {
                     if (runningGame.whitePlayer != null) {
@@ -109,7 +109,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 runningGame.observers.add(session);
                 isObserver = true;
                 runningGames.put(action.getGameID(), runningGame);
-                message.notificationString = username + " joined the game as an observer\n";
+                message.notificationString = "\n" + username + " joined the game as an observer\n";
                 newMessage = new Gson().toJson(message);
                 try {
                     if (runningGame.whitePlayer != null) {
@@ -155,7 +155,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             GameData data = gameDAO.getGame(action.getGameID());
             if (data.game().isGameOver()) {
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-                message.notificationString = "Cannot make a move as game is over";
+                message.notificationString = "\nCannot make a move as game is over \n";
 
             }
         } catch (DataAccessException e) {
@@ -176,9 +176,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             String newMessage = "";
             if (Objects.equals(data.whiteUsername(), username)) {
-                message.notificationString = username + " exited the game as white player.";
+                message.notificationString ="\n" + username + " exited the game as white player.";
                 newMessage = new Gson().toJson(message);
-                runningGame = new RunningGame(runningGame.observers(), null, runningGame.blackPlayer);
+                runningGame = new RunningGame(runningGame.observers(), null, runningGame.blackPlayer());
                 try {
                     if (runningGame.blackPlayer != null) {
 
@@ -189,9 +189,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
                 }
             } else if (Objects.equals(data.blackUsername(), username)) {
-                message.notificationString = username + " left the game as black player.";
+                message.notificationString ="\n" + username + " left the game as black player.";
                 newMessage = new Gson().toJson(message);
-                runningGame = new RunningGame(runningGame.observers(), runningGame.whitePlayer, null);
+                runningGame = new RunningGame(runningGame.observers(), runningGame.whitePlayer(), null);
 
                 try {
                     if (runningGame.whitePlayer != null) {
@@ -202,7 +202,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
                 }
             } else {
-                message.notificationString = username + " left the game as an observer";
+                message.notificationString ="\n" + username + " left the game as an observer";
                 newMessage = new Gson().toJson(message);
                 runningGame.observers().remove(session);
                 try {
@@ -248,7 +248,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             GameData data = gameDAO.getGame(action.getGameID());
             if (data.game().isGameOver()) {
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-                message.notificationString = username + " can't resign as game is already over.";
+                message.notificationString ="\n" + username + " can't resign as game is already over.";
             }
             else {
                 data.game().resigned(true);
@@ -261,7 +261,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 String newMessage = new Gson().toJson(message);
                 if (Objects.equals(data.whiteUsername(), username)) {
 
-                    message.notificationString = username + " resigned from the game as white player.";
+                    message.notificationString ="\n" + username + " resigned from the game as white player.";
                     newMessage = new Gson().toJson(message);
                     try {
                         if (runningGame.blackPlayer != null) {
@@ -273,7 +273,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
                     }
                 } else if (Objects.equals(data.blackUsername(), username)) {
-                    message.notificationString = username + " resigned from the game as black player.";
+                    message.notificationString = "\n" +username + " resigned from the game as black player.";
                     newMessage = new Gson().toJson(message);
                     try {
                         if (runningGame.whitePlayer != null) {

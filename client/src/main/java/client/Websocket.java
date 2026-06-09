@@ -65,7 +65,7 @@ public class Websocket extends Endpoint {
                             return;
                         }
                         case "highlight" -> highlightMoves(tokens);
-                        default -> System.out.println("Not an available command. Please type 'help' for options.\n");
+                        default -> System.out.println("Not an available command. Please type 'help' for options.");
                     }
                 }
 
@@ -116,8 +116,9 @@ public class Websocket extends Endpoint {
         this.session.addMessageHandler(new MessageHandler.Whole<String>() {
             public void onMessage(String message) {
                 ServerMessage newMessage = new Gson().fromJson(message, ServerMessage.class);
+                String username = ChessClient.visitorName;
                 switch (newMessage.getServerMessageType()) {
-                    case NOTIFICATION -> System.out.println(newMessage.notificationString);
+                    case NOTIFICATION -> System.out.print(newMessage.notificationString + "\n" + username + " >>> ");
                 }
             }
         });
