@@ -14,6 +14,7 @@ import websocket.messages.ServerMessage;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -23,22 +24,34 @@ public class Websocket extends Endpoint {
     private int gameID;
     private String authToken;
     private final ChessClient client;
+    private ChessBoard latestBoard = null;
 
     public static void joinGame(String playerColor, int gameID, String authToken, ChessClient clientInst){
 
         try {
-            Websocket client = new Websocket(playerColor, gameID, authToken);
+            Websocket client = new Websocket(clientInst, playerColor, gameID, authToken);
             client.send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
             Scanner scanner = new Scanner(System.in);
             String username = ChessClient.visitorName;
             while (true) {
-                System.out.printf(username + " >>> ");
-                String[] tokens = scanner.nextLine().split(" ");
+                String line = scanner.nextLine();
+                if (line.trim().isEmpty()) {
+                    System.out.printf(username + " >>> ");
+                    continue;
+                }
+                String[] tokens = line.split(" ");
                 String cmd = (tokens.length > 0) ? tokens[0] : "help";
+
                 if (Objects.equals(playerColor, "OBSERVER")) {
                     switch (cmd) {
-                        case "help" -> help(playerColor);
-                        case "redraw" -> redrawBoard();
+                        case "help" -> {
+                            help(playerColor);
+                        System.out.printf(username + " >>> ");
+                        }
+                        case "redraw" -> {
+                            client.redrawBoard();
+                        System.out.printf(username + " >>> ");
+                        }
                         case "leave" -> {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
                             client.send(command);
@@ -52,15 +65,24 @@ public class Websocket extends Endpoint {
                 }
                 else {
                     switch (cmd) {
-                        case "help" -> help(playerColor);
-                        case "redraw" -> redrawBoard();
+                        case "help" -> {
+                            help(playerColor);
+                            System.out.printf(username + " >>> ");
+                        }
+                        case "redraw" -> {
+                            client.redrawBoard();
+                            System.out.printf(username + " >>> ");
+                        }
                         case "leave" -> {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
                             client.send(command);
                             System.out.println("Left the game.");
                             return;
                         }
-                        case "move" -> makeMove(tokens);
+                        case "move" -> {
+                            makeMove(tokens);
+                        System.out.printf(username + " >>> ");
+                        }
                         case "resign" -> {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
                             client.send(command);
@@ -78,22 +100,19 @@ public class Websocket extends Endpoint {
         }
     }
 
-private void redrawBoard(String message) {
+private void redrawBoard() {
         try {
-            class GameContainer {
-                chess.ChessGame game;
-            }
-            GameContainer gameContainer = new Gson().fromJson(message, GameContainer.class);
-            chess.ChessBoard boardString = gameContainer.game.getBoard();
+            if (this.latestBoard == null) {
+                System.out.println("board is null error");
+                return;
 
+            }
             if (Objects.equals(playerColor, "WHITE")) {
-                System.out.println("\n" + this.client.makeBoardPlayerWhite(boardString) + "\n");
+                System.out.println("\n" + this.client.makeBoardPlayerWhite(this.latestBoard));
 
             } else {
-                System.out.println("\n" + this.client.makeBoardPlayerBlack(boardString) + "\n");
+                System.out.println("\n" + this.client.makeBoardPlayerBlack(this.latestBoard) );
             }
-
-            return;
         } catch (Exception e) {
             System.out.println("something went wrong with printing board");
 
@@ -102,6 +121,26 @@ private void redrawBoard(String message) {
         }
 }
 
+private void drawBoard(String message) {
+        try {
+            ServerMessage newMessage = new Gson().fromJson(message, ServerMessage.class);
+            String gameInJson = newMessage.notificationString;
+            ChessGame currentGame = new Gson().fromJson(gameInJson, ChessGame.class);
+            this.latestBoard = currentGame.getBoard();;
+            if (Objects.equals(playerColor, "WHITE")) {
+                System.out.println("\n" + this.client.makeBoardPlayerWhite(this.latestBoard) );
+
+            } else {
+                System.out.println("\n" + this.client.makeBoardPlayerBlack(this.latestBoard));
+            }
+        } catch (Exception e) {
+            System.out.println("something went wrong with printing board");
+
+            throw new RuntimeException(e);
+
+
+        }
+}
     private static void help(String playerColor) {
         if (Objects.equals(playerColor, "OBSERVER")) {
             System.out.print("""
@@ -125,9 +164,40 @@ private void redrawBoard(String message) {
 
     }
     private static void makeMove(String[] tokens) {
+        try {
+            if ()
+            if (tokens.length == 3) {
+                String startPosition = tokens[1];
+                String endPosition = tokens[2];
+                if (startPosition.length() != 2 || endPosition.length() !=2) {
+                    System.out.println("Please put in the right format for moves. Ex: move d4 f7");
+
+                }
+                String allPossibleNums = "12345678";
+                String allPossibleAlp = "abcdefgh";
+                if (!allPossibleAlp.contains(startPosition.charAt(0) + "")) {
+                    System.out.println("Please put in a valid alphabet letter");
+                }
+                else if (!allPossibleNums.contains(startPosition.charAt(1) + "")) {
+                    System.out.println("Please put in a valid number");
+
+                }
+                else {
+                    //probably a valid entry now lets check if it's actually valid
+
+                }
+            } else {
+                System.out.println("Please put in the right format and # of parameters for moves." +
+                        " Ex: move d4 f7");
+
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private static void highlightMoves(String[] tokens) {
+        private static void highlightMoves(String[] tokens) {
     }
 
 
@@ -145,7 +215,16 @@ private void redrawBoard(String message) {
                 ServerMessage newMessage = new Gson().fromJson(message, ServerMessage.class);
                 String username = ChessClient.visitorName;
                 switch (newMessage.getServerMessageType()) {
-                    case NOTIFICATION -> System.out.print(newMessage.notificationString + "\n" + username + " >>> ");
+                    case LOAD_GAME -> {
+                        drawBoard(message);
+                        System.out.print("\n" + username + " >>> ");
+
+                    }
+                    case NOTIFICATION -> {
+                        System.out.print(newMessage.notificationString);
+                    System.out.print("\n" + username + " >>> ");
+                    }
+
                 }
             }
         });

@@ -224,8 +224,7 @@ public class ChessClient {
                 ChessBoard currentBoard = gameToJoin.game().getBoard();
                 if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE")) {
                     if (gameToJoin.whiteUsername().equals(visitorName)) {
-                        String board = makeBoardPlayerWhite(currentBoard);
-                        System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
+                        System.out.printf("Successfully joined game %s%n", gameToJoin.gameName());
                         Websocket.joinGame(playerColor, gameID, this.authToken, this);
                         return "";
                     }
@@ -236,8 +235,7 @@ public class ChessClient {
                 }
                 if (gameToJoin.blackUsername() != null && Objects.equals(playerColor, "BLACK")) {
                     if (gameToJoin.blackUsername().equals(visitorName)) {
-                        String board = makeBoardPlayerBlack(currentBoard);
-                        System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
+                        System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() );
                         Websocket.joinGame(playerColor, gameID, this.authToken, this);
                         return "";
                     }
@@ -252,15 +250,8 @@ public class ChessClient {
                 if (Objects.equals(playerColor, "BLACK")) {
                     gameToJoin = new GameData(gameToJoin.gameID(), gameToJoin.whiteUsername(), visitorName, gameToJoin.gameName(), gameToJoin.game());
                 }
-                String board = "";
-                if (Objects.equals(playerColor, "WHITE") || playerColor == null) {
-                    board = makeBoardPlayerWhite(currentBoard);
-                }
-                if (Objects.equals(playerColor, "BLACK")) {
-                    board = makeBoardPlayerBlack(currentBoard);
-                }
                 server.joinGame(playerColor, gameID, this.authToken);
-                System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
+                System.out.printf("Successfully joined game %s%n", gameToJoin.gameName());
                 Websocket.joinGame(playerColor, gameID, this.authToken, this);
                 return "";
             } else {
@@ -293,7 +284,7 @@ public class ChessClient {
                 }
                 server.observeGame(gameToJoin.gameID(), this.authToken);
                 ChessBoard currentBoard = gameToJoin.game().getBoard();
-                System.out.printf("Successfully observing game %s", gameToJoin.gameName() + "\n" + makeBoardPlayerWhite(currentBoard) +"\n" +"\n");
+                System.out.printf("Successfully observing game %s", gameToJoin.gameName() + "\n");
                 Websocket.joinGame("OBSERVER", gameID, this.authToken, this);
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");

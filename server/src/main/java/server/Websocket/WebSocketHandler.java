@@ -147,6 +147,19 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 }
             }
             runningGame.observers().removeAll(deadObservers);
+            String gameInJson = new Gson().toJson(data.game());
+            ServerMessage loadMessage = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+            loadMessage.notificationString = gameInJson;
+            String actualJsonInfo = new Gson().toJson(loadMessage);
+            try {
+                session.getRemote().sendString(actualJsonInfo);
+                System.out.println("successfully send the load message info");
+            } catch (IOException e) {
+                System.out.println("did NOT successfully send the load message info");
+
+                throw new RuntimeException(e);
+            }
+
 
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
