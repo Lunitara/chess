@@ -113,7 +113,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 runningGame.observers.add(session);
                 isObserver = true;
                 runningGames.put(action.getGameID(), runningGame);
-                message.notificationString = "\n" + username + " joined the game as an observer\n";
+                message.notificationString = "\n" + username + " joined the game as an observer";
                 newMessage = new Gson().toJson(message);
                 try {
                     if (runningGame.whitePlayer != null) {

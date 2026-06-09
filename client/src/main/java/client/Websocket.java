@@ -1,5 +1,7 @@
 package client;
 
+import chess.ChessBoard;
+import chess.ChessGame;
 import com.google.gson.Gson;
 import jakarta.websocket.ContainerProvider;
 import jakarta.websocket.Endpoint;
@@ -20,8 +22,9 @@ public class Websocket extends Endpoint {
     public String playerColor;
     private int gameID;
     private String authToken;
+    private final ChessClient client;
 
-    public static void joinGame(String playerColor, int gameID, String authToken){
+    public static void joinGame(String playerColor, int gameID, String authToken, ChessClient clientInst){
 
         try {
             Websocket client = new Websocket(playerColor, gameID, authToken);
@@ -43,7 +46,7 @@ public class Websocket extends Endpoint {
                             return;
                         }
                         case "highlight" -> highlightMoves(tokens);
-                        default -> System.out.println("Not an available command. Please type 'help' for options.\n");
+                        default -> System.out.println("Not an available command. Please type 'help' for options.");
 
                     }
                 }
@@ -75,10 +78,30 @@ public class Websocket extends Endpoint {
         }
     }
 
+private void redrawBoard(String message) {
+        try {
+            class GameContainer {
+                chess.ChessGame game;
+            }
+            GameContainer gameContainer = new Gson().fromJson(message, GameContainer.class);
+            chess.ChessBoard boardString = gameContainer.game.getBoard();
 
+            if (Objects.equals(playerColor, "WHITE")) {
+                System.out.println("\n" + this.client.makeBoardPlayerWhite(boardString) + "\n");
 
-    private static void redrawBoard() {
-    }
+            } else {
+                System.out.println("\n" + this.client.makeBoardPlayerBlack(boardString) + "\n");
+            }
+
+            return;
+        } catch (Exception e) {
+            System.out.println("something went wrong with printing board");
+
+            throw new RuntimeException(e);
+
+        }
+}
+
     private static void help(String playerColor) {
         if (Objects.equals(playerColor, "OBSERVER")) {
             System.out.print("""
@@ -89,7 +112,8 @@ public class Websocket extends Endpoint {
                     """
             );
         }
-        System.out.print("""
+        else {
+            System.out.print("""
                 help -- lists options
                 redraw -- redraws current board
                 leave -- leaves current game
@@ -97,6 +121,8 @@ public class Websocket extends Endpoint {
                 resign -- forfeits current game
                 highlight -- <ChessPiece position> highlights possible move options
                 """);
+        }
+
     }
     private static void makeMove(String[] tokens) {
     }
@@ -105,10 +131,11 @@ public class Websocket extends Endpoint {
     }
 
 
-    public Websocket(String playerColor, int gameID, String authToken) throws Exception {
+    public Websocket(ChessClient client, String playerColor, int gameID, String authToken) throws Exception {
         this.playerColor = playerColor;
         this.gameID = gameID;
         this.authToken = authToken;
+        this.client = client;
         URI uri = new URI("ws://localhost:8080/ws");
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
         session = container.connectToServer(this, uri);

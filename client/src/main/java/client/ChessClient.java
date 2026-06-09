@@ -226,7 +226,7 @@ public class ChessClient {
                     if (gameToJoin.whiteUsername().equals(visitorName)) {
                         String board = makeBoardPlayerWhite(currentBoard);
                         System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
-                        Websocket.joinGame(playerColor, gameID, this.authToken);
+                        Websocket.joinGame(playerColor, gameID, this.authToken, this);
                         return "";
                     }
                     else {
@@ -238,7 +238,7 @@ public class ChessClient {
                     if (gameToJoin.blackUsername().equals(visitorName)) {
                         String board = makeBoardPlayerBlack(currentBoard);
                         System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
-                        Websocket.joinGame(playerColor, gameID, this.authToken);
+                        Websocket.joinGame(playerColor, gameID, this.authToken, this);
                         return "";
                     }
                     else {
@@ -261,7 +261,7 @@ public class ChessClient {
                 }
                 server.joinGame(playerColor, gameID, this.authToken);
                 System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
-                Websocket.joinGame(playerColor, gameID, this.authToken);
+                Websocket.joinGame(playerColor, gameID, this.authToken, this);
                 return "";
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
@@ -293,8 +293,8 @@ public class ChessClient {
                 }
                 server.observeGame(gameToJoin.gameID(), this.authToken);
                 ChessBoard currentBoard = gameToJoin.game().getBoard();
-                System.out.printf("Successfully observing game %s", gameToJoin.gameName() + "\n" + makeBoardPlayerWhite(currentBoard) +"\n");
-                Websocket.joinGame("OBSERVER", gameID, this.authToken);
+                System.out.printf("Successfully observing game %s", gameToJoin.gameName() + "\n" + makeBoardPlayerWhite(currentBoard) +"\n" +"\n");
+                Websocket.joinGame("OBSERVER", gameID, this.authToken, this);
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
@@ -303,6 +303,7 @@ public class ChessClient {
         }
         return "";
     }
+
     public String makeBoardPlayerWhite(ChessBoard board) {
         StringBuilder sb = new StringBuilder();
         String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
@@ -312,15 +313,25 @@ public class ChessClient {
         setUpAlphabet(sb, "WHITE");
         sb.append("\n");
         for (int row = 8; row >= 1; row--) {
-            sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
             for (int col = 1; col <= 8; col++) {
+                if ((row+col) %2 == 0) {
+                    sb.append(black);
+                }
+                    else {
+                        sb.append(orange);
+                    }
+
                 ChessPosition currentPos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(currentPos);
                 String pieceSymbol = getPieceSym(piece);
-                sb.append("\u2003").append(pieceSymbol).append("\u2003");
+                if (piece == null) {
+                    sb.append("\u2003");
+                }
+                sb.append("\u2003").append(pieceSymbol).append("\u2003").append(reset);
 
             }
-            sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
             sb.append("\n");
         }
         setUpAlphabet(sb, "WHITE");
@@ -378,15 +389,25 @@ public class ChessClient {
         setUpAlphabet(sb, "BLACK");
         sb.append("\n");
         for (int row = 1; row <= 8; row++) {
-            sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
             for (int col = 8; col >= 1; col--) {
+                if ((row+col) % 2 == 0) {
+                    sb.append(black);
+                }
+                    else {
+                        sb.append(orange);
+                    }
+
                 ChessPosition currentPos = new ChessPosition(row, col);
                 ChessPiece piece = board.getPiece(currentPos);
                 String pieceSymbol = getPieceSym(piece);
-                sb.append("\u2003").append(pieceSymbol).append("\u2003");
+                if (piece == null) {
+                    sb.append("\u2003");
+                }
+                sb.append("\u2003").append(pieceSymbol).append("\u2003").append(reset);
 
             }
-            sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
             sb.append("\n");
         }
         setUpAlphabet(sb, "BLACK");
