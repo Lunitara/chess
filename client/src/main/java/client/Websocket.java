@@ -30,7 +30,6 @@ public class Websocket extends Endpoint {
             String username = ChessClient.visitorName;
             while (true) {
                 System.out.printf(username + " >>> ");
-
                 String[] tokens = scanner.nextLine().split(" ");
                 String cmd = (tokens.length > 0) ? tokens[0] : "help";
                 if (Objects.equals(playerColor, "OBSERVER")) {
@@ -45,6 +44,7 @@ public class Websocket extends Endpoint {
                         }
                         case "highlight" -> highlightMoves(tokens);
                         default -> System.out.println("Not an available command. Please type 'help' for options.\n");
+
                     }
                 }
                 else {
@@ -79,23 +79,24 @@ public class Websocket extends Endpoint {
 
     private static void redrawBoard() {
     }
-    private static String help(String playerColor) {
+    private static void help(String playerColor) {
         if (Objects.equals(playerColor, "OBSERVER")) {
-            return """
+            System.out.print("""
                     help -- lists options
                     redraw -- redraws current board
                     leave -- leaves current game
                     highlight -- <CHESSPIECE POSITION> highlights possible move options
-                    """;
+                    """
+            );
         }
-        return """
+        System.out.print("""
                 help -- lists options
                 redraw -- redraws current board
                 leave -- leaves current game
                 move -- <old ChessPiece position> <new ChessPiece position> moves piece to new position
                 resign -- forfeits current game
                 highlight -- <ChessPiece position> highlights possible move options
-                """;
+                """);
     }
     private static void makeMove(String[] tokens) {
     }

@@ -267,15 +267,15 @@ public class ChessClient {
                     return "Game does not exist.\n";
                 }
                 server.observeGame(gameToJoin.gameID(), this.authToken);
-                System.out.printf("Successfully observing game %s", gameID + "\n" + makeBoardPlayerWhite() + "\n");
+                System.out.printf("Successfully observing game %s", gameToJoin.gameName() + "\n" + makeBoardPlayerWhite() +"\n");
                 Websocket.joinGame("OBSERVER", gameID, this.authToken);
-                return "Game Over";
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
         } catch (Exception e) {
             return "Error: could not observe game.\n";
         }
+        return "";
     }
     public String makeBoardPlayerWhite() {
         StringBuilder sb = new StringBuilder();
