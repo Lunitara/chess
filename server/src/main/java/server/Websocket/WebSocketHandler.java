@@ -79,13 +79,15 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String newMessage = new Gson().toJson(message);
             if (Objects.equals(data.whiteUsername(), username)) {
                 connections.put(session, new PlayerInfo(true, action.getGameID()));
-                runningGames.put(action.getGameID(), new RunningGame(runningGame.observers,session, runningGame.blackPlayer()));
+                Session blackSession = runningGame.blackPlayer();
+                runningGame = new RunningGame(runningGame.observers(), session, blackSession);
+                runningGames.put(action.getGameID(), runningGame);
                 message.notificationString ="\n" + username + " joined the game as white player.";
                 newMessage = new Gson().toJson(message);
                 try {
-                    if (runningGame.blackPlayer != null) {
+                    if (blackSession != null) {
 
-                        runningGame.blackPlayer.getRemote().sendString(newMessage);
+                        blackSession.getRemote().sendString(newMessage);
                     }
                 } catch (IOException e) {
                     System.out.println("sending a message to black player that white player joined failed");
@@ -93,12 +95,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 }
             } else if (Objects.equals(data.blackUsername(), username)) {
                 connections.put(session, new PlayerInfo(false, action.getGameID()));
-                runningGames.put(action.getGameID(), new RunningGame(runningGame.observers, runningGame.whitePlayer(),session));
+                Session whiteSession = runningGame.whitePlayer();
+                runningGame = new RunningGame(runningGame.observers(),whiteSession, session);
+                runningGames.put(action.getGameID(), runningGame);
                 message.notificationString ="\n" + username + " joined the game as black player.";
                 newMessage = new Gson().toJson(message);
                 try {
-                    if (runningGame.whitePlayer != null) {
-                        runningGame.whitePlayer.getRemote().sendString(newMessage);
+                    if (whiteSession != null) {
+                        whiteSession.getRemote().sendString(newMessage);
                     }
                 } catch (IOException e) {
                     System.out.println("sending a message to white player that black player joined failed");

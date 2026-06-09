@@ -1,10 +1,16 @@
 package client;
+import chess.ChessBoard;
+import chess.ChessGame;
+import chess.ChessPiece;
+import chess.ChessPosition;
+import com.google.gson.Gson;
 import model.GameData;
 
 import java.util.*;
 
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
 import ui.EscapeSequences;
+import websocket.messages.ServerMessage;
 
 public class ChessClient {
     private final ServerFacade server;
@@ -215,9 +221,10 @@ public class ChessClient {
                 if (gameToJoin == null) {
                     return "Game does not exist.\n";
                 }
+                ChessBoard currentBoard = gameToJoin.game().getBoard();
                 if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE")) {
                     if (gameToJoin.whiteUsername().equals(visitorName)) {
-                        String board = makeBoardPlayerWhite();
+                        String board = makeBoardPlayerWhite(currentBoard);
                         System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
                         Websocket.joinGame(playerColor, gameID, this.authToken);
                         return "";
@@ -229,7 +236,7 @@ public class ChessClient {
                 }
                 if (gameToJoin.blackUsername() != null && Objects.equals(playerColor, "BLACK")) {
                     if (gameToJoin.blackUsername().equals(visitorName)) {
-                        String board = makeBoardPlayerBlack();
+                        String board = makeBoardPlayerBlack(currentBoard);
                         System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
                         Websocket.joinGame(playerColor, gameID, this.authToken);
                         return "";
@@ -247,10 +254,10 @@ public class ChessClient {
                 }
                 String board = "";
                 if (Objects.equals(playerColor, "WHITE") || playerColor == null) {
-                    board = makeBoardPlayerWhite();
+                    board = makeBoardPlayerWhite(currentBoard);
                 }
                 if (Objects.equals(playerColor, "BLACK")) {
-                    board = makeBoardPlayerBlack();
+                    board = makeBoardPlayerBlack(currentBoard);
                 }
                 server.joinGame(playerColor, gameID, this.authToken);
                 System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() + "\n" + board +"\n");
@@ -285,7 +292,8 @@ public class ChessClient {
                     return "Game does not exist.\n";
                 }
                 server.observeGame(gameToJoin.gameID(), this.authToken);
-                System.out.printf("Successfully observing game %s", gameToJoin.gameName() + "\n" + makeBoardPlayerWhite() +"\n");
+                ChessBoard currentBoard = gameToJoin.game().getBoard();
+                System.out.printf("Successfully observing game %s", gameToJoin.gameName() + "\n" + makeBoardPlayerWhite(currentBoard) +"\n");
                 Websocket.joinGame("OBSERVER", gameID, this.authToken);
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
@@ -295,7 +303,7 @@ public class ChessClient {
         }
         return "";
     }
-    public String makeBoardPlayerWhite() {
+    public String makeBoardPlayerWhite(ChessBoard board) {
         StringBuilder sb = new StringBuilder();
         String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
         String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
@@ -303,109 +311,36 @@ public class ChessClient {
         String reset = EscapeSequences.RESET_BG_COLOR;
         setUpAlphabet(sb, "WHITE");
         sb.append("\n");
-        sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+        for (int row = 8; row >= 1; row--) {
+            sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition currentPos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(currentPos);
+                String pieceSymbol = getPieceSym(piece);
+                sb.append("\u2003").append(pieceSymbol).append("\u2003");
 
-        setUpPieces(sb, "BLACK", "WHITE");
-        sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
-        sb.append("\n");
-        sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
-
-        //pawns
-        for (int j = 8; j > 0; j--) {
-            if ((j) % 2 == 0) {
-                sb.append(black).append("\u2003").append("♟").append("\u2003").append(reset);
-            } else {
-                sb.append(orange).append("\u2003").append("♟").append("\u2003").append(reset);
             }
-        }
-        sb.append(gray).append("\u2003").append("7").append("\u2003").append(reset);
-        sb.append("\n");
-        int count = 6;
-        //lines in between
-        for (int k = 4; k > 0; k--) {
-            sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
-            for (int r = 8; r > 0; r--) {
-                if ((k + r) % 2 == 0) {
-                    sb.append(orange).append("\u2003").append("\u2003").append("\u2003").append(reset);
-                } else {
-                    sb.append(black).append("\u2003").append("\u2003").append("\u2003").append(reset);
-                }
-            }
-            //finish off the bottom of white board
-            sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("8").append("\u2003").append(reset);
             sb.append("\n");
-            count--;
         }
-        sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
-        //bottom white
-        for (int j = 8; j > 0; j--) {
-            if ((j) % 2 == 0) {
-                sb.append(orange).append("\u2003").append("♙").append("\u2003").append(reset);
-            } else {
-                sb.append(black).append("\u2003").append("♙").append("\u2003").append(reset);
-            }
-        }
-        sb.append(gray).append("\u2003").append(2).append("\u2003").append(reset);
-        sb.append("\n");
-        sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
-        setUpPieces(sb, "WHITE", "WHITE");
-        sb.append(gray).append("\u2003").append(1).append("\u2003").append(reset);
-        sb.append("\n");
         setUpAlphabet(sb, "WHITE");
         return sb.toString();
     }
-    public void setUpPieces(StringBuilder sb, String color, String turn) {
-        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
-        String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
-        String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
-        String reset = EscapeSequences.RESET_BG_COLOR;
-        if (Objects.equals(color, "BLACK")) {
-            if (Objects.equals(turn, "BLACK")) {
-                sb.append(black).append("\u2003").append("♜").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♞").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♝").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♚").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♛").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♝").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♞").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♜").append("\u2003").append(reset);
-            }
-
-            else {
-                sb.append(orange).append("\u2003").append("♜").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♞").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♝").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♛").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♚").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♝").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♞").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♜").append("\u2003").append(reset);
-            }
-        } else {
-            if (Objects.equals(turn, "BLACK")) {
-                sb.append(orange).append("\u2003").append("♖").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♘").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♗").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♔").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♕").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♗").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♘").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♖").append("\u2003").append(reset);
-            }
-            else {
-                sb.append(black).append("\u2003").append("♖").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♘").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♗").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♕").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♔").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♗").append("\u2003").append(reset);
-                sb.append(black).append("\u2003").append("♘").append("\u2003").append(reset);
-                sb.append(orange).append("\u2003").append("♖").append("\u2003").append(reset);
-
-            }
-
+    private String getPieceSym(ChessPiece piece) {
+        if (piece == null) {
+            return "";
         }
+        boolean isWhite = (piece.getTeamColor() == ChessGame.TeamColor.WHITE);
+        return switch (piece.getPieceType()) {
+            case KING -> isWhite ? "♔" : "♚";
+            case QUEEN -> isWhite ? "♕" : "♛";
+            case ROOK -> isWhite ? "♖" : "♜";
+            case BISHOP -> isWhite ? "♗" : "♝";
+            case KNIGHT -> isWhite ? "♘" : "♞";
+            case PAWN -> isWhite ? "♙" : "♟";
+        };
     }
+
     public void setUpAlphabet(StringBuilder sb, String color) {
         String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
         String reset = EscapeSequences.RESET_BG_COLOR;
@@ -434,7 +369,7 @@ public class ChessClient {
             sb.append(gray).append("   ").append("\u2003").append(reset);
         }
     }
-    public String makeBoardPlayerBlack() {
+    public String makeBoardPlayerBlack(ChessBoard board) {
         StringBuilder sb = new StringBuilder();
         String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
         String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
@@ -442,55 +377,22 @@ public class ChessClient {
         String reset = EscapeSequences.RESET_BG_COLOR;
         setUpAlphabet(sb, "BLACK");
         sb.append("\n");
-        sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
-        setUpPieces(sb, "WHITE", "BLACK");
-        sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
-        sb.append("\n");
-        sb.append(gray).append("\u2003").append("2").append("\u2003").append(reset);
-        //pawns
-        for (int j = 8; j > 0; j--) {
-            if ((j) % 2 == 0) {
-                sb.append(black).append("\u2003").append("♙").append("\u2003").append(reset);
-            } else {
-                sb.append(orange).append("\u2003").append("♙").append("\u2003").append(reset);
-            }
-        }
-        sb.append(gray).append("\u2003").append("2").append("\u2003").append(reset);
-        sb.append("\n");
-        int count = 3;
-        //lines in between
-        for (int i = 4; i > 0; i--) {
-            sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
-            for (int j = 8; j > 0; j--) {
-                if ((i + j) % 2 == 0) {
-                    sb.append(orange).append("\u2003").append("\u2003").append("\u2003").append(reset);
-                } else {
-                    sb.append(black).append("\u2003").append("\u2003").append("\u2003").append(reset);
-                }
-            }
-            sb.append(gray).append("\u2003").append(count).append("\u2003").append(reset);
-            sb.append("\n");
-            count++;
-        }
-        sb.append(gray).append("\u2003").append(7).append("\u2003").append(reset);
-        //bottom white
-        for (int j = 8; j > 0; j--) {
-            if ((j) % 2 == 0) {
-                sb.append(orange).append("\u2003").append("♟").append("\u2003").append(reset);
-            } else {
-                sb.append(black).append("\u2003").append("♟").append("\u2003").append(reset);
-            }
-        }
-        sb.append(gray).append("\u2003").append(7).append("\u2003").append(reset);
-        sb.append("\n");
-        sb.append(gray).append("\u2003").append(8).append("\u2003").append(reset);
-        setUpPieces(sb, "BLACK", "BLACK");
-        sb.append(gray).append("\u2003").append(8).append("\u2003").append(reset);
+        for (int row = 1; row <= 8; row++) {
+            sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
+            for (int col = 8; col >= 1; col--) {
+                ChessPosition currentPos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(currentPos);
+                String pieceSymbol = getPieceSym(piece);
+                sb.append("\u2003").append(pieceSymbol).append("\u2003");
 
-        sb.append("\n");
+            }
+            sb.append(gray).append("\u2003").append("1").append("\u2003").append(reset);
+            sb.append("\n");
+        }
         setUpAlphabet(sb, "BLACK");
         return sb.toString();
     }
+
     private boolean assertSignedIn() {
         if (this.state == State.SIGNEDOUT) {
             System.out.print("Error: could not fulfill request as" +
