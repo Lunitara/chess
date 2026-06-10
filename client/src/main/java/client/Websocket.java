@@ -27,97 +27,92 @@ public class Websocket extends Endpoint {
     private ChessMove lastMove;
     private String userName = null;
 
-    public static void joinGame(String playerColor, int gameID, String authToken) {
-
-        try {
-
-            Websocket client = new Websocket(playerColor, gameID, authToken);
-            client.send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
-            Scanner scanner = new Scanner(System.in);
-            String username = ChessClient.visitorName;
-            client.userName = ChessClient.visitorName;
-            while (true) {
-                String line = scanner.nextLine();
-                if (line.trim().isEmpty()) {
-                    System.out.printf(username + " >>> ");
-                    continue;
-                }
-                String[] tokens = line.split(" ");
-                String cmd = (tokens.length > 0) ? tokens[0] : "help";
-
-                if (Objects.equals(playerColor, "OBSERVER")) {
-                    switch (cmd) {
-                        case "help" -> {
-                            help(playerColor);
-                            System.out.printf(username + " >>> ");
-                        }
-
-                        case "leave" -> {
-                            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
-                            client.send(command);
-                            System.out.println("Left the game.");
-                            return;
-                        }
-                        case "highlight" -> {
-                            client.highlightMoves(tokens);
-                            System.out.printf(username + " >>> ");
-                        }
-                        case "redraw" -> {
-                            Collection<ChessMove> moves = new ArrayList<>();
-                            client.redrawBoard(moves);
-                            System.out.printf(username + " >>> ");
-                        }
-
-                        default -> {
-                            System.out.println("Not an available command. Please type 'help' for options.");
-                        System.out.printf(username + " >>> ");
-                        }
-
-                    }
-                } else {
-                    switch (cmd) {
-                        case "help" -> {
-                            help(playerColor);
-                            System.out.printf(username + " >>> ");
-                        }
-
-                        case "leave" -> {
-                            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
-                            client.send(command);
-                            System.out.println("Left the game.");
-                            return;
-                        }
-                        case "move" -> {
-                            client.makeMove(tokens);
-                            System.out.printf(username + " >>> ");
-
-                        }
-                        case "redraw" -> {
-                            Collection<ChessMove> moves = new ArrayList<>();
-                            client.redrawBoard(moves);
-                            System.out.printf(username + " >>> ");
-                        }
-                        case "resign" -> {
-                            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
-                            client.send(command);
-                            System.out.println("Resigned the game.");
-                            return;
-                        }
-                        case "highlight" -> {
-                            client.highlightMoves(tokens);
-                        System.out.printf(username + " >>> ");
-                        }
-                        default ->{
-                            System.out.println("Not an available command. Please type 'help' for options.");
-                        System.out.printf(username + " >>> ");
-                        }
-                    }
-                }
-
+    public static void joinGame(String playerColor, int gameID, String authToken) throws Exception {
+        Websocket client = new Websocket(playerColor, gameID, authToken);
+        client.send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
+        Scanner scanner = new Scanner(System.in);
+        String username = ChessClient.visitorName;
+        client.userName = ChessClient.visitorName;
+        while (true) {
+            String line = scanner.nextLine();
+            if (line.trim().isEmpty()) {
+                System.out.printf(username + " >>> ");
+                continue;
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            String[] tokens = line.split(" ");
+            String cmd = (tokens.length > 0) ? tokens[0] : "help";
+
+            if (Objects.equals(playerColor, "OBSERVER")) {
+                switch (cmd) {
+                    case "help" -> {
+                        help(playerColor);
+                        System.out.printf(username + " >>> ");
+                    }
+
+                    case "leave" -> {
+                        UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
+                        client.send(command);
+                        System.out.println("Left the game.");
+                        return;
+                    }
+                    case "highlight" -> {
+                        client.highlightMoves(tokens);
+                        System.out.printf(username + " >>> ");
+                    }
+                    case "redraw" -> {
+                        Collection<ChessMove> moves = new ArrayList<>();
+                        client.redrawBoard(moves);
+                        System.out.printf(username + " >>> ");
+                    }
+
+                    default -> {
+                        System.out.println("Not an available command. Please type 'help' for options.");
+                        System.out.printf(username + " >>> ");
+                    }
+
+                }
+            } else {
+                switch (cmd) {
+                    case "help" -> {
+                        help(playerColor);
+                        System.out.printf(username + " >>> ");
+                    }
+
+                    case "leave" -> {
+                        UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
+                        client.send(command);
+                        System.out.println("Left the game.");
+                        return;
+                    }
+                    case "move" -> {
+                        client.makeMove(tokens);
+                        System.out.printf(username + " >>> ");
+
+                    }
+                    case "redraw" -> {
+                        Collection<ChessMove> moves = new ArrayList<>();
+                        client.redrawBoard(moves);
+                        System.out.printf(username + " >>> ");
+                    }
+                    case "resign" -> {
+                        UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
+                        client.send(command);
+                        System.out.println("Resigned the game.");
+                        return;
+                    }
+                    case "highlight" -> {
+                        client.highlightMoves(tokens);
+                        System.out.printf(username + " >>> ");
+                    }
+                    default -> {
+                        System.out.println("Not an available command. Please type 'help' for options.");
+                        System.out.printf(username + " >>> ");
+                    }
+                }
+            }
+
         }
+
     }
 
     private void redrawBoard(Collection<ChessMove> moves) {
@@ -143,7 +138,6 @@ public class Websocket extends Endpoint {
     }
 
 
-
     private String getPieceSym(ChessPiece piece) {
         if (piece == null) {
             return "";
@@ -156,14 +150,13 @@ public class Websocket extends Endpoint {
             case ROOK -> "♜";
             case BISHOP -> "♝";
             case KNIGHT -> "♞";
-            case PAWN ->  "♟";
+            case PAWN -> "♟";
         };
         String black = EscapeSequences.SET_TEXT_COLOR_BLACK;
         String white = EscapeSequences.SET_TEXT_COLOR_WHITE;
         if (isWhite) {
             return white + pieceChar;
-        }
-        else {
+        } else {
             return black + pieceChar + white;
         }
     }
@@ -221,8 +214,7 @@ public class Websocket extends Endpoint {
             startCol = 8;
             endCol = 1;
             colStep = -1;
-        }
-        else {
+        } else {
             setUpAlphabet(sb, "WHITE");
             startRow = 8;
             endRow = 1;
@@ -233,24 +225,22 @@ public class Websocket extends Endpoint {
         }
         sb.append("\n");
 
-        for (int row = startRow; rowStep > 0 ? row <= endRow : row >= endRow; row+= rowStep) {
+        for (int row = startRow; rowStep > 0 ? row <= endRow : row >= endRow; row += rowStep) {
             sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
-            for (int col = startCol; colStep > 0 ? col <= endCol : col >= endCol; col+= colStep) {
+            for (int col = startCol; colStep > 0 ? col <= endCol : col >= endCol; col += colStep) {
                 boolean colored = false;
-                if (!validMoves.isEmpty()) {
-                    for (ChessMove move : validMoves) {
-                        if (move !=null && row == move.getEndPosition().getRow() && col == move.getEndPosition().getColumn()) {
-                            if ((row + col) % 2 == 0) {
-                                sb.append(highlightColor);
+                for (ChessMove move : validMoves) {
+                    if (row == move.getEndPosition().getRow() && col == move.getEndPosition().getColumn()) {
+                        if ((row + col) % 2 == 0) {
+                            sb.append(highlightColor);
 
-                            } else {
-                                sb.append(otherHighlightColor);
-                            }
-
-                            colored = true;
-                            break;
+                        } else {
+                            sb.append(otherHighlightColor);
                         }
+                        colored = true;
+                        break;
                     }
+
                 }
                 if (!colored) {
                     if (lastMove != null && row == lastMove.getStartPosition().getRow() && col ==
@@ -281,14 +271,12 @@ public class Websocket extends Endpoint {
         }
         if (Objects.equals(color, "BLACK")) {
             setUpAlphabet(sb, "BLACK");
-        }
-        else {
+        } else {
             setUpAlphabet(sb, "WHITE");
 
         }
         return sb.toString();
     }
-
 
 
     private static void help(String playerColor) {
@@ -330,8 +318,10 @@ public class Websocket extends Endpoint {
 
                 } else {
                     //probably a valid entry now lets check if it's actually valid
-                    ChessPosition startPos = new ChessPosition(allPossibleNums.indexOf(startPosition.charAt(1))+1, allPossibleAlp.indexOf(startPosition.charAt(0))+1);
-                    ChessPosition endPos = new ChessPosition(allPossibleNums.indexOf(endPosition.charAt(1))+1, allPossibleAlp.indexOf(endPosition.charAt(0))+1);
+                    ChessPosition startPos = new ChessPosition(allPossibleNums.indexOf(startPosition.charAt(1)) +
+                            1, allPossibleAlp.indexOf(startPosition.charAt(0)) + 1);
+                    ChessPosition endPos = new ChessPosition(allPossibleNums.indexOf(endPosition.charAt(1)) + 1,
+                            allPossibleAlp.indexOf(endPosition.charAt(0)) + 1);
                     ChessPiece piece = latestBoard.getPiece(startPos);
                     if (endPos.getRow() == 8 && Objects.equals(this.playerColor, "WHITE") ||
                             endPos.getRow() == 1 && Objects.equals(this.playerColor, "BLACK")) {
@@ -352,7 +342,7 @@ public class Websocket extends Endpoint {
                                     promotionPiece = ChessPiece.PieceType.QUEEN;
                                 }
                             }
-                            ChessMove move =  new ChessMove(startPos, endPos, promotionPiece);
+                            ChessMove move = new ChessMove(startPos, endPos, promotionPiece);
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, authToken, gameID);
                             command.setMove(move);
                             send(command);
@@ -397,23 +387,23 @@ public class Websocket extends Endpoint {
 
                 } else {
                     //probably a valid entry now lets check if it's actually valid
-                    ChessPosition finalPiecePos = new ChessPosition(allPossibleNums.indexOf(piecePos.charAt(1))+1, allPossibleAlp.indexOf(piecePos.charAt(0))+1);
+                    ChessPosition finalPiecePos = new ChessPosition(allPossibleNums.indexOf(piecePos.charAt(1)) + 1,
+                            allPossibleAlp.indexOf(piecePos.charAt(0)) + 1);
                     Collection<ChessMove> validMoves = this.latestBoard.getPiece(finalPiecePos).pieceMoves(this.latestBoard, finalPiecePos);
                     redrawBoard(validMoves);
                 }
 
-            }
-            else {
+            } else {
                 System.out.println("Please put in the right format and # of parameters for moves." +
                         "Ex: highlight d6");
 
 
             }
 
-    } catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        }
+    }
 
 
     public Websocket(String playerColor, int gameID, String authToken) throws Exception {

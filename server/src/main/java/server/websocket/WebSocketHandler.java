@@ -64,9 +64,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             case RESIGN -> resign(action, ctx.session);
         }
     }
-    private void sendTo(ServerMessage message, Session session) {
-
-    }
     private void connect(UserGameCommand action, Session session) {
         System.out.println("Successfully connected to game through websocket");
         try {
@@ -100,12 +97,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 newMessage = new Gson().toJson(message);
                 try {
                     if (blackSession != null) {
-
                         blackSession.getRemote().sendString(newMessage);
                     }
                 } catch (IOException e) {
                     System.out.println("sending a message to black player that white player joined failed");
-
                 }
             } else if (Objects.equals(data.blackUsername(), username)) {
                 connections.put(session, new PlayerInfo(false, action.getGameID()));
