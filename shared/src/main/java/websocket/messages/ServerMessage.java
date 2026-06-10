@@ -3,7 +3,6 @@ package websocket.messages;
 import chess.ChessGame;
 import chess.ChessMove;
 
-import java.util.Collection;
 import java.util.Objects;
 
 /**
@@ -14,8 +13,10 @@ import java.util.Objects;
  */
 public class ServerMessage {
     ServerMessageType serverMessageType;
-    public String notificationString;
+    public String message;
+    public String errorMessage;
     public ChessGame game;
+    public ChessMove lastMove;
     public enum ServerMessageType {
         LOAD_GAME,
         ERROR,
