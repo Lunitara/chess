@@ -51,11 +51,7 @@ public class Websocket extends Endpoint {
                             help(playerColor);
                             System.out.printf(username + " >>> ");
                         }
-                        case "redraw" -> {
-                            Collection<ChessMove> moves = new ArrayList<>();
-                            client.redrawBoard(moves);
-                            System.out.printf(username + " >>> ");
-                        }
+
                         case "leave" -> {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
                             client.send(command);
@@ -64,8 +60,14 @@ public class Websocket extends Endpoint {
                         }
                         case "highlight" -> {
                             client.highlightMoves(tokens);
-                        System.out.printf(username + " >>> ");
+                            System.out.printf(username + " >>> ");
                         }
+                        case "redraw" -> {
+                            Collection<ChessMove> moves = new ArrayList<>();
+                            client.redrawBoard(moves);
+                            System.out.printf(username + " >>> ");
+                        }
+
                         default -> {
                             System.out.println("Not an available command. Please type 'help' for options.");
                         System.out.printf(username + " >>> ");
@@ -78,11 +80,7 @@ public class Websocket extends Endpoint {
                             help(playerColor);
                             System.out.printf(username + " >>> ");
                         }
-                        case "redraw" -> {
-                            Collection<ChessMove> moves = new ArrayList<>();
-                            client.redrawBoard(moves);
-                            System.out.printf(username + " >>> ");
-                        }
+
                         case "leave" -> {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
                             client.send(command);
@@ -93,6 +91,11 @@ public class Websocket extends Endpoint {
                             client.makeMove(tokens);
                             System.out.printf(username + " >>> ");
 
+                        }
+                        case "redraw" -> {
+                            Collection<ChessMove> moves = new ArrayList<>();
+                            client.redrawBoard(moves);
+                            System.out.printf(username + " >>> ");
                         }
                         case "resign" -> {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
@@ -126,10 +129,10 @@ public class Websocket extends Endpoint {
             }
 
             if (Objects.equals(playerColor, "WHITE")) {
-                System.out.println("\n" + makeBoardPlayerWhite(this.latestBoard, this.lastMove, moves));
+                System.out.println("\n" + makeBoard(this.latestBoard, this.lastMove, moves, "WHITE"));
 
             } else {
-                System.out.println("\n" + makeBoardPlayerBlack(this.latestBoard, this.lastMove, moves));
+                System.out.println("\n" + makeBoard(this.latestBoard, this.lastMove, moves, "BLACK"));
             }
         } catch (Exception e) {
             System.out.println("something went wrong with printing board");
@@ -140,65 +143,6 @@ public class Websocket extends Endpoint {
     }
 
 
-    public String makeBoardPlayerWhite(ChessBoard board, ChessMove lastMove, Collection<ChessMove> validMoves) {
-        StringBuilder sb = new StringBuilder();
-        String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
-        String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
-        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
-        String reset = EscapeSequences.RESET_BG_COLOR;
-        String grossOrange = EscapeSequences.SET_BG_COLOR_PINK_ORANGE;
-        String highlightColor = EscapeSequences.SET_BG_COLOR_DARK_GREEN;
-        String otherHighlightColor = EscapeSequences.SET_BG_COLOR_YELLOW;
-        setUpAlphabet(sb, "WHITE");
-        sb.append("\n");
-        for (int row = 8; row >= 1; row--) {
-            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
-            for (int col = 1; col <= 8; col++) {
-                boolean colored = false;
-                if (!validMoves.isEmpty()) {
-                    for (ChessMove move : validMoves) {
-                        if (move !=null && row == move.getEndPosition().getRow() && col == move.getEndPosition().getColumn()) {
-                            if ((row + col) % 2 == 0) {
-                                sb.append(highlightColor);
-
-                            } else {
-                                sb.append(otherHighlightColor);
-                            }
-
-                            colored = true;
-                        }
-                    }
-                }
-                if (!colored) {
-                    if (lastMove != null && row == lastMove.getStartPosition().getRow() && col ==
-                            lastMove.getStartPosition().getColumn()) {
-                        sb.append(grossOrange);
-                    } else if (lastMove != null && row == lastMove.getEndPosition().getRow() && col ==
-                            lastMove.getEndPosition().getColumn()) {
-                        sb.append(grossOrange);
-                    } else if ((row + col) % 2 == 0) {
-                        sb.append(black);
-
-                    } else {
-                        sb.append(orange);
-                    }
-                }
-
-                ChessPosition currentPos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(currentPos);
-                String pieceSymbol = getPieceSym(piece);
-                if (piece == null) {
-                    sb.append("\u2003");
-                }
-                sb.append("\u2003").append(pieceSymbol).append("\u2003").append(reset);
-
-            }
-            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
-            sb.append("\n");
-        }
-        setUpAlphabet(sb, "WHITE");
-        return sb.toString();
-    }
 
     private String getPieceSym(ChessPiece piece) {
         if (piece == null) {
@@ -254,7 +198,7 @@ public class Websocket extends Endpoint {
         }
     }
 
-    public String makeBoardPlayerBlack(ChessBoard board, ChessMove lastMove, Collection<ChessMove> validMoves) {
+    public String makeBoard(ChessBoard board, ChessMove lastMove, Collection<ChessMove> validMoves, String color) {
         StringBuilder sb = new StringBuilder();
         String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
         String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
@@ -263,13 +207,35 @@ public class Websocket extends Endpoint {
         String grossOrange = EscapeSequences.SET_BG_COLOR_PINK_ORANGE;
         String highlightColor = EscapeSequences.SET_BG_COLOR_DARK_GREEN;
         String otherHighlightColor = EscapeSequences.SET_BG_COLOR_YELLOW;
-
-
-        setUpAlphabet(sb, "BLACK");
+        int startRow;
+        int endRow;
+        int rowStep;
+        int startCol;
+        int endCol;
+        int colStep;
+        if (Objects.equals(color, "BLACK")) {
+            setUpAlphabet(sb, "BLACK");
+            startRow = 1;
+            endRow = 8;
+            rowStep = 1;
+            startCol = 8;
+            endCol = 1;
+            colStep = -1;
+        }
+        else {
+            setUpAlphabet(sb, "WHITE");
+            startRow = 8;
+            endRow = 1;
+            rowStep = -1;
+            startCol = 1;
+            endCol = 8;
+            colStep = 1;
+        }
         sb.append("\n");
-        for (int row = 1; row <= 8; row++) {
+
+        for (int row = startRow; rowStep > 0 ? row <= endRow : row >= endRow; row+= rowStep) {
             sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
-            for (int col = 8; col >= 1; col--) {
+            for (int col = startCol; colStep > 0 ? col <= endCol : col >= endCol; col+= colStep) {
                 boolean colored = false;
                 if (!validMoves.isEmpty()) {
                     for (ChessMove move : validMoves) {
@@ -282,6 +248,7 @@ public class Websocket extends Endpoint {
                             }
 
                             colored = true;
+                            break;
                         }
                     }
                 }
@@ -312,9 +279,16 @@ public class Websocket extends Endpoint {
             sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
             sb.append("\n");
         }
-        setUpAlphabet(sb, "BLACK");
+        if (Objects.equals(color, "BLACK")) {
+            setUpAlphabet(sb, "BLACK");
+        }
+        else {
+            setUpAlphabet(sb, "WHITE");
+
+        }
         return sb.toString();
     }
+
 
 
     private static void help(String playerColor) {

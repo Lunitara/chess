@@ -1,4 +1,4 @@
-package server.Websocket;
+package server.websocket;
 
 import chess.ChessGame;
 import chess.ChessMove;
@@ -67,11 +67,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             case RESIGN -> resign(action, ctx.session);
         }
     }
-
-    private void connect(UserGameCommand action, Session session) {
-
-        System.out.println("Successfully connected to game through websocket");
-
+    private void connectCheckErrors(UserGameCommand action, Session session) {
         try {
             AuthData auth = authDAO.getAuth(action.getAuthToken());
             if (auth == null) {
@@ -92,11 +88,24 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            RunningGame runningGame = runningGames.get(action.getGameID());
-            if (runningGame == null) {
-                runningGame = new RunningGame(new ArrayList<>(), null, null);
-            }
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private void connect(UserGameCommand action, Session session) {
 
+        System.out.println("Successfully connected to game through websocket");
+
+            try {
+                String username = authDAO.getAuth(action.getAuthToken()).username();
+                GameData data = gameDAO.getGame(action.getGameID());
+                connectCheckErrors(action, session);
+                RunningGame runningGame = runningGames.get(action.getGameID());
+                if (runningGame == null) {
+                    runningGame = new RunningGame(new ArrayList<>(), null, null);
+                }
             websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             String newMessage = new Gson().toJson(message);
             if (Objects.equals(data.whiteUsername(), username)) {
@@ -184,21 +193,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+}
 
     }
 
     private void makeMove(UserGameCommand action, ChessMove move, Session session) {
         try {
             AuthData auth = authDAO.getAuth(action.getAuthToken());
-            if (auth == null) {
-                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-                message.errorMessage = "Error: unauthorized to make move";
-                session.getRemote().sendString(new Gson().toJson(message));
-                return;
-            }
+            testAuth(action, session);
             GameData data = gameDAO.getGame(action.getGameID());
             RunningGame runningGame = runningGames.get(action.getGameID());
 
@@ -275,12 +277,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             throw new RuntimeException(e);
         }
     }
-
-    private void leave(UserGameCommand action, Session session) {
-        System.out.println("Successfully disconnected to game through websocket");
-
+private void testAuth(UserGameCommand action, Session session) {
         try {
-            GameData data = gameDAO.getGame(action.getGameID());
             AuthData auth = authDAO.getAuth(action.getAuthToken());
             if (auth == null) {
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
@@ -288,6 +286,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 session.getRemote().sendString(new Gson().toJson(message));
                 return;
             }
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+}
+    private void leave(UserGameCommand action, Session session) {
+        System.out.println("Successfully disconnected to game through websocket");
+
+        try {
+            GameData data = gameDAO.getGame(action.getGameID());
+            testAuth(action, session);
             String username = authDAO.getAuth(action.getAuthToken()).username();
             RunningGame runningGame = runningGames.get(action.getGameID());
             if (runningGame == null) {
@@ -360,8 +370,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             runningGame.observers().removeAll(deadObservers);
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -372,12 +380,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
             GameData data = gameDAO.getGame(action.getGameID());
             AuthData auth = authDAO.getAuth(action.getAuthToken());
-            if (auth == null) {
-                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-                message.errorMessage = "Error: unauthorized to make move";
-                session.getRemote().sendString(new Gson().toJson(message));
-                return;
-            }
+            testAuth(action, session);
             String username = auth.username();
 
 

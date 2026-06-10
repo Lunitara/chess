@@ -5,11 +5,10 @@ import dataaccess.*;
 import io.javalin.*;
 import io.javalin.http.Context;
 import io.javalin.json.JsonMapper;
-import model.GameData;
 import model.UserData;
 
 import org.jetbrains.annotations.NotNull;
-import server.Websocket.WebSocketHandler;
+import server.websocket.WebSocketHandler;
 import service.UserService;
 import service.GameService;
 import service.AuthService;

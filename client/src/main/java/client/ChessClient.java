@@ -1,17 +1,11 @@
 package client;
 
 import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
-import com.google.gson.Gson;
 import model.GameData;
 
 import java.util.*;
 
 import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataProcessingException;
-import ui.EscapeSequences;
-import websocket.messages.ServerMessage;
 
 public class ChessClient {
     private final ServerFacade server;
