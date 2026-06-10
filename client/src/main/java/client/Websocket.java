@@ -1,7 +1,6 @@
 package client;
 
-import chess.ChessBoard;
-import chess.ChessGame;
+import chess.*;
 import com.google.gson.Gson;
 import jakarta.websocket.ContainerProvider;
 import jakarta.websocket.Endpoint;
@@ -9,6 +8,7 @@ import jakarta.websocket.EndpointConfig;
 import jakarta.websocket.MessageHandler;
 import jakarta.websocket.Session;
 import jakarta.websocket.WebSocketContainer;
+import ui.EscapeSequences;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ServerMessage;
 
@@ -23,13 +23,13 @@ public class Websocket extends Endpoint {
     public String playerColor;
     private int gameID;
     private String authToken;
-    private final ChessClient client;
     private ChessBoard latestBoard = null;
 
-    public static void joinGame(String playerColor, int gameID, String authToken, ChessClient clientInst){
+    public static void joinGame(String playerColor, int gameID, String authToken) {
 
         try {
-            Websocket client = new Websocket(clientInst, playerColor, gameID, authToken);
+
+            Websocket client = new Websocket(playerColor, gameID, authToken);
             client.send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, gameID));
             Scanner scanner = new Scanner(System.in);
             String username = ChessClient.visitorName;
@@ -46,11 +46,11 @@ public class Websocket extends Endpoint {
                     switch (cmd) {
                         case "help" -> {
                             help(playerColor);
-                        System.out.printf(username + " >>> ");
+                            System.out.printf(username + " >>> ");
                         }
                         case "redraw" -> {
                             client.redrawBoard();
-                        System.out.printf(username + " >>> ");
+                            System.out.printf(username + " >>> ");
                         }
                         case "leave" -> {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
@@ -62,8 +62,7 @@ public class Websocket extends Endpoint {
                         default -> System.out.println("Not an available command. Please type 'help' for options.");
 
                     }
-                }
-                else {
+                } else {
                     switch (cmd) {
                         case "help" -> {
                             help(playerColor);
@@ -80,8 +79,8 @@ public class Websocket extends Endpoint {
                             return;
                         }
                         case "move" -> {
-                            makeMove(tokens);
-                        System.out.printf(username + " >>> ");
+                            client.makeMove(tokens);
+                            System.out.printf(username + " >>> ");
                         }
                         case "resign" -> {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
@@ -100,7 +99,7 @@ public class Websocket extends Endpoint {
         }
     }
 
-private void redrawBoard() {
+    private void redrawBoard() {
         try {
             if (this.latestBoard == null) {
                 System.out.println("board is null error");
@@ -108,10 +107,10 @@ private void redrawBoard() {
 
             }
             if (Objects.equals(playerColor, "WHITE")) {
-                System.out.println("\n" + this.client.makeBoardPlayerWhite(this.latestBoard));
+                System.out.println("\n" + makeBoardPlayerWhite(this.latestBoard));
 
             } else {
-                System.out.println("\n" + this.client.makeBoardPlayerBlack(this.latestBoard) );
+                System.out.println("\n" + makeBoardPlayerBlack(this.latestBoard));
             }
         } catch (Exception e) {
             System.out.println("something went wrong with printing board");
@@ -119,28 +118,120 @@ private void redrawBoard() {
             throw new RuntimeException(e);
 
         }
-}
+    }
 
-private void drawBoard(String message) {
-        try {
-            ServerMessage newMessage = new Gson().fromJson(message, ServerMessage.class);
-            String gameInJson = newMessage.notificationString;
-            ChessGame currentGame = new Gson().fromJson(gameInJson, ChessGame.class);
-            this.latestBoard = currentGame.getBoard();;
-            if (Objects.equals(playerColor, "WHITE")) {
-                System.out.println("\n" + this.client.makeBoardPlayerWhite(this.latestBoard) );
 
-            } else {
-                System.out.println("\n" + this.client.makeBoardPlayerBlack(this.latestBoard));
+    public String makeBoardPlayerWhite(ChessBoard board) {
+        StringBuilder sb = new StringBuilder();
+        String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
+        String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
+        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
+        String reset = EscapeSequences.RESET_BG_COLOR;
+        setUpAlphabet(sb, "WHITE");
+        sb.append("\n");
+        for (int row = 8; row >= 1; row--) {
+            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
+            for (int col = 1; col <= 8; col++) {
+                if ((row + col) % 2 == 0) {
+                    sb.append(black);
+                } else {
+                    sb.append(orange);
+                }
+
+                ChessPosition currentPos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(currentPos);
+                String pieceSymbol = getPieceSym(piece);
+                if (piece == null) {
+                    sb.append("\u2003");
+                }
+                sb.append("\u2003").append(pieceSymbol).append("\u2003").append(reset);
+
             }
-        } catch (Exception e) {
-            System.out.println("something went wrong with printing board");
-
-            throw new RuntimeException(e);
-
-
+            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
+            sb.append("\n");
         }
-}
+        setUpAlphabet(sb, "WHITE");
+        return sb.toString();
+    }
+
+    private String getPieceSym(ChessPiece piece) {
+        if (piece == null) {
+            return "";
+        }
+        boolean isWhite = (piece.getTeamColor() == ChessGame.TeamColor.WHITE);
+        return switch (piece.getPieceType()) {
+            case KING -> isWhite ? "♔" : "♚";
+            case QUEEN -> isWhite ? "♕" : "♛";
+            case ROOK -> isWhite ? "♖" : "♜";
+            case BISHOP -> isWhite ? "♗" : "♝";
+            case KNIGHT -> isWhite ? "♘" : "♞";
+            case PAWN -> isWhite ? "♙" : "♟";
+        };
+    }
+
+    public void setUpAlphabet(StringBuilder sb, String color) {
+        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
+        String reset = EscapeSequences.RESET_BG_COLOR;
+        if (Objects.equals(color, "BLACK")) {
+            sb.append(gray).append("   ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("h ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("g").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("f ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("e").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("d ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("c").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("b ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("a").append("\u2003").append(reset);
+            sb.append(gray).append("   ").append("\u2003").append(reset);
+
+        } else {
+            sb.append(gray).append("   ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("a ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("b").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("c ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("d").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("e ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("f").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("g ").append("\u2003").append(reset);
+            sb.append(gray).append("\u2003").append("h").append("\u2003").append(reset);
+            sb.append(gray).append("   ").append("\u2003").append(reset);
+        }
+    }
+
+    public String makeBoardPlayerBlack(ChessBoard board) {
+        StringBuilder sb = new StringBuilder();
+        String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
+        String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
+        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
+        String reset = EscapeSequences.RESET_BG_COLOR;
+        setUpAlphabet(sb, "BLACK");
+        sb.append("\n");
+        for (int row = 1; row <= 8; row++) {
+            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
+            for (int col = 8; col >= 1; col--) {
+                if ((row + col) % 2 == 0) {
+                    sb.append(black);
+                } else {
+                    sb.append(orange);
+                }
+
+                ChessPosition currentPos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(currentPos);
+                String pieceSymbol = getPieceSym(piece);
+                if (piece == null) {
+                    sb.append("\u2003");
+                }
+                sb.append("\u2003").append(pieceSymbol).append("\u2003").append(reset);
+
+            }
+            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
+            sb.append("\n");
+        }
+        setUpAlphabet(sb, "BLACK");
+        return sb.toString();
+    }
+
+
     private static void help(String playerColor) {
         if (Objects.equals(playerColor, "OBSERVER")) {
             System.out.print("""
@@ -150,40 +241,41 @@ private void drawBoard(String message) {
                     highlight -- <CHESSPIECE POSITION> highlights possible move options
                     """
             );
-        }
-        else {
+        } else {
             System.out.print("""
-                help -- lists options
-                redraw -- redraws current board
-                leave -- leaves current game
-                move -- <old ChessPiece position> <new ChessPiece position> moves piece to new position
-                resign -- forfeits current game
-                highlight -- <ChessPiece position> highlights possible move options
-                """);
+                    help -- lists options
+                    redraw -- redraws current board
+                    leave -- leaves current game
+                    move -- <old ChessPiece position> <new ChessPiece position> moves piece to new position
+                    resign -- forfeits current game
+                    highlight -- <ChessPiece position> highlights possible move options
+                    """);
         }
 
     }
-    private static void makeMove(String[] tokens) {
+
+    private void makeMove(String[] tokens) {
         try {
-            if ()
+
             if (tokens.length == 3) {
                 String startPosition = tokens[1];
                 String endPosition = tokens[2];
-                if (startPosition.length() != 2 || endPosition.length() !=2) {
-                    System.out.println("Please put in the right format for moves. Ex: move d4 f7");
-
-                }
                 String allPossibleNums = "12345678";
                 String allPossibleAlp = "abcdefgh";
-                if (!allPossibleAlp.contains(startPosition.charAt(0) + "")) {
+                if (startPosition.length() != 2 || endPosition.length() != 2) {
+                    System.out.println("Please put in the right format for moves. Ex: move d4 f7");
+                } else if (!allPossibleAlp.contains(startPosition.charAt(0) + "")) {
                     System.out.println("Please put in a valid alphabet letter");
-                }
-                else if (!allPossibleNums.contains(startPosition.charAt(1) + "")) {
+                } else if (!allPossibleNums.contains(startPosition.charAt(1) + "")) {
                     System.out.println("Please put in a valid number");
 
-                }
-                else {
+                } else {
                     //probably a valid entry now lets check if it's actually valid
+                    ChessPosition startPos = new ChessPosition(allPossibleNums.indexOf(startPosition.charAt(1))+1, allPossibleAlp.indexOf(startPosition.charAt(0))+1);
+                    ChessPosition endPos = new ChessPosition(allPossibleNums.indexOf(endPosition.charAt(1))+1, allPossibleAlp.indexOf(endPosition.charAt(0))+1);
+                    UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, this.authToken, this.gameID);
+                    command.setMove(new ChessMove(startPos, endPos, null));
+                    send(command);
 
                 }
             } else {
@@ -197,15 +289,14 @@ private void drawBoard(String message) {
         }
     }
 
-        private static void highlightMoves(String[] tokens) {
+    private static void highlightMoves(String[] tokens) {
     }
 
 
-    public Websocket(ChessClient client, String playerColor, int gameID, String authToken) throws Exception {
+    public Websocket(String playerColor, int gameID, String authToken) throws Exception {
         this.playerColor = playerColor;
         this.gameID = gameID;
         this.authToken = authToken;
-        this.client = client;
         URI uri = new URI("ws://localhost:8080/ws");
         WebSocketContainer container = ContainerProvider.getWebSocketContainer();
         session = container.connectToServer(this, uri);
@@ -216,13 +307,14 @@ private void drawBoard(String message) {
                 String username = ChessClient.visitorName;
                 switch (newMessage.getServerMessageType()) {
                     case LOAD_GAME -> {
-                        drawBoard(message);
+                        latestBoard = newMessage.game.getBoard();
+                        redrawBoard();
                         System.out.print("\n" + username + " >>> ");
 
                     }
                     case NOTIFICATION -> {
                         System.out.print(newMessage.notificationString);
-                    System.out.print("\n" + username + " >>> ");
+                        System.out.print("\n" + username + " >>> ");
                     }
 
                 }

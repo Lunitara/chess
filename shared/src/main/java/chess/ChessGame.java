@@ -54,10 +54,7 @@ public class ChessGame {
         if (this.isInStalemate(color)) {
             return true;
         }
-        if (this.isResigned) {
-            return true;
-        }
-        return false;
+        return this.isResigned;
     }
     public void resigned(boolean status) {
         this.isResigned = status;

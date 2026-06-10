@@ -1,4 +1,5 @@
 package client;
+
 import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessPiece;
@@ -17,11 +18,12 @@ public class ChessClient {
     private State state = State.SIGNEDOUT;
     public static String visitorName = null;
     public String authToken;
-    public Map<Integer, Integer> gameNumberTOGameID= new HashMap<>();
+    public Map<Integer, Integer> gameNumberTOGameID = new HashMap<>();
 
     public ChessClient(String serverUrl) {
         this.server = new ServerFacade(serverUrl);
     }
+
     public void run() {
         System.out.println("Welcome to CS 240 Stander Chess!");
         System.out.println("Type 'help' for a list of commands.");
@@ -40,6 +42,7 @@ public class ChessClient {
         }
         System.out.println();
     }
+
     private void printPrompt() {
         if (state == State.SIGNEDOUT) {
             System.out.print("Chess 240 User >>> ");
@@ -47,6 +50,7 @@ public class ChessClient {
             System.out.print(visitorName + " >>> ");
         }
     }
+
     public String eval(String input) {
         try {
             String[] tokens = input.split(" ");
@@ -69,6 +73,7 @@ public class ChessClient {
             throw new RuntimeException(e);
         }
     }
+
     //HELP UI
     public String help() {
         if (state == State.SIGNEDOUT) {
@@ -89,6 +94,7 @@ public class ChessClient {
                 observe -- <game ID number>
                 """;
     }
+
     //PRE-LOGIN UI
     public String login(String... params) {
         if (state == State.SIGNEDIN) {
@@ -110,6 +116,7 @@ public class ChessClient {
             return "Error: cannot login. Make sure username and password are correct.\n";
         }
     }
+
     public String register(String... params) {
 
         try {
@@ -130,7 +137,8 @@ public class ChessClient {
             return "Error: user already exists.\n";
         }
     }
-// POST LOGIN UI
+
+    // POST LOGIN UI
     public String logout() {
         try {
             assertSignedIn();
@@ -143,6 +151,7 @@ public class ChessClient {
             return String.format("Failed to logout" + e.getMessage() + "\n");
         }
     }
+
     public String create(String... params) {
         if (!assertSignedIn()) {
             return "";
@@ -166,6 +175,7 @@ public class ChessClient {
             return "Could not create game";
         }
     }
+
     public String listGames() {
         if (!assertSignedIn()) {
             return "";
@@ -201,6 +211,7 @@ public class ChessClient {
             throw new RuntimeException(e);
         }
     }
+
     private String joinGame(String... params) {
         if (!assertSignedIn()) {
             return "";
@@ -225,21 +236,19 @@ public class ChessClient {
                 if (gameToJoin.whiteUsername() != null && Objects.equals(playerColor, "WHITE")) {
                     if (gameToJoin.whiteUsername().equals(visitorName)) {
                         System.out.printf("Successfully joined game %s%n", gameToJoin.gameName());
-                        Websocket.joinGame(playerColor, gameID, this.authToken, this);
+                        Websocket.joinGame(playerColor, gameID, this.authToken);
                         return "";
-                    }
-                    else {
+                    } else {
                         return "White is already being used.\n";
 
                     }
                 }
                 if (gameToJoin.blackUsername() != null && Objects.equals(playerColor, "BLACK")) {
                     if (gameToJoin.blackUsername().equals(visitorName)) {
-                        System.out.printf("Successfully joined game %s%n", gameToJoin.gameName() );
-                        Websocket.joinGame(playerColor, gameID, this.authToken, this);
+                        System.out.printf("Successfully joined game %s%n", gameToJoin.gameName());
+                        Websocket.joinGame(playerColor, gameID, this.authToken);
                         return "";
-                    }
-                    else {
+                    } else {
                         return "Black is already being used.\n";
 
                     }
@@ -252,7 +261,7 @@ public class ChessClient {
                 }
                 server.joinGame(playerColor, gameID, this.authToken);
                 System.out.printf("Successfully joined game %s%n", gameToJoin.gameName());
-                Websocket.joinGame(playerColor, gameID, this.authToken, this);
+                Websocket.joinGame(playerColor, gameID, this.authToken);
                 return "";
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
@@ -262,6 +271,7 @@ public class ChessClient {
         }
 
     }
+
     public String observeGame(String... params) {
         if (!assertSignedIn()) {
             return "";
@@ -285,7 +295,7 @@ public class ChessClient {
                 server.observeGame(gameToJoin.gameID(), this.authToken);
                 ChessBoard currentBoard = gameToJoin.game().getBoard();
                 System.out.printf("Successfully observing game %s", gameToJoin.gameName() + "\n");
-                Websocket.joinGame("OBSERVER", gameID, this.authToken, this);
+                Websocket.joinGame("OBSERVER", gameID, this.authToken);
             } else {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
@@ -293,116 +303,6 @@ public class ChessClient {
             return "Error: could not observe game.\n";
         }
         return "";
-    }
-
-    public String makeBoardPlayerWhite(ChessBoard board) {
-        StringBuilder sb = new StringBuilder();
-        String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
-        String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
-        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
-        String reset = EscapeSequences.RESET_BG_COLOR;
-        setUpAlphabet(sb, "WHITE");
-        sb.append("\n");
-        for (int row = 8; row >= 1; row--) {
-            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
-            for (int col = 1; col <= 8; col++) {
-                if ((row+col) %2 == 0) {
-                    sb.append(black);
-                }
-                    else {
-                        sb.append(orange);
-                    }
-
-                ChessPosition currentPos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(currentPos);
-                String pieceSymbol = getPieceSym(piece);
-                if (piece == null) {
-                    sb.append("\u2003");
-                }
-                sb.append("\u2003").append(pieceSymbol).append("\u2003").append(reset);
-
-            }
-            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
-            sb.append("\n");
-        }
-        setUpAlphabet(sb, "WHITE");
-        return sb.toString();
-    }
-    private String getPieceSym(ChessPiece piece) {
-        if (piece == null) {
-            return "";
-        }
-        boolean isWhite = (piece.getTeamColor() == ChessGame.TeamColor.WHITE);
-        return switch (piece.getPieceType()) {
-            case KING -> isWhite ? "♔" : "♚";
-            case QUEEN -> isWhite ? "♕" : "♛";
-            case ROOK -> isWhite ? "♖" : "♜";
-            case BISHOP -> isWhite ? "♗" : "♝";
-            case KNIGHT -> isWhite ? "♘" : "♞";
-            case PAWN -> isWhite ? "♙" : "♟";
-        };
-    }
-
-    public void setUpAlphabet(StringBuilder sb, String color) {
-        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
-        String reset = EscapeSequences.RESET_BG_COLOR;
-        if (Objects.equals(color, "BLACK")) {
-            sb.append(gray).append("   ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("h ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("g").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("f ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("e").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("d ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("c").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("b ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("a").append("\u2003").append(reset);
-            sb.append(gray).append("   ").append("\u2003").append(reset);
-
-        } else {
-            sb.append(gray).append("   ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("a ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("b").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("c ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("d").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("e ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("f").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("g ").append("\u2003").append(reset);
-            sb.append(gray).append("\u2003").append("h").append("\u2003").append(reset);
-            sb.append(gray).append("   ").append("\u2003").append(reset);
-        }
-    }
-    public String makeBoardPlayerBlack(ChessBoard board) {
-        StringBuilder sb = new StringBuilder();
-        String black = EscapeSequences.SET_BG_COLOR_SLATE_BLUE;
-        String orange = EscapeSequences.SET_BG_COLOR_FROST_BLUE;
-        String gray = EscapeSequences.SET_BG_COLOR_LIGHT_GREY;
-        String reset = EscapeSequences.RESET_BG_COLOR;
-        setUpAlphabet(sb, "BLACK");
-        sb.append("\n");
-        for (int row = 1; row <= 8; row++) {
-            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
-            for (int col = 8; col >= 1; col--) {
-                if ((row+col) % 2 == 0) {
-                    sb.append(black);
-                }
-                    else {
-                        sb.append(orange);
-                    }
-
-                ChessPosition currentPos = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(currentPos);
-                String pieceSymbol = getPieceSym(piece);
-                if (piece == null) {
-                    sb.append("\u2003");
-                }
-                sb.append("\u2003").append(pieceSymbol).append("\u2003").append(reset);
-
-            }
-            sb.append(gray).append("\u2003").append(row).append("\u2003").append(reset);
-            sb.append("\n");
-        }
-        setUpAlphabet(sb, "BLACK");
-        return sb.toString();
     }
 
     private boolean assertSignedIn() {
