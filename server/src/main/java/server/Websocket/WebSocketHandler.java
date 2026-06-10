@@ -1,5 +1,6 @@
 package server.Websocket;
 
+import chess.ChessGame;
 import chess.ChessMove;
 import chess.InvalidMoveException;
 import dataaccess.AuthDAO;
@@ -191,23 +192,34 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void makeMove(UserGameCommand action, ChessMove move, Session session) {
         try {
-            GameData data = gameDAO.getGame(action.getGameID());
-            if (data.game().isGameOver()) {
-                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-                message.message = "\nCannot make a move as game is over";
+            AuthData auth = authDAO.getAuth(action.getAuthToken());
+            if (auth == null) {
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                message.errorMessage = "Error: unauthorized to make move";
                 session.getRemote().sendString(new Gson().toJson(message));
                 return;
             }
-            if (data.game().getTeamTurn() !=  data.game().getBoard().getPiece(move.getStartPosition()).getTeamColor()) {
-                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-                message.message = "\nCannot make a move on opponent's turn";
+            GameData data = gameDAO.getGame(action.getGameID());
+            RunningGame runningGame = runningGames.get(action.getGameID());
+
+            if (data.game().isGameOver()) {
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                message.errorMessage = "\nCannot make a move as game is over";
+                session.getRemote().sendString(new Gson().toJson(message));
+                return;
+            }
+            ChessGame.TeamColor pieceColor =data.game().getBoard().getPiece(move.getStartPosition()).getTeamColor();
+            if (data.game().getTeamTurn() !=  pieceColor ||
+            pieceColor == ChessGame.TeamColor.WHITE && !session.equals(runningGame.whitePlayer) ||
+            pieceColor == ChessGame.TeamColor.BLACK && !session.equals(runningGame.blackPlayer)) {
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                message.errorMessage = "\nCannot make a move on opponent's turn or using opponent's pieces";
                 session.getRemote().sendString(new Gson().toJson(message));
                 return;
             }
             try {
                 data.game().makeMove(move);
                 gameDAO.updateGame(data);
-                RunningGame runningGame = runningGames.get(action.getGameID());
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 if (session.equals(runningGame.whitePlayer)) {
                     message.message = "\nWhite player moved piece.";
@@ -215,23 +227,46 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 else {
                     message.message = "\nBlack player moved piece.";
                 }
-                session.getRemote().sendString(new Gson().toJson(message));
+                String gameOverJson = null;
+                if (data.game().isGameOver()) {
+                    websocket.messages.ServerMessage gameOverMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                    gameOverMessage.message = "CHECKMATE! Game over";
+                    gameOverJson = new Gson().toJson(gameOverMessage);
+                }
+                String notificationJson = new Gson().toJson(message);
                 ServerMessage chessMessage = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
                 chessMessage.game = data.game();
                 chessMessage.lastMove = move;
                 if (runningGame.whitePlayer != null) {
                     runningGame.whitePlayer.getRemote().sendString(new Gson().toJson(chessMessage));
+                    if (!session.equals(runningGame.whitePlayer)) {
+                        runningGame.whitePlayer.getRemote().sendString(notificationJson);
+                    }
+                    if (gameOverJson != null) {
+                        runningGame.whitePlayer.getRemote().sendString(gameOverJson);
+                    }
                 }
                 if (runningGame.blackPlayer != null) {
                     runningGame.blackPlayer.getRemote().sendString(new Gson().toJson(chessMessage));
-
+                    if (!session.equals(runningGame.blackPlayer)) {
+                        runningGame.blackPlayer.getRemote().sendString(notificationJson);
+                    }
+                    if (gameOverJson != null) {
+                        runningGame.blackPlayer.getRemote().sendString(gameOverJson);
+                    }
                 }
                 for (Session observer : runningGame.observers) {
                     observer.getRemote().sendString(new Gson().toJson(chessMessage));
+                    if (!session.equals(observer)) {
+                        observer.getRemote().sendString(notificationJson);
+                    }
+                    if (gameOverJson != null) {
+                        observer.getRemote().sendString(gameOverJson);
+                    }
                 }
             } catch (InvalidMoveException e) {
-                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-                message.message = "\nIllegal move. Please type in a valid move.";
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                message.errorMessage = "\nIllegal move. Please type in a valid move.";
                 session.getRemote().sendString(new Gson().toJson(message));
             }
         } catch (DataAccessException e) {
@@ -326,8 +361,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String username = authDAO.getAuth(action.getAuthToken()).username();
             GameData data = gameDAO.getGame(action.getGameID());
             if (data.game().isGameOver()) {
-                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-                message.message = "\n" + username + " can't resign as game is already over.";
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                message.errorMessage = "\n" + username + " can't resign as game is already over.";
                 try {
                     session.getRemote().sendString(new Gson().toJson(message));
                 } catch (IOException e) {
