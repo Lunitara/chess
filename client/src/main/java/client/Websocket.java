@@ -231,30 +231,21 @@ public class Websocket extends Endpoint {
                 boolean colored = false;
                 for (ChessMove move : validMoves) {
                     if (row == move.getEndPosition().getRow() && col == move.getEndPosition().getColumn()) {
-                        if ((row + col) % 2 == 0) {
-                            sb.append(highlightColor);
-
-                        } else {
-                            sb.append(otherHighlightColor);
-                        }
                         colored = true;
                         break;
                     }
-
                 }
-                if (!colored) {
-                    if (lastMove != null && row == lastMove.getStartPosition().getRow() && col ==
-                            lastMove.getStartPosition().getColumn()) {
-                        sb.append(grossOrange);
-                    } else if (lastMove != null && row == lastMove.getEndPosition().getRow() && col ==
-                            lastMove.getEndPosition().getColumn()) {
-                        sb.append(grossOrange);
-                    } else if ((row + col) % 2 == 0) {
-                        sb.append(black);
+                if (lastMove != null && row == lastMove.getStartPosition().getRow() && col ==
+                        lastMove.getStartPosition().getColumn()) {
+                    sb.append(grossOrange);
+                } else if (lastMove != null && row == lastMove.getEndPosition().getRow() && col ==
+                        lastMove.getEndPosition().getColumn()) {
+                    sb.append(grossOrange);
+                } else if ((row + col) % 2 == 0) {
+                    sb.append(colored ? highlightColor : black);
 
-                    } else {
-                        sb.append(orange);
-                    }
+                } else {
+                    sb.append(colored ? otherHighlightColor : orange);
                 }
 
                 ChessPosition currentPos = new ChessPosition(row, col);
@@ -301,68 +292,65 @@ public class Websocket extends Endpoint {
 
     }
 
-    private void makeMove(String[] tokens) {
-        try {
+    private void makeMove(String[] tokens) throws IOException {
 
-            if (tokens.length == 3) {
-                String startPosition = tokens[1];
-                String endPosition = tokens[2];
-                String allPossibleNums = "12345678";
-                String allPossibleAlp = "abcdefgh";
-                if (startPosition.length() != 2 || endPosition.length() != 2) {
-                    System.out.println("Please put in the right format for moves. Ex: move d4 f7");
-                } else if (!allPossibleAlp.contains(startPosition.charAt(0) + "")) {
-                    System.out.println("Please put in a valid alphabet letter");
-                } else if (!allPossibleNums.contains(startPosition.charAt(1) + "")) {
-                    System.out.println("Please put in a valid number");
-
-                } else {
-                    //probably a valid entry now lets check if it's actually valid
-                    ChessPosition startPos = new ChessPosition(allPossibleNums.indexOf(startPosition.charAt(1)) +
-                            1, allPossibleAlp.indexOf(startPosition.charAt(0)) + 1);
-                    ChessPosition endPos = new ChessPosition(allPossibleNums.indexOf(endPosition.charAt(1)) + 1,
-                            allPossibleAlp.indexOf(endPosition.charAt(0)) + 1);
-                    ChessPiece piece = latestBoard.getPiece(startPos);
-                    if (endPos.getRow() == 8 && Objects.equals(this.playerColor, "WHITE") ||
-                            endPos.getRow() == 1 && Objects.equals(this.playerColor, "BLACK")) {
-                        if (piece.getPieceType() == PAWN) {
-                            ChessPiece.PieceType promotionPiece = null;
-                            Scanner tempScanner = new Scanner(System.in);
-                            System.out.println(("Pawn can promote. Choose from the following options:\n" +
-                                    "Queen, Rook, Bishop, Knight\n"));
-                            System.out.println(this.userName + " >> ");
-                            String choice = tempScanner.nextLine().trim().toUpperCase();
-                            switch (choice) {
-                                case "QUEEN" -> promotionPiece = ChessPiece.PieceType.QUEEN;
-                                case "ROOK" -> promotionPiece = ChessPiece.PieceType.ROOK;
-                                case "BISHOP" -> promotionPiece = ChessPiece.PieceType.BISHOP;
-                                case "KNIGHT" -> promotionPiece = ChessPiece.PieceType.KNIGHT;
-                                default -> {
-                                    System.out.println(("Not an option. Piece promoted to QUEEN\n"));
-                                    promotionPiece = ChessPiece.PieceType.QUEEN;
-                                }
-                            }
-                            ChessMove move = new ChessMove(startPos, endPos, promotionPiece);
-                            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, authToken, gameID);
-                            command.setMove(move);
-                            send(command);
-                        }
-
-                    }
-                    UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, this.authToken, this.gameID);
-                    command.setMove(new ChessMove(startPos, endPos, null));
-                    send(command);
-
-                }
-            } else {
-                System.out.println("Please put in the right format and # of parameters for moves." +
-                        " Ex: move d4 f7");
+        if (tokens.length == 3) {
+            String startPosition = tokens[1];
+            String endPosition = tokens[2];
+            String allPossibleNums = "12345678";
+            String allPossibleAlp = "abcdefgh";
+            if (startPosition.length() != 2 || endPosition.length() != 2) {
+                System.out.println("Please put in the right format for moves. Ex: move d4 f7");
+            } else if (!allPossibleAlp.contains(startPosition.charAt(0) + "")) {
+                System.out.println("Please put in a valid alphabet letter");
+            } else if (!allPossibleNums.contains(startPosition.charAt(1) + "")) {
+                System.out.println("Please put in a valid number");
 
             }
+            //probably a valid entry now lets check if it's actually valid
+            ChessPosition startPos = new ChessPosition(allPossibleNums.indexOf(startPosition.charAt(1)) +
+                    1, allPossibleAlp.indexOf(startPosition.charAt(0)) + 1);
+            ChessPosition endPos = new ChessPosition(allPossibleNums.indexOf(endPosition.charAt(1)) + 1,
+                    allPossibleAlp.indexOf(endPosition.charAt(0)) + 1);
+            ChessPiece piece = latestBoard.getPiece(startPos);
+            if (((endPos.getRow() == 8 && Objects.equals(this.playerColor, "WHITE")) ||
+                    (endPos.getRow() == 1 && Objects.equals(this.playerColor, "BLACK")))
+                    && piece.getPieceType() == PAWN) {
+                ChessPiece.PieceType promotionPiece = null;
+                Scanner tempScanner = new Scanner(System.in);
+                System.out.println(("Pawn can promote. Choose from the following options:\n" +
+                        "Queen, Rook, Bishop, Knight\n"));
+                System.out.println(this.userName + " >> ");
+                String choice = tempScanner.nextLine().trim().toUpperCase();
+                switch (choice) {
+                    case "QUEEN" -> promotionPiece = ChessPiece.PieceType.QUEEN;
+                    case "ROOK" -> promotionPiece = ChessPiece.PieceType.ROOK;
+                    case "BISHOP" -> promotionPiece = ChessPiece.PieceType.BISHOP;
+                    case "KNIGHT" -> promotionPiece = ChessPiece.PieceType.KNIGHT;
+                    default -> {
+                        System.out.println(("Not an option. Piece promoted to QUEEN\n"));
+                        promotionPiece = ChessPiece.PieceType.QUEEN;
+                    }
+                }
+                ChessMove move = new ChessMove(startPos, endPos, promotionPiece);
+                UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, authToken, gameID);
+                command.setMove(move);
+                send(command);
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+
+            }
+            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.MAKE_MOVE, this.authToken, this.gameID);
+            command.setMove(new ChessMove(startPos, endPos, null));
+            send(command);
+
+
+        } else {
+            System.out.println("Please put in the right format and # of parameters for moves." +
+                    " Ex: move d4 f7");
+
         }
+
+
     }
 
     //run highilght that akes the parameter of the piece you want to get the highlihgts for and then do
