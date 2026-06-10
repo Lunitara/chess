@@ -358,17 +358,29 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         try {
 
-            String username = authDAO.getAuth(action.getAuthToken()).username();
             GameData data = gameDAO.getGame(action.getGameID());
+            AuthData auth = authDAO.getAuth(action.getAuthToken());
+            if (auth == null) {
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                message.errorMessage = "Error: unauthorized to make move";
+                session.getRemote().sendString(new Gson().toJson(message));
+                return;
+            }
+            String username = auth.username();
+
+
             if (data.game().isGameOver()) {
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                 message.errorMessage = "\n" + username + " can't resign as game is already over.";
+
                 try {
                     session.getRemote().sendString(new Gson().toJson(message));
+
+
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-
+                return;
             } else {
                 data.game().resigned(true);
                 gameDAO.updateGame(data);
@@ -382,11 +394,17 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     message.message = "\n" + username + " resigned from the game as white player.";
                     newMessage = new Gson().toJson(message);
                     try {
+                        if (runningGame.whitePlayer != null) {
+                            runningGame.whitePlayer.getRemote().sendString(newMessage);
+                        }
                         if (runningGame.blackPlayer != null) {
                             runningGame.blackPlayer.getRemote().sendString(newMessage);
                         }
+                        for (Session observer: runningGame.observers) {
+                            observer.getRemote().sendString(newMessage);
+                        }
                     } catch (IOException e) {
-                        System.out.println("sending a message to black player that white player resigning failed");
+                        System.out.println("sending a message to players that white player resigning failed");
 
                     }
                 } else if (Objects.equals(data.blackUsername(), username)) {
@@ -396,17 +414,27 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                         if (runningGame.whitePlayer != null) {
                             runningGame.whitePlayer.getRemote().sendString(newMessage);
                         }
+                        if (runningGame.blackPlayer != null) {
+                            runningGame.blackPlayer.getRemote().sendString(newMessage);
+                        }
+                        for (Session observer: runningGame.observers) {
+                            observer.getRemote().sendString(newMessage);
+                        }
                     } catch (IOException e) {
-                        System.out.println("sending a message to white player that black player resigning failed");
+                        System.out.println("sending a message to players that black player resigning failed");
 
                     }
                 } else {
-                    message.message = "observers can't resign";
-                    newMessage = new Gson().toJson(message);
+                    websocket.messages.ServerMessage resignError = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                    resignError.errorMessage = "observers can't resign";
+                    session.getRemote().sendString(new Gson().toJson(resignError));
+                    return;
                 }
             }
 
         } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
