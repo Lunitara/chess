@@ -258,7 +258,7 @@ public class Server {
             users = new UserService(gamesdao, usersdao, authsdao);
             games = new GameService(authsdao, gamesdao, usersdao);
             auths = new AuthService(usersdao, gamesdao, authsdao);
-            handler.populate(games,auths,users,gamesdao,authsdao,usersdao);
+            handler.populate(gamesdao,authsdao);
             // Register your endpoints and exception handlers here.
             javalin.delete("/db", this::clear);
             javalin.post("/user", this::register);

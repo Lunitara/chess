@@ -34,21 +34,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private final ConcurrentHashMap<Session, PlayerInfo> connections = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, RunningGame> runningGames = new ConcurrentHashMap<>();
 
-    private GameService gameService;
-    private AuthService authService;
-    private UserService userService;
+
     private GameDAO gameDAO;
     private AuthDAO authDAO;
-    private UserDAO userDAO;
+
     public boolean isObserver = false;
 
-    public void populate(GameService gameService, AuthService authService, UserService userService, GameDAO gameDAO, AuthDAO authDAO, UserDAO userDAO) {
-        this.gameService = gameService;
-        this.authService = authService;
-        this.userService = userService;
+    public void populate(
+                         GameDAO gameDAO, AuthDAO authDAO) {
+
         this.gameDAO = gameDAO;
         this.authDAO = authDAO;
-        this.userDAO = userDAO;
+
     }
 
     @Override
@@ -67,16 +64,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             case RESIGN -> resign(action, ctx.session);
         }
     }
-    private void connectCheckErrors(UserGameCommand action, Session session) {
+
+    private void connect(UserGameCommand action, Session session) {
+        System.out.println("Successfully connected to game through websocket");
         try {
             AuthData auth = authDAO.getAuth(action.getAuthToken());
-            if (auth == null) {
-                ServerMessage noDataMessage = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
-                noDataMessage.errorMessage = "Error unauthorized";
-                session.getRemote().sendString(new Gson().toJson(noDataMessage));
+            if (!testAuth(action, session)) {
                 return;
             }
-            String username = authDAO.getAuth(action.getAuthToken()).username();
             GameData data = gameDAO.getGame(action.getGameID());
             try {
                 if (data == null) {
@@ -88,24 +83,11 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    private void connect(UserGameCommand action, Session session) {
-
-        System.out.println("Successfully connected to game through websocket");
-
-            try {
-                String username = authDAO.getAuth(action.getAuthToken()).username();
-                GameData data = gameDAO.getGame(action.getGameID());
-                connectCheckErrors(action, session);
-                RunningGame runningGame = runningGames.get(action.getGameID());
-                if (runningGame == null) {
-                    runningGame = new RunningGame(new ArrayList<>(), null, null);
-                }
+            String username = authDAO.getAuth(action.getAuthToken()).username();
+            RunningGame runningGame = runningGames.get(action.getGameID());
+            if (runningGame == null) {
+                runningGame = new RunningGame(new ArrayList<>(), null, null);
+            }
             websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             String newMessage = new Gson().toJson(message);
             if (Objects.equals(data.whiteUsername(), username)) {
@@ -165,7 +147,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 }
             }
             List<Session> deadObservers = new ArrayList<>();
-
             for (Session observer : runningGame.observers) {
                 if (observer.equals(session)) {
                     continue;
@@ -189,18 +170,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
                 throw new RuntimeException(e);
             }
-
-
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
-}
+        }
 
     }
 
     private void makeMove(UserGameCommand action, ChessMove move, Session session) {
         try {
             AuthData auth = authDAO.getAuth(action.getAuthToken());
-            testAuth(action, session);
+            if (!testAuth(action, session)) {
+                return;
+            }
             GameData data = gameDAO.getGame(action.getGameID());
             RunningGame runningGame = runningGames.get(action.getGameID());
 
@@ -210,10 +191,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 session.getRemote().sendString(new Gson().toJson(message));
                 return;
             }
-            ChessGame.TeamColor pieceColor =data.game().getBoard().getPiece(move.getStartPosition()).getTeamColor();
-            if (data.game().getTeamTurn() !=  pieceColor ||
-            pieceColor == ChessGame.TeamColor.WHITE && !session.equals(runningGame.whitePlayer) ||
-            pieceColor == ChessGame.TeamColor.BLACK && !session.equals(runningGame.blackPlayer)) {
+            ChessGame.TeamColor pieceColor = data.game().getBoard().getPiece(move.getStartPosition()).getTeamColor();
+            if (data.game().getTeamTurn() != pieceColor ||
+                    pieceColor == ChessGame.TeamColor.WHITE && !session.equals(runningGame.whitePlayer) ||
+                    pieceColor == ChessGame.TeamColor.BLACK && !session.equals(runningGame.blackPlayer)) {
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                 message.errorMessage = "\nCannot make a move on opponent's turn or using opponent's pieces";
                 session.getRemote().sendString(new Gson().toJson(message));
@@ -225,8 +206,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 if (session.equals(runningGame.whitePlayer)) {
                     message.message = "\nWhite player moved piece.";
-                }
-                else {
+                } else {
                     message.message = "\nBlack player moved piece.";
                 }
                 String gameOverJson = null;
@@ -277,28 +257,32 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             throw new RuntimeException(e);
         }
     }
-private void testAuth(UserGameCommand action, Session session) {
+
+    private boolean testAuth(UserGameCommand action, Session session) {
         try {
             AuthData auth = authDAO.getAuth(action.getAuthToken());
             if (auth == null) {
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                 message.errorMessage = "Error: unauthorized to make move";
                 session.getRemote().sendString(new Gson().toJson(message));
-                return;
+                return false;
             }
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-}
+        return true;
+    }
+
     private void leave(UserGameCommand action, Session session) {
         System.out.println("Successfully disconnected to game through websocket");
 
         try {
             GameData data = gameDAO.getGame(action.getGameID());
-            testAuth(action, session);
-            String username = authDAO.getAuth(action.getAuthToken()).username();
+            if (!testAuth(action, session)) {
+                return;
+            }            String username = authDAO.getAuth(action.getAuthToken()).username();
             RunningGame runningGame = runningGames.get(action.getGameID());
             if (runningGame == null) {
                 return;
@@ -380,7 +364,9 @@ private void testAuth(UserGameCommand action, Session session) {
 
             GameData data = gameDAO.getGame(action.getGameID());
             AuthData auth = authDAO.getAuth(action.getAuthToken());
-            testAuth(action, session);
+            if (!testAuth(action, session)) {
+                return;
+            }
             String username = auth.username();
 
 
@@ -396,14 +382,14 @@ private void testAuth(UserGameCommand action, Session session) {
                     throw new RuntimeException(e);
                 }
                 return;
-            } else {
+            }
                 data.game().resigned(true);
                 gameDAO.updateGame(data);
                 RunningGame runningGame = runningGames.get(action.getGameID());
                 if (runningGame == null) {
                     runningGame = new RunningGame(new ArrayList<>(), null, null);
                 }
-                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                websocket.messages.ServerMessage message=new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 String newMessage = new Gson().toJson(message);
                 if (Objects.equals(data.whiteUsername(), username)) {
                     message.message = "\n" + username + " resigned from the game as white player.";
@@ -415,7 +401,7 @@ private void testAuth(UserGameCommand action, Session session) {
                         if (runningGame.blackPlayer != null) {
                             runningGame.blackPlayer.getRemote().sendString(newMessage);
                         }
-                        for (Session observer: runningGame.observers) {
+                        for (Session observer : runningGame.observers) {
                             observer.getRemote().sendString(newMessage);
                         }
                     } catch (IOException e) {
@@ -432,7 +418,7 @@ private void testAuth(UserGameCommand action, Session session) {
                         if (runningGame.blackPlayer != null) {
                             runningGame.blackPlayer.getRemote().sendString(newMessage);
                         }
-                        for (Session observer: runningGame.observers) {
+                        for (Session observer : runningGame.observers) {
                             observer.getRemote().sendString(newMessage);
                         }
                     } catch (IOException e) {
@@ -440,12 +426,12 @@ private void testAuth(UserGameCommand action, Session session) {
 
                     }
                 } else {
-                    websocket.messages.ServerMessage resignError = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                    websocket.messages.ServerMessage resignError=new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                     resignError.errorMessage = "observers can't resign";
                     session.getRemote().sendString(new Gson().toJson(resignError));
                     return;
                 }
-            }
+
 
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
