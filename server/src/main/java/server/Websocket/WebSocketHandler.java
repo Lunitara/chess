@@ -280,8 +280,15 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Successfully disconnected to game through websocket");
 
         try {
-            String username = authDAO.getAuth(action.getAuthToken()).username();
             GameData data = gameDAO.getGame(action.getGameID());
+            AuthData auth = authDAO.getAuth(action.getAuthToken());
+            if (auth == null) {
+                websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+                message.errorMessage = "Error: unauthorized to make move";
+                session.getRemote().sendString(new Gson().toJson(message));
+                return;
+            }
+            String username = authDAO.getAuth(action.getAuthToken()).username();
             RunningGame runningGame = runningGames.get(action.getGameID());
             if (runningGame == null) {
                 return;
@@ -293,6 +300,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 message.message = "\n" + username + " exited the game as white player.";
                 newMessage = new Gson().toJson(message);
                 runningGame = new RunningGame(runningGame.observers(), null, runningGame.blackPlayer());
+                data = new GameData(data.gameID(), null, data.blackUsername(), data.gameName(), data.game());
+                gameDAO.updateGame(data);
                 try {
                     if (runningGame.blackPlayer != null) {
 
@@ -306,7 +315,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 message.message = "\n" + username + " left the game as black player.";
                 newMessage = new Gson().toJson(message);
                 runningGame = new RunningGame(runningGame.observers(), runningGame.whitePlayer(), null);
-
+                data = new GameData(data.gameID(), data.whiteUsername(), null, data.gameName(), data.game());
+                gameDAO.updateGame(data);
                 try {
                     if (runningGame.whitePlayer != null) {
                         runningGame.whitePlayer.getRemote().sendString(newMessage);
@@ -349,6 +359,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
             runningGame.observers().removeAll(deadObservers);
         } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
