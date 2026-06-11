@@ -12,6 +12,7 @@ public class ChessClient {
     private State state = State.SIGNEDOUT;
     public static String visitorName = null;
     public String authToken;
+    public boolean hasListed = false;
     public Map<Integer, Integer> gameNumberTOGameID = new HashMap<>();
 
     public ChessClient(String serverUrl) {
@@ -180,6 +181,7 @@ public class ChessClient {
             if (games == null || games.isEmpty()) {
                 return "No games to show.\n";
             }
+            hasListed = true;
             var resultingString = new StringBuilder();
             resultingString.append("Current games:\n");
             int gameNumber = 1;
@@ -212,6 +214,9 @@ public class ChessClient {
         }
         try {
             if (params.length == 3) {
+                if (!hasListed) {
+                    return "Must list games before joining one.\n";
+                }
                 String playerColor = params[2];
                 int gameNumber = Integer.parseInt(params[1]);
                 int gameID = gameNumberTOGameID.get(gameNumber);
@@ -261,7 +266,7 @@ public class ChessClient {
                 return String.format("Please put in the correct # of parameters. You put in " + params.length + "\n");
             }
         } catch (Throwable e) {
-            return "Error: could not play game. Make sure it is typed in the correct format.\n";
+            return "Error: could not play game. Make sure it is typed in the correct format.\n" + e.getMessage();
         }
 
     }

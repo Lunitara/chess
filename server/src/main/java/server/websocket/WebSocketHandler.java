@@ -2,6 +2,7 @@ package server.websocket;
 
 import chess.ChessGame;
 import chess.ChessMove;
+import chess.ChessPiece;
 import chess.InvalidMoveException;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
@@ -141,7 +142,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     continue;
                 }
                 try {
-                    observer.getRemote().sendString(newMessage);
+                    if (!observer.equals(session)) {
+                        observer.getRemote().sendString(newMessage);
+                    }
                 } catch (IOException e) {
                     deadObservers.add(observer);
                     System.out.println("observer lost connection.");
@@ -181,26 +184,31 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
             ChessGame.TeamColor pieceColor = data.game().getBoard().getPiece(move.getStartPosition()).getTeamColor();
             if (data.game().getTeamTurn() != pieceColor ||
-                    pieceColor == ChessGame.TeamColor.WHITE && !session.equals(runningGame.whitePlayer) ||
-                    pieceColor == ChessGame.TeamColor.BLACK && !session.equals(runningGame.blackPlayer)) {
+                    (pieceColor == ChessGame.TeamColor.WHITE && !session.equals(runningGame.whitePlayer)) ||
+                            (pieceColor == ChessGame.TeamColor.BLACK && !session.equals(runningGame.blackPlayer))) {
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                 message.errorMessage = "\nCannot make a move on opponent's turn or using opponent's pieces";
                 session.getRemote().sendString(new Gson().toJson(message));
                 return;
             }
             try {
+                ChessPiece.PieceType pieceType= data.game().getBoard().getPiece(move.getStartPosition()).getPieceType();
                 data.game().makeMove(move);
                 gameDAO.updateGame(data);
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                String[] alphLetters = {"", "a", "b", "c", "d", "e", "f", "g", "h"};
+                String endPos = alphLetters[move.getEndPosition().getColumn()]
+                        + move.getEndPosition().getRow();
                 if (session.equals(runningGame.whitePlayer)) {
-                    message.message = "\nWhite player moved piece.";
+                    message.message = "\nWhite player moved piece " + pieceType.toString().toLowerCase() + " to " + endPos;
+
                 } else {
-                    message.message = "\nBlack player moved piece.";
+                    message.message = "\nBlack player moved piece" + pieceType.toString().toLowerCase() + " to " + endPos;
                 }
                 String gameOverJson = null;
                 if (data.game().isGameOver()) {
                     websocket.messages.ServerMessage gameOverMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
-                    gameOverMessage.message = "CHECKMATE! Game over";
+                    gameOverMessage.message = "CHECKMATE! Game over. " + auth.username() + " won the game.";
                     gameOverJson = new Gson().toJson(gameOverMessage);
                 }
                 String notificationJson = new Gson().toJson(message);
@@ -237,6 +245,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             } catch (InvalidMoveException e) {
                 websocket.messages.ServerMessage message = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
                 message.errorMessage = "\nIllegal move. Please type in a valid move.";
+                System.out.println("Invalid move");
                 session.getRemote().sendString(new Gson().toJson(message));
             }
         } catch (DataAccessException e) {
@@ -311,7 +320,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             } else {
                 message.message = "\n" + username + " left the game as an observer";
                 newMessage = new Gson().toJson(message);
-                runningGame.observers().remove(session);
+                List<Session> updatedObservers = new ArrayList<>(runningGame.observers());
+                updatedObservers.remove(session);
+                runningGame = new RunningGame(updatedObservers, runningGame.whitePlayer(), runningGame.blackPlayer());
                 try {
                     if (runningGame.whitePlayer != null) {
                         runningGame.whitePlayer.getRemote().sendString(newMessage);
@@ -333,6 +344,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             runningGames.put(action.getGameID(), runningGame);
             List<Session> deadObservers = new ArrayList<>();
             for (Session observer : runningGame.observers) {
+                if (observer.equals(session)) {
+                    continue;
+                }
                 try {
                     observer.getRemote().sendString(newMessage);
                 } catch (IOException e) {
@@ -340,7 +354,19 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                     System.out.println("observer lost connection.");
                 }
             }
-            runningGame.observers().removeAll(deadObservers);
+            if (!deadObservers.isEmpty()) {
+                List<Session> cleanedObservers = new ArrayList<>(runningGame.observers());
+                cleanedObservers.removeAll(deadObservers);
+                runningGame = new RunningGame(cleanedObservers, runningGame.whitePlayer(), runningGame.blackPlayer());
+                runningGames.put(action.getGameID(), runningGame);
+            }
+            try {
+                if (session.isOpen()) {
+                    session.close();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         } catch (DataAccessException e) {
             throw new RuntimeException(e);
         }

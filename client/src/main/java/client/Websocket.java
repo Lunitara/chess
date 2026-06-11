@@ -123,7 +123,7 @@ public class Websocket extends Endpoint {
 
             }
 
-            if (Objects.equals(playerColor, "WHITE")) {
+            if (Objects.equals(playerColor, "WHITE") || Objects.equals(playerColor, "OBSERVER")) {
                 System.out.println("\n" + makeBoard(this.latestBoard, this.lastMove, moves, "WHITE"));
 
             } else {
@@ -299,6 +299,8 @@ public class Websocket extends Endpoint {
             String endPosition = tokens[2];
             String allPossibleNums = "12345678";
             String allPossibleAlp = "abcdefgh";
+            ChessPosition startPos = new ChessPosition(allPossibleNums.indexOf(startPosition.charAt(1)) +
+                    1, allPossibleAlp.indexOf(startPosition.charAt(0)) + 1);
             if (startPosition.length() != 2 || endPosition.length() != 2) {
                 System.out.println("Please put in the right format for moves. Ex: move d4 f7");
             } else if (!allPossibleAlp.contains(startPosition.charAt(0) + "")) {
@@ -307,11 +309,13 @@ public class Websocket extends Endpoint {
                 System.out.println("Please put in a valid number");
 
             }
+            else if (latestBoard.getPiece(startPos) == null) {
+                System.out.println("Illegal move; no piece is there");
+            }
             //probably a valid entry now lets check if it's actually valid
-            ChessPosition startPos = new ChessPosition(allPossibleNums.indexOf(startPosition.charAt(1)) +
-                    1, allPossibleAlp.indexOf(startPosition.charAt(0)) + 1);
             ChessPosition endPos = new ChessPosition(allPossibleNums.indexOf(endPosition.charAt(1)) + 1,
                     allPossibleAlp.indexOf(endPosition.charAt(0)) + 1);
+
             ChessPiece piece = latestBoard.getPiece(startPos);
             if (((endPos.getRow() == 8 && Objects.equals(this.playerColor, "WHITE")) ||
                     (endPos.getRow() == 1 && Objects.equals(this.playerColor, "BLACK")))
@@ -366,17 +370,21 @@ public class Websocket extends Endpoint {
                 String piecePos = tokens[1];
                 String allPossibleNums = "12345678";
                 String allPossibleAlp = "abcdefgh";
+                ChessPosition finalPiecePos = new ChessPosition(allPossibleNums.indexOf(piecePos.charAt(1)) + 1,
+                        allPossibleAlp.indexOf(piecePos.charAt(0)) + 1);
                 if (piecePos.length() != 2) {
                     System.out.println("Please put in the right format for highlights. Ex: highlight d4");
                 } else if (!allPossibleAlp.contains(piecePos.charAt(0) + "")) {
                     System.out.println("Please put in a valid alphabet letter");
                 } else if (!allPossibleNums.contains(piecePos.charAt(1) + "")) {
                     System.out.println("Please put in a valid number");
+                } else if (this.latestBoard.getPiece(finalPiecePos) == null) {
+                        System.out.println("There is no piece there");
+                        return;
 
                 } else {
                     //probably a valid entry now lets check if it's actually valid
-                    ChessPosition finalPiecePos = new ChessPosition(allPossibleNums.indexOf(piecePos.charAt(1)) + 1,
-                            allPossibleAlp.indexOf(piecePos.charAt(0)) + 1);
+
                     Collection<ChessMove> validMoves = this.latestBoard.getPiece(finalPiecePos).pieceMoves(this.latestBoard, finalPiecePos);
                     redrawBoard(validMoves);
                 }
@@ -417,6 +425,10 @@ public class Websocket extends Endpoint {
                     }
                     case NOTIFICATION -> {
                         System.out.print(newMessage.message);
+                        System.out.print("\n" + username + " >>> ");
+                    }
+                    case ERROR -> {
+                        System.out.print(newMessage.errorMessage);
                         System.out.print("\n" + username + " >>> ");
                     }
 
