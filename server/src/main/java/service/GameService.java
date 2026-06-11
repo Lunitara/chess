@@ -13,6 +13,8 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
+import static java.lang.Math.abs;
+
 public class GameService {
     private UserDAO users;
     private GameDAO games;
@@ -39,7 +41,7 @@ public class GameService {
             throw new IllegalArgumentException("error null");
         }
         Random rand = new Random();
-        newGameID = rand.nextInt();
+        newGameID = abs(rand.nextInt());
         System.out.println(newGameID);
         GameData gameData = new GameData(newGameID,null,null,
                 createGameRequest.gameName(), new ChessGame());
