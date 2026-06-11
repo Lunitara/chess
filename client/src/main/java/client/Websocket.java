@@ -99,7 +99,7 @@ public class Websocket extends Endpoint {
                         if (reallyResign()) {
                             UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
                             client.send(command);
-                            System.out.println("Resigned the game.");
+                            System.out.println("Resigning...");
                             return;
                         }
                     }
