@@ -26,6 +26,7 @@ public class Websocket extends Endpoint {
     private ChessBoard latestBoard = null;
     private ChessMove lastMove;
     private String userName = null;
+    private ChessGame game;
 
     public static void joinGame(String playerColor, int gameID, String authToken) throws Exception {
         Websocket client = new Websocket(playerColor, gameID, authToken);
@@ -95,10 +96,12 @@ public class Websocket extends Endpoint {
                         System.out.printf(username + " >>> ");
                     }
                     case "resign" -> {
-                        UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
-                        client.send(command);
-                        System.out.println("Resigned the game.");
-                        return;
+                        if (reallyResign()) {
+                            UserGameCommand command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID);
+                            client.send(command);
+                            System.out.println("Resigned the game.");
+                            return;
+                        }
                     }
                     case "highlight" -> {
                         client.highlightMoves(tokens);
@@ -159,6 +162,13 @@ public class Websocket extends Endpoint {
         } else {
             return black + pieceChar + white;
         }
+    }
+
+    public static boolean reallyResign() {
+        Scanner scnaner = new Scanner(System.in);
+        System.out.println("Are you sure you want to resign? (yes/no)");
+        String reply = scnaner.nextLine().trim().toString();
+        return reply.equals("yes");
     }
 
     public void setUpAlphabet(StringBuilder sb, String color) {
@@ -385,7 +395,7 @@ public class Websocket extends Endpoint {
                 } else {
                     //probably a valid entry now lets check if it's actually valid
 
-                    Collection<ChessMove> validMoves = this.latestBoard.getPiece(finalPiecePos).pieceMoves(this.latestBoard, finalPiecePos);
+                    Collection<ChessMove> validMoves = game.validMoves(finalPiecePos);
                     redrawBoard(validMoves);
                 }
 
@@ -416,6 +426,7 @@ public class Websocket extends Endpoint {
                 String username = ChessClient.visitorName;
                 switch (newMessage.getServerMessageType()) {
                     case LOAD_GAME -> {
+                        game = newMessage.game;
                         latestBoard = newMessage.game.getBoard();
                         lastMove = newMessage.lastMove;
                         Collection<ChessMove> moves = new ArrayList<>();

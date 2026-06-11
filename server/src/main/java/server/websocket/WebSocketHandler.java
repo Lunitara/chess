@@ -199,16 +199,30 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 String[] alphLetters = {"", "a", "b", "c", "d", "e", "f", "g", "h"};
                 String endPos = alphLetters[move.getEndPosition().getColumn()]
                         + move.getEndPosition().getRow();
+                boolean whitePieceMoved;
                 if (session.equals(runningGame.whitePlayer)) {
                     message.message = "\nWhite player moved piece " + pieceType.toString().toLowerCase() + " to " + endPos;
-
+                    whitePieceMoved = true;
                 } else {
                     message.message = "\nBlack player moved piece" + pieceType.toString().toLowerCase() + " to " + endPos;
+                    whitePieceMoved = false;
                 }
+                ChessGame.TeamColor opponentColor = whitePieceMoved ?
+                        ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
                 String gameOverJson = null;
-                if (data.game().isGameOver()) {
+                if (data.game().isInCheckmate(opponentColor)) {
                     websocket.messages.ServerMessage gameOverMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                     gameOverMessage.message = "CHECKMATE! Game over. " + auth.username() + " won the game.";
+                    gameOverJson = new Gson().toJson(gameOverMessage);
+                }
+                 else if (data.game().isInCheck(opponentColor)) {
+                    websocket.messages.ServerMessage gameOverMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                    gameOverMessage.message = "CHECK. " + (whitePieceMoved ? "BLACK" : "WHITE")+ " player is in check";
+                    gameOverJson = new Gson().toJson(gameOverMessage);
+                }
+                else if (data.game().isInStalemate(opponentColor)) {
+                    websocket.messages.ServerMessage gameOverMessage = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+                    gameOverMessage.message = "STALEMATE. Game Over";
                     gameOverJson = new Gson().toJson(gameOverMessage);
                 }
                 String notificationJson = new Gson().toJson(message);
